@@ -14,6 +14,9 @@
 		794733462B464333001C3FEB /* MusubiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733452B464333001C3FEB /* MusubiTests.swift */; };
 		794733502B464333001C3FEB /* MusubiUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947334F2B464333001C3FEB /* MusubiUITests.swift */; };
 		794733522B464333001C3FEB /* MusubiUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */; };
+		7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947336A2B464E2B001C3FEB /* MusubiModel.swift */; };
+		7947336D2B46566F001C3FEB /* SpotifyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947336C2B46566F001C3FEB /* SpotifyModel.swift */; };
+		7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947336E2B46758F001C3FEB /* MusubiViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +47,9 @@
 		7947334B2B464333001C3FEB /* MusubiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusubiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7947334F2B464333001C3FEB /* MusubiUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUITests.swift; sourceTree = "<group>"; };
 		794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		7947336A2B464E2B001C3FEB /* MusubiModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiModel.swift; sourceTree = "<group>"; };
+		7947336C2B46566F001C3FEB /* SpotifyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyModel.swift; sourceTree = "<group>"; };
+		7947336E2B46758F001C3FEB /* MusubiViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,7 +100,12 @@
 		794733332B464331001C3FEB /* Musubi */ = {
 			isa = PBXGroup;
 			children = (
+				794733672B464706001C3FEB /* SpotifyWebClient */,
+				794733602B46450B001C3FEB /* Views */,
+				794733702B468FFE001C3FEB /* Util */,
 				794733342B464331001C3FEB /* MusubiApp.swift */,
+				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
+				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				794733362B464331001C3FEB /* ContentView.swift */,
 				794733382B464333001C3FEB /* Assets.xcassets */,
 				7947333A2B464333001C3FEB /* Preview Content */,
@@ -125,6 +136,28 @@
 				794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */,
 			);
 			path = MusubiUITests;
+			sourceTree = "<group>";
+		};
+		794733602B46450B001C3FEB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		794733672B464706001C3FEB /* SpotifyWebClient */ = {
+			isa = PBXGroup;
+			children = (
+				7947336C2B46566F001C3FEB /* SpotifyModel.swift */,
+			);
+			path = SpotifyWebClient;
+			sourceTree = "<group>";
+		};
+		794733702B468FFE001C3FEB /* Util */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Util;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,7 +290,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7947336D2B46566F001C3FEB /* SpotifyModel.swift in Sources */,
 				794733372B464331001C3FEB /* ContentView.swift in Sources */,
+				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
+				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

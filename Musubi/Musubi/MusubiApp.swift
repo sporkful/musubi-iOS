@@ -10,3 +10,16 @@ struct MusubiApp: App {
         }
     }
 }
+
+// namespaces
+struct Musubi {
+    private init() { }
+    
+    struct Model {
+        private init() { }
+    }
+    
+    struct ViewModel {
+        private init() { }
+    }
+}
