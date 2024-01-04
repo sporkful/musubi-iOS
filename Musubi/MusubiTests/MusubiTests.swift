@@ -1,9 +1,9 @@
-// musubi_iOSTests.swift
+// MusubiTests.swift
 
 import XCTest
-@testable import musubi_iOS
+@testable import Musubi
 
-final class musubi_iOSTests: XCTestCase {
+final class MusubiTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

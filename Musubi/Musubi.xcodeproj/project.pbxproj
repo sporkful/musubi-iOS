@@ -7,61 +7,61 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		794732FF2B46400D001C3FEB /* musubi_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794732FE2B46400D001C3FEB /* musubi_iOSApp.swift */; };
-		794733012B46400D001C3FEB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733002B46400D001C3FEB /* ContentView.swift */; };
-		794733032B46400E001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733022B46400E001C3FEB /* Assets.xcassets */; };
-		794733062B46400E001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733052B46400E001C3FEB /* Preview Assets.xcassets */; };
-		794733102B46400E001C3FEB /* musubi_iOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947330F2B46400E001C3FEB /* musubi_iOSTests.swift */; };
-		7947331A2B46400E001C3FEB /* musubi_iOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733192B46400E001C3FEB /* musubi_iOSUITests.swift */; };
-		7947331C2B46400E001C3FEB /* musubi_iOSUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947331B2B46400E001C3FEB /* musubi_iOSUITestsLaunchTests.swift */; };
+		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
+		794733372B464331001C3FEB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733362B464331001C3FEB /* ContentView.swift */; };
+		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
+		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
+		794733462B464333001C3FEB /* MusubiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733452B464333001C3FEB /* MusubiTests.swift */; };
+		794733502B464333001C3FEB /* MusubiUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947334F2B464333001C3FEB /* MusubiUITests.swift */; };
+		794733522B464333001C3FEB /* MusubiUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		7947330C2B46400E001C3FEB /* PBXContainerItemProxy */ = {
+		794733422B464333001C3FEB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 794732F32B46400C001C3FEB /* Project object */;
+			containerPortal = 794733292B464331001C3FEB /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 794732FA2B46400D001C3FEB;
-			remoteInfo = "musubi-iOS";
+			remoteGlobalIDString = 794733302B464331001C3FEB;
+			remoteInfo = Musubi;
 		};
-		794733162B46400E001C3FEB /* PBXContainerItemProxy */ = {
+		7947334C2B464333001C3FEB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 794732F32B46400C001C3FEB /* Project object */;
+			containerPortal = 794733292B464331001C3FEB /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 794732FA2B46400D001C3FEB;
-			remoteInfo = "musubi-iOS";
+			remoteGlobalIDString = 794733302B464331001C3FEB;
+			remoteInfo = Musubi;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		794732FB2B46400D001C3FEB /* musubi-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "musubi-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		794732FE2B46400D001C3FEB /* musubi_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = musubi_iOSApp.swift; sourceTree = "<group>"; };
-		794733002B46400D001C3FEB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		794733022B46400E001C3FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		794733052B46400E001C3FEB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		7947330B2B46400E001C3FEB /* musubi-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "musubi-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7947330F2B46400E001C3FEB /* musubi_iOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = musubi_iOSTests.swift; sourceTree = "<group>"; };
-		794733152B46400E001C3FEB /* musubi-iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "musubi-iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		794733192B46400E001C3FEB /* musubi_iOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = musubi_iOSUITests.swift; sourceTree = "<group>"; };
-		7947331B2B46400E001C3FEB /* musubi_iOSUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = musubi_iOSUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
+		794733362B464331001C3FEB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		794733382B464333001C3FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7947333B2B464333001C3FEB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		794733412B464333001C3FEB /* MusubiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusubiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		794733452B464333001C3FEB /* MusubiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiTests.swift; sourceTree = "<group>"; };
+		7947334B2B464333001C3FEB /* MusubiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusubiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7947334F2B464333001C3FEB /* MusubiUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUITests.swift; sourceTree = "<group>"; };
+		794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUITestsLaunchTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		794732F82B46400D001C3FEB /* Frameworks */ = {
+		7947332E2B464331001C3FEB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733082B46400E001C3FEB /* Frameworks */ = {
+		7947333E2B464333001C3FEB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733122B46400E001C3FEB /* Frameworks */ = {
+		794733482B464333001C3FEB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -71,142 +71,142 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		794732F22B46400C001C3FEB = {
+		794733282B464331001C3FEB = {
 			isa = PBXGroup;
 			children = (
-				794732FD2B46400D001C3FEB /* musubi-iOS */,
-				7947330E2B46400E001C3FEB /* musubi-iOSTests */,
-				794733182B46400E001C3FEB /* musubi-iOSUITests */,
-				794732FC2B46400D001C3FEB /* Products */,
+				794733332B464331001C3FEB /* Musubi */,
+				794733442B464333001C3FEB /* MusubiTests */,
+				7947334E2B464333001C3FEB /* MusubiUITests */,
+				794733322B464331001C3FEB /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		794732FC2B46400D001C3FEB /* Products */ = {
+		794733322B464331001C3FEB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				794732FB2B46400D001C3FEB /* musubi-iOS.app */,
-				7947330B2B46400E001C3FEB /* musubi-iOSTests.xctest */,
-				794733152B46400E001C3FEB /* musubi-iOSUITests.xctest */,
+				794733312B464331001C3FEB /* Musubi.app */,
+				794733412B464333001C3FEB /* MusubiTests.xctest */,
+				7947334B2B464333001C3FEB /* MusubiUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		794732FD2B46400D001C3FEB /* musubi-iOS */ = {
+		794733332B464331001C3FEB /* Musubi */ = {
 			isa = PBXGroup;
 			children = (
-				794732FE2B46400D001C3FEB /* musubi_iOSApp.swift */,
-				794733002B46400D001C3FEB /* ContentView.swift */,
-				794733022B46400E001C3FEB /* Assets.xcassets */,
-				794733042B46400E001C3FEB /* Preview Content */,
+				794733342B464331001C3FEB /* MusubiApp.swift */,
+				794733362B464331001C3FEB /* ContentView.swift */,
+				794733382B464333001C3FEB /* Assets.xcassets */,
+				7947333A2B464333001C3FEB /* Preview Content */,
 			);
-			path = "musubi-iOS";
+			path = Musubi;
 			sourceTree = "<group>";
 		};
-		794733042B46400E001C3FEB /* Preview Content */ = {
+		7947333A2B464333001C3FEB /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
-				794733052B46400E001C3FEB /* Preview Assets.xcassets */,
+				7947333B2B464333001C3FEB /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		7947330E2B46400E001C3FEB /* musubi-iOSTests */ = {
+		794733442B464333001C3FEB /* MusubiTests */ = {
 			isa = PBXGroup;
 			children = (
-				7947330F2B46400E001C3FEB /* musubi_iOSTests.swift */,
+				794733452B464333001C3FEB /* MusubiTests.swift */,
 			);
-			path = "musubi-iOSTests";
+			path = MusubiTests;
 			sourceTree = "<group>";
 		};
-		794733182B46400E001C3FEB /* musubi-iOSUITests */ = {
+		7947334E2B464333001C3FEB /* MusubiUITests */ = {
 			isa = PBXGroup;
 			children = (
-				794733192B46400E001C3FEB /* musubi_iOSUITests.swift */,
-				7947331B2B46400E001C3FEB /* musubi_iOSUITestsLaunchTests.swift */,
+				7947334F2B464333001C3FEB /* MusubiUITests.swift */,
+				794733512B464333001C3FEB /* MusubiUITestsLaunchTests.swift */,
 			);
-			path = "musubi-iOSUITests";
+			path = MusubiUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		794732FA2B46400D001C3FEB /* musubi-iOS */ = {
+		794733302B464331001C3FEB /* Musubi */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7947331F2B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOS" */;
+			buildConfigurationList = 794733552B464333001C3FEB /* Build configuration list for PBXNativeTarget "Musubi" */;
 			buildPhases = (
-				794732F72B46400D001C3FEB /* Sources */,
-				794732F82B46400D001C3FEB /* Frameworks */,
-				794732F92B46400D001C3FEB /* Resources */,
+				7947332D2B464331001C3FEB /* Sources */,
+				7947332E2B464331001C3FEB /* Frameworks */,
+				7947332F2B464331001C3FEB /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "musubi-iOS";
-			productName = "musubi-iOS";
-			productReference = 794732FB2B46400D001C3FEB /* musubi-iOS.app */;
+			name = Musubi;
+			productName = Musubi;
+			productReference = 794733312B464331001C3FEB /* Musubi.app */;
 			productType = "com.apple.product-type.application";
 		};
-		7947330A2B46400E001C3FEB /* musubi-iOSTests */ = {
+		794733402B464333001C3FEB /* MusubiTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 794733222B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOSTests" */;
+			buildConfigurationList = 794733582B464333001C3FEB /* Build configuration list for PBXNativeTarget "MusubiTests" */;
 			buildPhases = (
-				794733072B46400E001C3FEB /* Sources */,
-				794733082B46400E001C3FEB /* Frameworks */,
-				794733092B46400E001C3FEB /* Resources */,
+				7947333D2B464333001C3FEB /* Sources */,
+				7947333E2B464333001C3FEB /* Frameworks */,
+				7947333F2B464333001C3FEB /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				7947330D2B46400E001C3FEB /* PBXTargetDependency */,
+				794733432B464333001C3FEB /* PBXTargetDependency */,
 			);
-			name = "musubi-iOSTests";
-			productName = "musubi-iOSTests";
-			productReference = 7947330B2B46400E001C3FEB /* musubi-iOSTests.xctest */;
+			name = MusubiTests;
+			productName = MusubiTests;
+			productReference = 794733412B464333001C3FEB /* MusubiTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		794733142B46400E001C3FEB /* musubi-iOSUITests */ = {
+		7947334A2B464333001C3FEB /* MusubiUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 794733252B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOSUITests" */;
+			buildConfigurationList = 7947335B2B464333001C3FEB /* Build configuration list for PBXNativeTarget "MusubiUITests" */;
 			buildPhases = (
-				794733112B46400E001C3FEB /* Sources */,
-				794733122B46400E001C3FEB /* Frameworks */,
-				794733132B46400E001C3FEB /* Resources */,
+				794733472B464333001C3FEB /* Sources */,
+				794733482B464333001C3FEB /* Frameworks */,
+				794733492B464333001C3FEB /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				794733172B46400E001C3FEB /* PBXTargetDependency */,
+				7947334D2B464333001C3FEB /* PBXTargetDependency */,
 			);
-			name = "musubi-iOSUITests";
-			productName = "musubi-iOSUITests";
-			productReference = 794733152B46400E001C3FEB /* musubi-iOSUITests.xctest */;
+			name = MusubiUITests;
+			productName = MusubiUITests;
+			productReference = 7947334B2B464333001C3FEB /* MusubiUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		794732F32B46400C001C3FEB /* Project object */ = {
+		794733292B464331001C3FEB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1510;
 				LastUpgradeCheck = 1510;
 				TargetAttributes = {
-					794732FA2B46400D001C3FEB = {
+					794733302B464331001C3FEB = {
 						CreatedOnToolsVersion = 15.1;
 					};
-					7947330A2B46400E001C3FEB = {
+					794733402B464333001C3FEB = {
 						CreatedOnToolsVersion = 15.1;
-						TestTargetID = 794732FA2B46400D001C3FEB;
+						TestTargetID = 794733302B464331001C3FEB;
 					};
-					794733142B46400E001C3FEB = {
+					7947334A2B464333001C3FEB = {
 						CreatedOnToolsVersion = 15.1;
-						TestTargetID = 794732FA2B46400D001C3FEB;
+						TestTargetID = 794733302B464331001C3FEB;
 					};
 				};
 			};
-			buildConfigurationList = 794732F62B46400C001C3FEB /* Build configuration list for PBXProject "musubi-iOS" */;
+			buildConfigurationList = 7947332C2B464331001C3FEB /* Build configuration list for PBXProject "Musubi" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -214,36 +214,36 @@
 				en,
 				Base,
 			);
-			mainGroup = 794732F22B46400C001C3FEB;
-			productRefGroup = 794732FC2B46400D001C3FEB /* Products */;
+			mainGroup = 794733282B464331001C3FEB;
+			productRefGroup = 794733322B464331001C3FEB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				794732FA2B46400D001C3FEB /* musubi-iOS */,
-				7947330A2B46400E001C3FEB /* musubi-iOSTests */,
-				794733142B46400E001C3FEB /* musubi-iOSUITests */,
+				794733302B464331001C3FEB /* Musubi */,
+				794733402B464333001C3FEB /* MusubiTests */,
+				7947334A2B464333001C3FEB /* MusubiUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		794732F92B46400D001C3FEB /* Resources */ = {
+		7947332F2B464331001C3FEB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				794733062B46400E001C3FEB /* Preview Assets.xcassets in Resources */,
-				794733032B46400E001C3FEB /* Assets.xcassets in Resources */,
+				7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */,
+				794733392B464333001C3FEB /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733092B46400E001C3FEB /* Resources */ = {
+		7947333F2B464333001C3FEB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733132B46400E001C3FEB /* Resources */ = {
+		794733492B464333001C3FEB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,49 +253,49 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		794732F72B46400D001C3FEB /* Sources */ = {
+		7947332D2B464331001C3FEB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				794733012B46400D001C3FEB /* ContentView.swift in Sources */,
-				794732FF2B46400D001C3FEB /* musubi_iOSApp.swift in Sources */,
+				794733372B464331001C3FEB /* ContentView.swift in Sources */,
+				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733072B46400E001C3FEB /* Sources */ = {
+		7947333D2B464333001C3FEB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				794733102B46400E001C3FEB /* musubi_iOSTests.swift in Sources */,
+				794733462B464333001C3FEB /* MusubiTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		794733112B46400E001C3FEB /* Sources */ = {
+		794733472B464333001C3FEB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7947331A2B46400E001C3FEB /* musubi_iOSUITests.swift in Sources */,
-				7947331C2B46400E001C3FEB /* musubi_iOSUITestsLaunchTests.swift in Sources */,
+				794733502B464333001C3FEB /* MusubiUITests.swift in Sources */,
+				794733522B464333001C3FEB /* MusubiUITestsLaunchTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7947330D2B46400E001C3FEB /* PBXTargetDependency */ = {
+		794733432B464333001C3FEB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 794732FA2B46400D001C3FEB /* musubi-iOS */;
-			targetProxy = 7947330C2B46400E001C3FEB /* PBXContainerItemProxy */;
+			target = 794733302B464331001C3FEB /* Musubi */;
+			targetProxy = 794733422B464333001C3FEB /* PBXContainerItemProxy */;
 		};
-		794733172B46400E001C3FEB /* PBXTargetDependency */ = {
+		7947334D2B464333001C3FEB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 794732FA2B46400D001C3FEB /* musubi-iOS */;
-			targetProxy = 794733162B46400E001C3FEB /* PBXContainerItemProxy */;
+			target = 794733302B464331001C3FEB /* Musubi */;
+			targetProxy = 7947334C2B464333001C3FEB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		7947331D2B46400E001C3FEB /* Debug */ = {
+		794733532B464333001C3FEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -358,7 +358,7 @@
 			};
 			name = Debug;
 		};
-		7947331E2B46400E001C3FEB /* Release */ = {
+		794733542B464333001C3FEB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -414,14 +414,14 @@
 			};
 			name = Release;
 		};
-		794733202B46400E001C3FEB /* Debug */ = {
+		794733562B464333001C3FEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"musubi-iOS/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Musubi/Preview Content\"";
 				DEVELOPMENT_TEAM = 7763V93L7Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -435,7 +435,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOS";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.Musubi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -443,14 +443,14 @@
 			};
 			name = Debug;
 		};
-		794733212B46400E001C3FEB /* Release */ = {
+		794733572B464333001C3FEB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"musubi-iOS/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Musubi/Preview Content\"";
 				DEVELOPMENT_TEAM = 7763V93L7Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -464,7 +464,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOS";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.Musubi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -472,7 +472,7 @@
 			};
 			name = Release;
 		};
-		794733232B46400E001C3FEB /* Debug */ = {
+		794733592B464333001C3FEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -483,16 +483,16 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOSTests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.MusubiTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/musubi-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/musubi-iOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Musubi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Musubi";
 			};
 			name = Debug;
 		};
-		794733242B46400E001C3FEB /* Release */ = {
+		7947335A2B464333001C3FEB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -503,16 +503,16 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOSTests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.MusubiTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/musubi-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/musubi-iOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Musubi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Musubi";
 			};
 			name = Release;
 		};
-		794733262B46400E001C3FEB /* Debug */ = {
+		7947335C2B464333001C3FEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -521,16 +521,16 @@
 				DEVELOPMENT_TEAM = 7763V93L7Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOSUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.MusubiUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "musubi-iOS";
+				TEST_TARGET_NAME = Musubi;
 			};
 			name = Debug;
 		};
-		794733272B46400E001C3FEB /* Release */ = {
+		7947335D2B464333001C3FEB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -539,55 +539,55 @@
 				DEVELOPMENT_TEAM = 7763V93L7Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.springwell.musubi-iOSUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.MusubiUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "musubi-iOS";
+				TEST_TARGET_NAME = Musubi;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		794732F62B46400C001C3FEB /* Build configuration list for PBXProject "musubi-iOS" */ = {
+		7947332C2B464331001C3FEB /* Build configuration list for PBXProject "Musubi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7947331D2B46400E001C3FEB /* Debug */,
-				7947331E2B46400E001C3FEB /* Release */,
+				794733532B464333001C3FEB /* Debug */,
+				794733542B464333001C3FEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7947331F2B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOS" */ = {
+		794733552B464333001C3FEB /* Build configuration list for PBXNativeTarget "Musubi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				794733202B46400E001C3FEB /* Debug */,
-				794733212B46400E001C3FEB /* Release */,
+				794733562B464333001C3FEB /* Debug */,
+				794733572B464333001C3FEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		794733222B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOSTests" */ = {
+		794733582B464333001C3FEB /* Build configuration list for PBXNativeTarget "MusubiTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				794733232B46400E001C3FEB /* Debug */,
-				794733242B46400E001C3FEB /* Release */,
+				794733592B464333001C3FEB /* Debug */,
+				7947335A2B464333001C3FEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		794733252B46400E001C3FEB /* Build configuration list for PBXNativeTarget "musubi-iOSUITests" */ = {
+		7947335B2B464333001C3FEB /* Build configuration list for PBXNativeTarget "MusubiUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				794733262B46400E001C3FEB /* Debug */,
-				794733272B46400E001C3FEB /* Release */,
+				7947335C2B464333001C3FEB /* Debug */,
+				7947335D2B464333001C3FEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 794732F32B46400C001C3FEB /* Project object */;
+	rootObject = 794733292B464331001C3FEB /* Project object */;
 }

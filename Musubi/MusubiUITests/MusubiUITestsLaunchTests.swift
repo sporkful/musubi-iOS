@@ -1,8 +1,8 @@
-// musubi_iOSUITestsLaunchTests.swift
+// MusubiUITestsLaunchTests.swift
 
 import XCTest
 
-final class musubi_iOSUITestsLaunchTests: XCTestCase {
+final class MusubiUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

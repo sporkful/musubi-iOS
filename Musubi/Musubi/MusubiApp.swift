@@ -1,9 +1,9 @@
-// musubi_iOSApp.swift
+// MusubiApp.swift
 
 import SwiftUI
 
 @main
-struct musubi_iOSApp: App {
+struct MusubiApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
