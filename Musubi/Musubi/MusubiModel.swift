@@ -1,24 +1,17 @@
 // MusubiModel.swift
 
 import Foundation
-import CryptoKit
 
 extension Musubi.Model {
-    typealias HashPointer = String
+    typealias HashPointer = Musubi.HashPointer
     
-    static func cryptoHash<T: Encodable>(content: T) throws -> HashPointer {
-        return SHA256.hash(data: try JSONEncoder().encode(content))
-            .compactMap { String(format: "%02x", $0) }
-            .joined()
-    }
-}
-
-extension Musubi.Model {
-    struct Playlist {
-        let id: Spotify.ID
-        let name: String
-        let description: String
-        let items: [Spotify.ID]
+    struct Repository: Codable {
+        let playlistID: Spotify.ID
+        
+        // commit pointers
+        let head: HashPointer  // only one local head since branches are merged upon discovery.
+        let latestHubSync: HashPointer
+        let latestSpotifySync: HashPointer
     }
     
     // Hashable conformance here is only for SwiftUI List materialization,
@@ -27,6 +20,8 @@ extension Musubi.Model {
         let authorID: Spotify.ID
         let date: Date
         let message: String
+        let nonce: UInt64
+        
         let parentCommits: [HashPointer]
         
         // content pointers
@@ -35,10 +30,10 @@ extension Musubi.Model {
         let playlistItemsHash: HashPointer
     }
     
-    struct Repository: Codable {
-        let playlistID: Spotify.ID
-        let initialCommit: HashPointer
-        let headCommits: Set<HashPointer>
-        let latestSpotifySyncCommit: HashPointer
+    struct Playlist {
+        let id: Spotify.ID
+        let name: String
+        let description: String
+        let items: [Spotify.ID]
     }
 }

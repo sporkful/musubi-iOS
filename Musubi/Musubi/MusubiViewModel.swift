@@ -3,6 +3,9 @@
 import Foundation
 
 extension Musubi.ViewModel {
+    typealias Repository = Musubi.Model.Repository
+    typealias Commit = Musubi.Model.Commit
+    
     struct Playlist: Identifiable {
         let id: Spotify.ID
         var name: String
@@ -45,7 +48,4 @@ extension Musubi.ViewModel {
             )
         }
     }
-    
-    typealias Commit = Musubi.Model.Commit
-    typealias Repository = Musubi.Model.Repository
 }
