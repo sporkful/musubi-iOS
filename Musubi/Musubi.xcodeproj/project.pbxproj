@@ -20,6 +20,8 @@
 		794733722B469C01001C3FEB /* Cryptography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733712B469C01001C3FEB /* Cryptography.swift */; };
 		794733782B469E11001C3FEB /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733772B469E11001C3FEB /* Storage.swift */; };
 		7947337C2B472754001C3FEB /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947337B2B472754001C3FEB /* Error.swift */; };
+		7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */; };
+		794733802B493341001C3FEB /* SpotifyAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947337F2B493341001C3FEB /* SpotifyAuth.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +58,8 @@
 		794733712B469C01001C3FEB /* Cryptography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cryptography.swift; sourceTree = "<group>"; };
 		794733772B469E11001C3FEB /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		7947337B2B472754001C3FEB /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
+		7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotSoSecretSecrets.swift; sourceTree = "<group>"; };
+		7947337F2B493341001C3FEB /* SpotifyAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyAuth.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +159,8 @@
 			isa = PBXGroup;
 			children = (
 				7947336C2B46566F001C3FEB /* SpotifyModel.swift */,
+				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
+				7947337F2B493341001C3FEB /* SpotifyAuth.swift */,
 			);
 			path = SpotifyWebClient;
 			sourceTree = "<group>";
@@ -301,9 +307,11 @@
 			files = (
 				7947336D2B46566F001C3FEB /* SpotifyModel.swift in Sources */,
 				794733782B469E11001C3FEB /* Storage.swift in Sources */,
+				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,
 				794733372B464331001C3FEB /* ContentView.swift in Sources */,
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
+				794733802B493341001C3FEB /* SpotifyAuth.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
@@ -483,7 +491,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.Musubi;
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwellmusic.Musubi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -512,7 +520,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.springwell.Musubi;
+				PRODUCT_BUNDLE_IDENTIFIER = com.springwellmusic.Musubi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
