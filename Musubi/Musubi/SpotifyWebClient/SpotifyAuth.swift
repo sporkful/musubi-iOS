@@ -2,7 +2,6 @@
 
 import Foundation
 
-// MARK: configuration
 extension Spotify.Constants {
     static let AUTH_REDIRECT_URI = "https://musubi-iOS.com"
     static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
@@ -30,24 +29,17 @@ extension Spotify.Constants {
     ]
 }
 
-// MARK: convenience
-extension Spotify.Constants {
-    static var ACCESS_SCOPES_STR: String {
-        ACCESS_SCOPES.joined(separator: "%20")
+extension Spotify {
+    private static func getToken(queryItems: [URLQueryItem]) async throws {
+        var request = URLRequest(url: URL(string: "https://accounts.spotify.com/api/token")!)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
+
+        var components = URLComponents()
+        components.queryItems = queryItems
+        request.httpBody = components.query?.data(using: .utf8)
+        
+        // TODO: finish
     }
-    static var AUTH_PAGE_URL: URL {
-        URL(
-            string: """
-               https://accounts.spotify.com/authorize\
-               ?response_type=code\
-               &client_id=\(API_CLIENT_ID)\
-               &scope=\(ACCESS_SCOPES_STR)\
-               &redirect_uri=\(AUTH_REDIRECT_URI)\
-               &show_dialog=TRUE
-               """
-        )!
-    }
-    static var TOKEN_REQUEST_URL: URL {
-        URL(string: "https://accounts.spotify.com/api/token")!
-    }
+    
 }
