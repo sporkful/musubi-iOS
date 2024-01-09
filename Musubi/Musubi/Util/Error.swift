@@ -6,11 +6,13 @@ extension Musubi {
     enum StorageError: LocalizedError {
         case local(detail: String)
         case remote(detail: String)
+        case keychain(detail: String)
 
         var errorDescription: String? {
             let description = switch self {
                 case let .local(detail): "(local) \(detail)"
                 case let .remote(detail): "(remote) \(detail)"
+                case let .keychain(detail): "(keychain) \(detail)"
             }
             return "[Musubi::Storage] \(description)"
         }
