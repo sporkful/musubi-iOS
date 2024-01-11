@@ -18,7 +18,7 @@ extension Musubi {
     
     private static let pkceVerifierLength = 128
     
-    static func pkceVerifier() throws -> String {
+    static func newPKCEVerifier() -> String {
         // This is cryptographically secure on iOS devices.
         // https://forums.swift.org/t/random-data-uint8-random-or-secrandomcopybytes/56165/12
         var srng = SystemRandomNumberGenerator()
@@ -34,7 +34,7 @@ extension Musubi {
 //        return encodeBase64URL(bytes: randomBytes)
     }
     
-    static func pkceChallenge(pkceVerifier: String) throws -> String {
+    static func newPKCEChallenge(pkceVerifier: String) throws -> String {
         guard let pkceVerifier = pkceVerifier.data(using: .ascii) else {
             throw CryptoError.pkce(detail: "failed to generate challenge")
         }

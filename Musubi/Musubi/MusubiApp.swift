@@ -6,7 +6,8 @@ import SwiftUI
 struct MusubiApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
+                .preferredColorScheme(.dark)
         }
     }
 }

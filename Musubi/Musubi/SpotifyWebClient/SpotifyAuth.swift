@@ -32,7 +32,7 @@ extension Spotify.Constants {
 }
 
 extension Spotify {
-    static func createAuthRequest(pkceChallenge: String) throws -> URLRequest {
+    static func createAuthRequest(pkceChallenge: String) -> URLRequest {
         var request = URLRequest(url: URL(string: "https://accounts.spotify.com/authorize")!)
         request.httpMethod = "GET"
 //        request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
@@ -111,6 +111,15 @@ extension Spotify {
         components.queryItems = queryItems
         request.httpBody = components.query?.data(using: .utf8)
         
+        let (data, response) = try await URLSession.shared.data(for: request)
         
+        // TODO: consider showing auth webview if old access token given for refreshing was expired
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw Spotify.AuthError.any(detail: "unable to interpret response to requestToken")
+        }
+        guard (httpResponse.statusCode == 200) else {
+            throw Spotify.AuthError.any(detail: "requestToken errored: \(httpResponse.statusCode)")
+        }
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
     }
 }

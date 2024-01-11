@@ -45,30 +45,33 @@ extension Spotify {
     }
 }
 
-//extension Musubi {
-//    private enum CommonSuggestedFix {
-//        case reopen, reinstall
-//        
-//        var text: String {
-//            switch self {
-//            case .reinstall:
-//                return "deleting and re-installing the app"
-//            case .reopen:
-//                return "quitting and re-opening the app"
-//            }
-//        }
-//    }
-//    
-//    private static func longMessage(suggestedFix: CommonSuggestedFix) -> String {
-//        return longMessage(suggestedFix: suggestedFix.text)
-//    }
-//    
-//    private static func longMessage(suggestedFix: String) -> String {
-//    """
-//    Apologies for the inconvenience! \
-//    We're still working out the kinks in this early release. \
-//    Please try \(suggestedFix), \
-//    and let us know if the issue persists!
-//    """
-//    }
-//}
+extension Musubi {
+    enum ErrorSuggestedFix {
+        case reopen, reinstall, none
+        
+        var text: String {
+            switch self {
+            case .reinstall:
+                return "Please try deleting and re-installing the Musubi app."
+            case .reopen:
+                return "Please try quitting and re-opening the Musubi app."
+            case .none:
+                return ""
+            }
+        }
+    }
+    
+    static func errorAlertMessage(suggestedFix: ErrorSuggestedFix) -> String {
+        return errorAlertMessage(suggestedFix: suggestedFix.text)
+    }
+    
+    static func errorAlertMessage(suggestedFix: String) -> String {
+        """
+        Apologies for the inconvenience! \
+        We're still working out the kinks in this early release. \
+        \(suggestedFix) \
+        If the same error keeps popping up, please let us know so we can fix it!
+        We appreciate your patience :)
+        """
+    }
+}
