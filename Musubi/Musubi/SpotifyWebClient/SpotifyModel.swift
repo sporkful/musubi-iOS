@@ -5,7 +5,7 @@ import Foundation
 extension Spotify {
     typealias ID = String
     
-    struct AuthResponse: Codable {
+    struct OAuthResponse: Codable {
         let access_token: String
         let expires_in: Int
         let refresh_token: String?
@@ -13,7 +13,7 @@ extension Spotify {
         let token_type: String
     }
     
-    struct CurrentUser: Codable {
+    struct CurrentUser: Codable, Identifiable {
         let country: String
         let display_name: String
         let explicit_content: [String: Bool]
@@ -23,7 +23,7 @@ extension Spotify {
         let product: String
     }
     
-    struct OtherUser: Codable {
+    struct OtherUser: Codable, Identifiable {
         let display_name: String
         let external_urls: [String: String]
         let id: String

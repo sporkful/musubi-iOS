@@ -30,6 +30,17 @@ extension Musubi {
             return "[Musubi::Cryptography] \(description)"
         }
     }
+    
+    enum DeveloperError: LocalizedError {
+        case any(detail: String)
+        
+        var errorDescription: String? {
+            let description = switch self {
+                case let .any(detail): "\(detail)"
+            }
+            return "[MUSUBI DEV ERROR] \(description)"
+        }
+    }
 }
 
 extension Spotify {
@@ -43,35 +54,51 @@ extension Spotify {
             return "[SpotifyWebClient::Auth] \(description)"
         }
     }
+    
+    enum RequestError: LocalizedError {
+        case creation(detail: String)
+        case response(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .creation(detail): "(creation) \(detail)"
+                case let .response(detail): "(response) \(detail)"
+            }
+            return "[SpotifyWebClient::Request] \(description)"
+        }
+    }
 }
 
 extension Musubi {
-    enum ErrorSuggestedFix {
-        case reopen, reinstall, none
+    struct ErrorMessage {
+        private let suggestedFix: SuggestedFix
+        
+        init(suggestedFix: SuggestedFix) {
+            self.suggestedFix = suggestedFix
+        }
         
         var text: String {
-            switch self {
-            case .reinstall:
-                return "Please try deleting and re-installing the Musubi app."
-            case .reopen:
-                return "Please try quitting and re-opening the Musubi app."
-            case .none:
-                return ""
+            """
+            Apologies for the inconvenience! \
+            We're still working out the kinks in this early release of Musubi. \
+            Please try again. \
+            \
+            If the same error keeps popping up, \(suggestedFix) \
+            We appreciate your patience and feedback - it helps us improve your future experience :)
+            """
+        }
+        
+        enum SuggestedFix {
+            case reopen, relogin, reinstall, none
+            
+            var text: String {
+                return switch self {
+                    case .reopen: "try quitting and re-opening the Musubi app."
+                    case .relogin: "try logging out and logging back in."
+                    case .reinstall: "try deleting and re-installing the Musubi app."
+                    case .none: "please let us know so we can fix it."
+                }
             }
         }
-    }
-    
-    static func errorAlertMessage(suggestedFix: ErrorSuggestedFix) -> String {
-        return errorAlertMessage(suggestedFix: suggestedFix.text)
-    }
-    
-    static func errorAlertMessage(suggestedFix: String) -> String {
-        """
-        Apologies for the inconvenience! \
-        We're still working out the kinks in this early release. \
-        \(suggestedFix) \
-        If the same error keeps popping up, please let us know so we can fix it!
-        We appreciate your patience :)
-        """
     }
 }

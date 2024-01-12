@@ -2,8 +2,8 @@
 
 import Foundation
 
-// TODO: a lot of repetition of userID, maybe make these all instance methods as part of a context
-// (instantiated at sign-in time) instead of independent static methods?
+// TODO: a lot of repetition of userID, maybe wrap these static functions as methods of the user
+// instance / view model?
 
 // namespaces
 extension Musubi {
