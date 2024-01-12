@@ -13,7 +13,7 @@ extension Spotify {
         let token_type: String
     }
     
-    struct CurrentUser: Codable, Identifiable {
+    struct LoggedInUser: Codable, Identifiable {
         let country: String
         let display_name: String
         let explicit_content: [String: Bool]

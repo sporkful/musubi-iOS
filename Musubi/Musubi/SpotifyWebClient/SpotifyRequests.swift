@@ -1,9 +1,9 @@
-// SpotifyRequest.swift
+// SpotifyRequests.swift
 
 import Foundation
 
-extension Spotify {
-    enum HTTPMethod: String {
+extension SpotifyWebClient {
+    private enum HTTPMethod: String {
         case GET, PUT, POST, DELETE
     }
     
@@ -15,7 +15,7 @@ extension Spotify {
         setContentTypeJSON: Bool = false
     ) throws -> URLRequest {
         guard path.first == "/" else {
-            throw RequestError.creation(detail: "given request path is invalid")
+            throw Spotify.RequestError.creation(detail: "given request path is invalid")
         }
         
         var components = URLComponents()
@@ -24,7 +24,7 @@ extension Spotify {
         components.path = "/v1" + path
         components.queryItems = queryItems
         guard let url = components.url else {
-            throw RequestError.creation(detail: "failed to create valid request URL")
+            throw Spotify.RequestError.creation(detail: "failed to create valid request URL")
         }
         
         return try createRequest(
@@ -53,4 +53,3 @@ extension Spotify {
         return request
     }
 }
-
