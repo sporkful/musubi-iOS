@@ -13,10 +13,17 @@ extension Musubi {
         struct Keychain {
             private init() {}
         }
+        
+        struct Local {
+            private init() {}
+        }
+        
+        struct Remote {
+            private init() {}
+        }
     }
 }
 
-// MARK: iOS keychain
 extension Musubi.Storage.Keychain {
     enum KeyName: String {
         case oauthToken, oauthRefreshToken, oauthExpirationDate
@@ -102,99 +109,72 @@ extension Musubi.Storage.Keychain {
     }
 }
 
-// MARK: general storage
-extension Musubi.Storage {
+extension Musubi.Storage.Local {
+    // Hierarchy: `baseDir/userID/{repos or commits or stage}/objectID`
+    private static let baseDirURL = URL.libraryDirectory.appending(
+        path: "MusubiLocalStorage",
+        directoryHint: .isDirectory
+    )
+    private static let reposDirName = "repos"
+    private static let commitsDirName = "commits"
+    private static let stageDirName = "stage"
+    
+    private static func objectURL<T>(
+        type: T.Type,
+        objectID: String,
+        userID: Spotify.ID
+    ) throws -> URL {
+        let dirName = switch type {
+            case is Musubi.Model.Repository.Type: reposDirName
+            case is Musubi.Model.Commit.Type: commitsDirName
+            case is Musubi.Model.Playlist.Type: stageDirName
+            default:
+                throw Musubi.StorageError.local(detail: "objectURL - unrecognized object type")
+        }
+        return baseDirURL
+            .appending(path: userID, directoryHint: .isDirectory)
+            .appending(path: dirName, directoryHint: .isDirectory)
+            .appending(path: objectID, directoryHint: .notDirectory)
+    }
+    
     static func save<T: Codable>(object: T, objectID: String, userID: Spotify.ID) throws {
-        try LocalStorage.save(object: object, objectID: objectID, userID: userID)
-        // TODO: remote save
-        // TODO: make atomic?
+        let objectData = try JSONEncoder().encode(object)
+        try objectData.write(
+            to: objectURL(type: T.self, objectID: objectID, userID: userID),
+            options: .atomic
+        )
     }
     
     static func retrieve<T: Codable>(objectID: String, userID: Spotify.ID) throws -> T {
-        return try LocalStorage.retrieve(objectID: objectID, userID: userID)
-        // TODO: if local retrieve fails, try remote retrieve
+        return try JSONDecoder().decode(
+            T.self,
+            from: Data(contentsOf: objectURL(type: T.self, objectID: objectID, userID: userID))
+        )
     }
     
-    // should only be called once, when this device is first signed into a new Spotify account.
-    static func createNewStorage(userID: Spotify.ID) throws {
-        try LocalStorage.createDirs(userID: userID)
-        // TODO: create remote storage
-    }
-}
-
-extension Musubi.Storage {
-    private struct LocalStorage {
-        private init() {}
-        
-        // template = "baseDir/userID/{repos or commits or stage}/objectID
-        private static let baseDirURL = URL.libraryDirectory.appending(
-            path: "MusubiLocalStorage",
-            directoryHint: .isDirectory
+    static func createDirs(userID: Spotify.ID) throws {
+        try FileManager.default.createDirectory(
+            at: baseDirURL,
+            withIntermediateDirectories: false
         )
-        private static let reposDirName = "repos"
-        private static let commitsDirName = "commits"
-        private static let stageDirName = "stage"
-        
-        private static func objectURL<T>(
-            type: T.Type,
-            objectID: String,
-            userID: Spotify.ID
-        ) throws -> URL {
-            let dirName = switch type {
-                case is Musubi.Model.Repository.Type: reposDirName
-                case is Musubi.Model.Commit.Type: commitsDirName
-                case is Musubi.Model.Playlist.Type: stageDirName
-                default:
-                    throw Musubi.StorageError.local(detail: "objectURL - unrecognized object type")
-            }
-            return baseDirURL
-                .appending(path: userID, directoryHint: .isDirectory)
-                .appending(path: dirName, directoryHint: .isDirectory)
-                .appending(path: objectID, directoryHint: .notDirectory)
-        }
-        
-        static func save<T: Codable>(object: T, objectID: String, userID: Spotify.ID) throws {
-            let objectData = try JSONEncoder().encode(object)
-            try objectData.write(
-                to: LocalStorage.objectURL(type: T.self, objectID: objectID, userID: userID),
-                options: .atomic
-            )
-        }
-        
-        static func retrieve<T: Codable>(objectID: String, userID: Spotify.ID) throws -> T {
-            return try JSONDecoder().decode(
-                T.self,
-                from: Data(contentsOf: objectURL(type: T.self, objectID: objectID, userID: userID))
-            )
-        }
-        
-        static func createDirs(userID: Spotify.ID) throws {
-            try FileManager.default.createDirectory(
-                at: baseDirURL,
-                withIntermediateDirectories: false
-            )
-            try FileManager.default.createDirectory(
-                at: baseDirURL.appending(path: userID),
-                withIntermediateDirectories: false
-            )
-            try FileManager.default.createDirectory(
-                at: baseDirURL.appending(path: userID).appending(path: reposDirName),
-                withIntermediateDirectories: false
-            )
-            try FileManager.default.createDirectory(
-                at: baseDirURL.appending(path: userID).appending(path: commitsDirName),
-                withIntermediateDirectories: false
-            )
-            try FileManager.default.createDirectory(
-                at: baseDirURL.appending(path: userID).appending(path: stageDirName),
-                withIntermediateDirectories: false
-            )
-        }
+        try FileManager.default.createDirectory(
+            at: baseDirURL.appending(path: userID),
+            withIntermediateDirectories: false
+        )
+        try FileManager.default.createDirectory(
+            at: baseDirURL.appending(path: userID).appending(path: reposDirName),
+            withIntermediateDirectories: false
+        )
+        try FileManager.default.createDirectory(
+            at: baseDirURL.appending(path: userID).appending(path: commitsDirName),
+            withIntermediateDirectories: false
+        )
+        try FileManager.default.createDirectory(
+            at: baseDirURL.appending(path: userID).appending(path: stageDirName),
+            withIntermediateDirectories: false
+        )
     }
 }
 
-extension Musubi {
-    private struct RemoteStorage {
-        private init() {}
-    }
+extension Musubi.Storage.Remote {
 }
