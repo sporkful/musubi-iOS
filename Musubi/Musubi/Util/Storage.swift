@@ -25,27 +25,37 @@ extension Musubi {
 }
 
 extension Musubi.Storage.Keychain {
-    enum KeyName: String {
-        case oauthToken, oauthRefreshToken, oauthExpirationDate
+    struct KeyIdentifier {
+        let string: String
         
-        var fullIdentifier: Data {
-            "com.musubi-app.keys.\(self.rawValue)".data(using: .utf8)!
+        init(keyName: KeyName) {
+            self.string = "com.musubi-app.keys.\(keyName.rawValue)"
+        }
+        
+        // TODO: support multiple users?
+        // complicated by fact that we don't get user id until after successful oauth login
+//        init(keyName: KeyName, userID: Spotify.ID) {
+//            self.string = "com.musubi-app.keys.\(userID).\(keyName.rawValue)"
+//        }
+        
+        enum KeyName: String {
+            case oauthToken, oauthRefreshToken, oauthExpirationDate
         }
     }
     
-    static func save(keyName: KeyName, value: Data) throws {
+    static func save(keyIdentifier: KeyIdentifier, value: Data) throws {
         do {
-            try update(keyName: keyName, value: value)
+            try update(keyIdentifier: keyIdentifier, value: value)
         } catch Musubi.StorageError.keychain {
-            try insert(keyName: keyName, value: value)
+            try insert(keyIdentifier: keyIdentifier, value: value)
         }
     }
     
-    static func retrieve(keyName: KeyName) throws -> Data {
+    static func retrieve(keyIdentifier: KeyIdentifier) throws -> Data {
         let query = [
             kSecClass: kSecClassGenericPassword,
 //            kSecAttrService: service,
-            kSecAttrAccount: keyName.fullIdentifier,
+            kSecAttrAccount: keyIdentifier.string,
             kSecMatchLimit: kSecMatchLimitOne,
             kSecReturnData: true
         ] as CFDictionary
@@ -53,29 +63,29 @@ extension Musubi.Storage.Keychain {
         var result: AnyObject?
         let status = SecItemCopyMatching(query, &result)
         guard status == errSecSuccess else {
-            throw Musubi.StorageError.keychain(detail: "failed to retrieve \(keyName.rawValue)")
+            throw Musubi.StorageError.keychain(detail: "failed to retrieve \(keyIdentifier.string)")
         }
         return result as! Data
     }
     
-    static func delete(keyName: KeyName) throws {
+    static func delete(keyIdentifier: KeyIdentifier) throws {
         let query = [
             kSecClass: kSecClassGenericPassword,
 //            kSecAttrService: service,
-            kSecAttrAccount: keyName.fullIdentifier
+            kSecAttrAccount: keyIdentifier.string
         ] as CFDictionary
 
         let status = SecItemDelete(query)
         guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw Musubi.StorageError.keychain(detail: "failed to delete \(keyName.rawValue)")
+            throw Musubi.StorageError.keychain(detail: "failed to delete \(keyIdentifier.string)")
         }
     }
     
-    private static func insert(keyName: KeyName, value: Data) throws {
+    private static func insert(keyIdentifier: KeyIdentifier, value: Data) throws {
         let attributes = [
             kSecClass: kSecClassGenericPassword,
 //            kSecAttrService: service,
-            kSecAttrAccount: keyName.fullIdentifier,
+            kSecAttrAccount: keyIdentifier.string,
             kSecValueData: value
         ] as CFDictionary
 
@@ -84,15 +94,15 @@ extension Musubi.Storage.Keychain {
 //            if status == errSecDuplicateItem {
 //                throw Musubi.StorageError.keychain(detail: "\(keyName.rawValue) already exists")
 //            }
-            throw Musubi.StorageError.keychain(detail: "failed to insert \(keyName.rawValue)")
+            throw Musubi.StorageError.keychain(detail: "failed to insert \(keyIdentifier.string)")
         }
     }
     
-    private static func update(keyName: KeyName, value: Data) throws {
+    private static func update(keyIdentifier: KeyIdentifier, value: Data) throws {
         let query = [
             kSecClass: kSecClassGenericPassword,
 //            kSecAttrService: service,
-            kSecAttrAccount: keyName.fullIdentifier
+            kSecAttrAccount: keyIdentifier.string
         ] as CFDictionary
 
         let attributes = [
@@ -104,7 +114,7 @@ extension Musubi.Storage.Keychain {
 //            if status == errSecItemNotFound {
 //                throw Musubi.StorageError.keychain(detail: "update nonexistent \(keyName.rawValue)")
 //            }
-            throw Musubi.StorageError.keychain(detail: "failed to update \(keyName.rawValue)")
+            throw Musubi.StorageError.keychain(detail: "failed to update \(keyIdentifier.string)")
         }
     }
 }

@@ -4,13 +4,13 @@ import SwiftUI
 import WebKit
 
 struct LoginView: View {
-    @Environment(SpotifyWebClient.self) private var spotifyWebClient
+    @Environment(Musubi.UserManager.self) private var userManager
     
     @State var showSheetWebLogin = false
     @State var showAlertLoginError = false
     
     var body: some View {
-        @Bindable var spotifyWebClient = spotifyWebClient
+        @Bindable var userManager = userManager
         
         VStack {
             Spacer()
@@ -47,7 +47,8 @@ struct LoginView: View {
             actions: {},
             message: { Text(Musubi.ErrorMessage(suggestedFix: .reopen).text) }
         )
-        .fullScreenCover(item: $spotifyWebClient.loggedInUser) { loggedInUser in
+        .fullScreenCover(item: $userManager.loggedInUser) { _ in
+            Text(userManager.loggedInUser?.display_name ?? "errored")
             // TODO: create a new view model instance passing in this (immutable) loggedInUser
             // TODO: create HomeView with above view model as environment object
         }
@@ -55,7 +56,7 @@ struct LoginView: View {
 }
 
 struct SpotifyLoginWebView: UIViewRepresentable {
-    @Environment(SpotifyWebClient.self) private var spotifyWebClient
+    @Environment(Musubi.UserManager.self) private var userManager
     
     @Binding var showSheetWebLogin: Bool
     @Binding var showAlertLoginError: Bool
@@ -72,7 +73,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         }
         
         self.webView.navigationDelegate = context.coordinator
-        self.webView.load(spotifyWebClient.createWebLoginRequest(pkceChallenge: pkceChallenge))
+        self.webView.load(Spotify.createWebLoginRequest(pkceChallenge: pkceChallenge))
         return self.webView
     }
 
@@ -82,7 +83,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     
     func makeCoordinator() -> SpotifyLoginWebView.Coordinator {
         Coordinator(
-            spotifyWebClient: spotifyWebClient,
+            userManager: userManager,
             showSheetWebLogin: $showSheetWebLogin,
             showAlertLoginError: $showAlertLoginError,
             pkceVerifier: pkceVerifier
@@ -90,7 +91,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
-        private var spotifyWebClient: SpotifyWebClient
+        private var userManager: Musubi.UserManager
         
         @Binding private var showSheetWebLogin: Bool
         @Binding private var showAlertLoginError: Bool
@@ -98,23 +99,25 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         private let pkceVerifier: String
         
         init(
-            spotifyWebClient: SpotifyWebClient,
+            userManager: Musubi.UserManager,
             showSheetWebLogin: Binding<Bool>,
             showAlertLoginError: Binding<Bool>,
             pkceVerifier: String
         ) {
-            self.spotifyWebClient = spotifyWebClient
+            self.userManager = userManager
             _showSheetWebLogin = showSheetWebLogin
             _showAlertLoginError = showAlertLoginError
             self.pkceVerifier = pkceVerifier
         }
         
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+//        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
             Task {
                 do {
-                    try await spotifyWebClient.handleNewLogin(
+                    try await Spotify.handleNewLogin(
                         oauthRedirectedURL: webView.url,
-                        pkceVerifier: pkceVerifier
+                        pkceVerifier: pkceVerifier,
+                        userManager: userManager
                     )
                 } catch {
                     showAlertLoginError = true

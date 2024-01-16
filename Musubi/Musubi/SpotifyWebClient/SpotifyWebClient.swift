@@ -2,37 +2,40 @@
 
 import Foundation
 
-@Observable
-class SpotifyWebClient {
-    var loggedInUser: Spotify.LoggedInUser?
-    
+extension Spotify {
     @MainActor
-    func logOut() {
-        self.clearOAuthCache()
-        self.loggedInUser = nil
+    static func logOut(userManager: Musubi.UserManager) {
+        clearOAuthCache()
+        userManager.loggedInUser = nil
     }
     
-    func createWebLoginRequest(pkceChallenge: String) -> URLRequest {
+    static func createWebLoginRequest(pkceChallenge: String) -> URLRequest {
         var request = URLRequest(url: URL(string: "https://accounts.spotify.com/authorize")!)
         request.httpMethod = "GET"
 //        request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
 
         var components = URLComponents()
         components.queryItems = [
-            URLQueryItem(name: "client_id", value: SpotifyWebClient.API_CLIENT_ID),
+            URLQueryItem(name: "client_id", value: Constants.API_CLIENT_ID),
             URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "redirect_uri", value: SpotifyWebClient.OAUTH_DUMMY_REDIRECT_URI),
+            URLQueryItem(name: "redirect_uri", value: Constants.OAUTH_DUMMY_REDIRECT_URI),
 //            URLQueryItem(name: "state", value: ),
-            URLQueryItem(name: "scope", value: SpotifyWebClient.ACCESS_SCOPES_STR),
+            URLQueryItem(name: "scope", value: Constants.ACCESS_SCOPES_STR),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "code_challenge", value: pkceChallenge),
+//            URLQueryItem(name: "show_dialog", value: "TRUE"),
         ]
         request.httpBody = components.query?.data(using: .utf8)
         
         return request
     }
     
-    func handleNewLogin(oauthRedirectedURL: URL?, pkceVerifier: String) async throws {
+    @MainActor
+    static func handleNewLogin(
+        oauthRedirectedURL: URL?,
+        pkceVerifier: String,
+        userManager: Musubi.UserManager
+    ) async throws {
         guard let oauthRedirectedURL = oauthRedirectedURL
         else {
             throw Spotify.AuthError.any(detail: "failed to obtain oauth-redirected URL")
@@ -45,62 +48,81 @@ class SpotifyWebClient {
             throw Spotify.AuthError.any(detail: "oauth-redirected URL did not contain auth code")
         }
         
-        try await fetchOAuthToken(authCode: authCode, pkceVerifier: pkceVerifier)
+        try await fetchOAuthToken(
+            authCode: authCode,
+            pkceVerifier: pkceVerifier,
+            userManager: userManager
+        )
         
         var currentUserRequest = URLRequest(url: URL(string: "https://api.spotify.com/v1/me")!)
         currentUserRequest.httpMethod = "GET"
-        let data = try await makeAuthenticatedRequest(request: &currentUserRequest)
+        let data = try await makeAuthenticatedRequest(
+            request: &currentUserRequest,
+            userManager: userManager
+        )
         
-        self.loggedInUser = try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
+        userManager.loggedInUser = try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
     }
     
-    func makeAuthenticatedRequest(request: inout URLRequest) async throws -> Data {
-        try await refreshOAuthToken()
-        request.setValue("Bearer \(retrieveOAuthToken())", forHTTPHeaderField: "Authorization")
+    static func makeAuthenticatedRequest(
+        request: inout URLRequest,
+        userManager: Musubi.UserManager
+    ) async throws -> Data {
+        try await refreshOAuthToken(userManager: userManager)
+        request.setValue(
+            "Bearer \(retrieveOAuthToken(userManager: userManager))",
+            forHTTPHeaderField: "Authorization"
+        )
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw Spotify.RequestError.response(detail: "unable to parse response as HTTP")
         }
-        guard SpotifyWebClient.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
+        guard Constants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
             // TODO: auto log out on error code 401?
             throw Spotify.RequestError.response(detail: "failed - \(httpResponse.statusCode)")
         }
         return data
     }
     
-    private func fetchOAuthToken(authCode: String, pkceVerifier: String) async throws {
+    private static func fetchOAuthToken(
+        authCode: String,
+        pkceVerifier: String,
+        userManager: Musubi.UserManager
+    ) async throws {
         let response = try await requestOAuthToken(
             queryItems: [
                 URLQueryItem(name: "grant_type", value: "authorization_code"),
                 URLQueryItem(name: "code", value: authCode),
-                URLQueryItem(name: "redirect_uri", value: SpotifyWebClient.OAUTH_DUMMY_REDIRECT_URI),
-                URLQueryItem(name: "client_id", value: SpotifyWebClient.API_CLIENT_ID),
+                URLQueryItem(name: "redirect_uri", value: Constants.OAUTH_DUMMY_REDIRECT_URI),
+                URLQueryItem(name: "client_id", value: Constants.API_CLIENT_ID),
                 URLQueryItem(name: "code_verifier", value: pkceVerifier),
             ]
         )
         
-        cacheOAuth(response: response)
+        cacheOAuthToken(response: response, userManager: userManager)
     }
     
-    private func refreshOAuthToken() async throws {
-        if Date.now.addingTimeInterval(SpotifyWebClient.TOKEN_EXPIRATION_BUFFER) < retrieveOAuthExpirationDate() {
+    private static func refreshOAuthToken(userManager: Musubi.UserManager) async throws {
+        let expirationDate = retrieveOAuthExpirationDate(userManager: userManager)
+        if Date.now.addingTimeInterval(Constants.TOKEN_EXPIRATION_BUFFER) < expirationDate {
             return
         }
         
+        let lastRefreshToken = retrieveOAuthRefreshToken(userManager: userManager)
         let response = try await requestOAuthToken(
             queryItems: [
                 URLQueryItem(name: "grant_type", value: "refresh_token"),
-                URLQueryItem(name: "refresh_token", value: retrieveOAuthRefreshToken()),
-                URLQueryItem(name: "client_id", value: SpotifyWebClient.API_CLIENT_ID),
+                URLQueryItem(name: "refresh_token", value: lastRefreshToken),
+                URLQueryItem(name: "client_id", value: Constants.API_CLIENT_ID),
             ]
         )
         
-        cacheOAuth(response: response)
+        cacheOAuthToken(response: response, userManager: userManager)
     }
     
-    private func requestOAuthToken(queryItems: [URLQueryItem]) async throws -> Spotify.OAuthResponse {
+    private static func requestOAuthToken(queryItems: [URLQueryItem]) async throws -> Spotify.OAuthResponse {
         var request = URLRequest(url: URL(string: "https://accounts.spotify.com/api/token")!)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
@@ -121,25 +143,28 @@ class SpotifyWebClient {
         return try JSONDecoder().decode(Spotify.OAuthResponse.self, from: data)
     }
     
-    private func cacheOAuth(response: Spotify.OAuthResponse) {
-        save(oauthToken: response.access_token)
+    private static func cacheOAuthToken(
+        response: Spotify.OAuthResponse,
+        userManager: Musubi.UserManager
+    ) {
+        save(oauthToken: response.access_token, userManager: userManager)
         if let refresh_token = response.refresh_token {
-            save(oauthRefreshToken: refresh_token)
+            save(oauthRefreshToken: refresh_token, userManager: userManager)
         }
-        save(oauthExpirationDate: Date.now.addingTimeInterval(TimeInterval(response.expires_in)))
+        let newExpirationDate = Date.now.addingTimeInterval(TimeInterval(response.expires_in))
+        save(oauthExpirationDate: newExpirationDate, userManager: userManager)
     }
 }
 
-// MARK: Constants
-extension SpotifyWebClient {
-    private static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
-    private static let OAUTH_DUMMY_REDIRECT_URI = "https://musubi-iOS.com"
+extension Spotify.Constants {
+    fileprivate static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
+    fileprivate static let OAUTH_DUMMY_REDIRECT_URI = "https://musubi-iOS.com"
     
     /// Reference:
     /// https://developer.spotify.com/documentation/web-api/concepts/scopes
     /// As a rule of thumb, Musubi only gives itself write access to things under its version control.
-    private static var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
-    private static let ACCESS_SCOPES = [
+    fileprivate static var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
+    fileprivate static let ACCESS_SCOPES = [
 //        "ugc-image-upload",
         "user-read-playback-state",
         "user-modify-playback-state",
@@ -161,81 +186,84 @@ extension SpotifyWebClient {
     
     /// Reference:
     /// https://developer.spotify.com/documentation/web-api/concepts/api-calls
-    private static let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
+    fileprivate static let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
 }
 
 // MARK: OAuth caching
 // TODO: can we make this more generic / reduce code duplication? (see eof)
 // note we can't make these static funcs since logOut is tied to an instance of SpotifyWebClient
-extension SpotifyWebClient {
-    private func save(oauthToken: String) {
+extension Spotify {
+    private typealias Keychain = Musubi.Storage.Keychain
+    private typealias KeyIdentifier = Keychain.KeyIdentifier
+    
+    private static func save(oauthToken: String, userManager: Musubi.UserManager) {
         do {
-            try Musubi.Storage.Keychain.save(
-                keyName: .oauthToken,
+            try Keychain.save(
+                keyIdentifier: KeyIdentifier(keyName: .oauthToken),
                 value: Data(oauthToken.utf8)
             )
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
         }
     }
     
-    private func save(oauthRefreshToken: String) {
+    private static func save(oauthRefreshToken: String, userManager: Musubi.UserManager) {
         do {
-            try Musubi.Storage.Keychain.save(
-                keyName: .oauthRefreshToken,
+            try Keychain.save(
+                keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken),
                 value: Data(oauthRefreshToken.utf8)
             )
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
         }
     }
     
-    private func save(oauthExpirationDate: Date) {
+    private static func save(oauthExpirationDate: Date, userManager: Musubi.UserManager) {
         do {
             let rawDate = oauthExpirationDate.timeIntervalSince1970
-            try Musubi.Storage.Keychain.save(
-                keyName: .oauthExpirationDate,
+            try Keychain.save(
+                keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate),
                 value: withUnsafeBytes(of: rawDate) { Data($0) }
             )
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
         }
     }
     
-    private func retrieveOAuthToken() -> String {
+    private static func retrieveOAuthToken(userManager: Musubi.UserManager) -> String {
         do {
-            let data = try Musubi.Storage.Keychain.retrieve(keyName: .oauthToken)
+            let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthToken))
             return String(decoding: data, as: UTF8.self)
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
             return ""
         }
     }
     
-    private func retrieveOAuthRefreshToken() -> String {
+    private static func retrieveOAuthRefreshToken(userManager: Musubi.UserManager) -> String {
         do {
-            let data = try Musubi.Storage.Keychain.retrieve(keyName: .oauthRefreshToken)
+            let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken))
             return String(decoding: data, as: UTF8.self)
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
             return ""
         }
     }
     
-    private func retrieveOAuthExpirationDate() -> Date {
+    private static func retrieveOAuthExpirationDate(userManager: Musubi.UserManager) -> Date {
         do {
-            let data = try Musubi.Storage.Keychain.retrieve(keyName: .oauthExpirationDate)
+            let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate))
             return Date(timeIntervalSince1970: data.withUnsafeBytes({ $0.load(as: Double.self) }))
         } catch {
-            Task { await logOut() }
+            Task { await logOut(userManager: userManager) }
             return Date.distantPast
         }
     }
     
-    private func clearOAuthCache() {
-        try! Musubi.Storage.Keychain.delete(keyName: .oauthToken)
-        try! Musubi.Storage.Keychain.delete(keyName: .oauthRefreshToken)
-        try! Musubi.Storage.Keychain.delete(keyName: .oauthExpirationDate)
+    private static func clearOAuthCache() {
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthToken))
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken))
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate))
     }
     
 //    private enum OAuthCacheable {

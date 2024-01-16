@@ -2,7 +2,7 @@
 
 import Foundation
 
-extension SpotifyWebClient {
+extension Spotify {
     private enum HTTPMethod: String {
         case GET, PUT, POST, DELETE
     }

@@ -24,6 +24,7 @@
 		794733862B4B180E001C3FEB /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733852B4B180E001C3FEB /* HomeView.swift */; };
 		7947338A2B4B25F8001C3FEB /* SpotifyWebClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733892B4B25F8001C3FEB /* SpotifyWebClient.swift */; };
 		7947338C2B4B7955001C3FEB /* SpotifyRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */; };
+		7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 		794733852B4B180E001C3FEB /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		794733892B4B25F8001C3FEB /* SpotifyWebClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyWebClient.swift; sourceTree = "<group>"; };
 		7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyRequests.swift; sourceTree = "<group>"; };
+		7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUserManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +120,7 @@
 				794733602B46450B001C3FEB /* Views */,
 				794733702B468FFE001C3FEB /* Util */,
 				794733342B464331001C3FEB /* MusubiApp.swift */,
+				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				794733382B464333001C3FEB /* Assets.xcassets */,
@@ -318,6 +321,7 @@
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
+				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
 				7947338A2B4B25F8001C3FEB /* SpotifyWebClient.swift in Sources */,
