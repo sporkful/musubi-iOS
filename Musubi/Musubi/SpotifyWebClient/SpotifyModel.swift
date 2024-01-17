@@ -14,13 +14,13 @@ extension Spotify {
     }
     
     struct LoggedInUser: Codable, Identifiable {
-        let country: String
+//        let country: String
         let display_name: String
-        let explicit_content: [String: Bool]
-        let external_urls: [String: String]
+//        let explicit_content: [String: Bool]
+//        let external_urls: [String: String]
         let id: String
-        let images: [SpotifyImage]?
-        let product: String
+//        let images: [SpotifyImage]?
+//        let product: String
     }
     
     struct OtherUser: Codable, Identifiable {

@@ -10,11 +10,10 @@ extension Spotify {
     }
     
     static func createWebLoginRequest(pkceChallenge: String) -> URLRequest {
-        var request = URLRequest(url: URL(string: "https://accounts.spotify.com/authorize")!)
-        request.httpMethod = "GET"
-//        request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
-
         var components = URLComponents()
+        components.scheme = "https"
+        components.host = "accounts.spotify.com"
+        components.path = "/authorize"
         components.queryItems = [
             URLQueryItem(name: "client_id", value: Constants.API_CLIENT_ID),
             URLQueryItem(name: "response_type", value: "code"),
@@ -23,31 +22,17 @@ extension Spotify {
             URLQueryItem(name: "scope", value: Constants.ACCESS_SCOPES_STR),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "code_challenge", value: pkceChallenge),
-//            URLQueryItem(name: "show_dialog", value: "TRUE"),
         ]
-        request.httpBody = components.query?.data(using: .utf8)
         
-        return request
+        return URLRequest(url: components.url!)
     }
     
     @MainActor
     static func handleNewLogin(
-        oauthRedirectedURL: URL?,
+        authCode: String,
         pkceVerifier: String,
         userManager: Musubi.UserManager
     ) async throws {
-        guard let oauthRedirectedURL = oauthRedirectedURL
-        else {
-            throw Spotify.AuthError.any(detail: "failed to obtain oauth-redirected URL")
-        }
-        guard let authCode = URLComponents(string: oauthRedirectedURL.absoluteString)?
-            .queryItems?
-            .first(where: { $0.name == "code" })?
-            .value
-        else {
-            throw Spotify.AuthError.any(detail: "oauth-redirected URL did not contain auth code")
-        }
-        
         try await fetchOAuthToken(
             authCode: authCode,
             pkceVerifier: pkceVerifier,
@@ -158,7 +143,7 @@ extension Spotify {
 
 extension Spotify.Constants {
     fileprivate static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
-    fileprivate static let OAUTH_DUMMY_REDIRECT_URI = "https://musubi-iOS.com"
+    fileprivate static let OAUTH_DUMMY_REDIRECT_URI = "https://github.com/musubi-app/musubi-iOS"
     
     /// Reference:
     /// https://developer.spotify.com/documentation/web-api/concepts/scopes

@@ -110,12 +110,22 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             self.pkceVerifier = pkceVerifier
         }
         
-//        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            // Spotify's login flow includes multiple redirections.
+            // We only care about the one with the auth code.
+            guard let oauthRedirectedURL = webView.url,
+                  let authCode = URLComponents(string: oauthRedirectedURL.absoluteString)?
+                    .queryItems?
+                    .first(where: { $0.name == "code" })?
+                    .value
+            else {
+                return
+            }
+            
             Task {
                 do {
                     try await Spotify.handleNewLogin(
-                        oauthRedirectedURL: webView.url,
+                        authCode: authCode,
                         pkceVerifier: pkceVerifier,
                         userManager: userManager
                     )
