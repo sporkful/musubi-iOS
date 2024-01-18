@@ -1,4 +1,4 @@
-// SpotifyWebClient.swift
+// SpotifyAuth.swift
 
 import Foundation
 
