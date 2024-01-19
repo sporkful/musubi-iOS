@@ -3,12 +3,6 @@
 import Foundation
 
 extension Spotify {
-    @MainActor
-    static func logOut(userManager: Musubi.UserManager) {
-        clearOAuthCache()
-        userManager.loggedInUser = nil
-    }
-    
     static func createWebLoginRequest(pkceChallenge: String) -> URLRequest {
         var components = URLComponents()
         components.scheme = "https"
@@ -181,6 +175,12 @@ extension Spotify {
     private typealias Keychain = Musubi.Storage.Keychain
     private typealias KeyIdentifier = Keychain.KeyIdentifier
     
+    static func clearOAuthCache() {
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthToken))
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken))
+        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate))
+    }
+    
     private static func save(oauthToken: String, userManager: Musubi.UserManager) {
         do {
             try Keychain.save(
@@ -188,7 +188,7 @@ extension Spotify {
                 value: Data(oauthToken.utf8)
             )
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
         }
     }
     
@@ -199,7 +199,7 @@ extension Spotify {
                 value: Data(oauthRefreshToken.utf8)
             )
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
         }
     }
     
@@ -211,7 +211,7 @@ extension Spotify {
                 value: withUnsafeBytes(of: rawDate) { Data($0) }
             )
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
         }
     }
     
@@ -220,7 +220,7 @@ extension Spotify {
             let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthToken))
             return String(decoding: data, as: UTF8.self)
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
             return ""
         }
     }
@@ -230,7 +230,7 @@ extension Spotify {
             let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken))
             return String(decoding: data, as: UTF8.self)
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
             return ""
         }
     }
@@ -240,15 +240,9 @@ extension Spotify {
             let data = try Keychain.retrieve(keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate))
             return Date(timeIntervalSince1970: data.withUnsafeBytes({ $0.load(as: Double.self) }))
         } catch {
-            Task { await logOut(userManager: userManager) }
+            Task { await userManager.logOut() }
             return Date.distantPast
         }
-    }
-    
-    private static func clearOAuthCache() {
-        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthToken))
-        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthRefreshToken))
-        try! Keychain.delete(keyIdentifier: KeyIdentifier(keyName: .oauthExpirationDate))
     }
     
 //    private enum OAuthCacheable {

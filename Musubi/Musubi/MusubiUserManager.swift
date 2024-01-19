@@ -9,7 +9,7 @@ extension Musubi {
         
         @MainActor
         func logOut() {
-            Spotify.logOut(userManager: self)
+            Spotify.clearOAuthCache()
             self.loggedInUser = nil
         }
     }
