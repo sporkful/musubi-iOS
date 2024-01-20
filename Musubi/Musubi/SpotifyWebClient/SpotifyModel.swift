@@ -2,16 +2,8 @@
 
 import Foundation
 
-extension Spotify {
+extension Spotify.Model {
     typealias ID = String
-    
-    struct OAuthResponse: Codable {
-        let access_token: String
-        let expires_in: Int
-        let refresh_token: String?
-        let scope: String
-        let token_type: String
-    }
     
     struct LoggedInUser: Codable, Identifiable {
 //        let country: String
@@ -34,14 +26,5 @@ extension Spotify {
         let url: String
         let height: Int?
         let width: Int?
-    }
-}
-
-// namespaces
-struct Spotify {
-    private init() { }
-    
-    struct Constants {
-        private init() { }
     }
 }

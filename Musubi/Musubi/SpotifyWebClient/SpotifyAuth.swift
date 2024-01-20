@@ -2,7 +2,7 @@
 
 import Foundation
 
-extension Spotify {
+extension Spotify.Auth {
     static func createWebLoginRequest(pkceChallenge: String) -> URLRequest {
         var components = URLComponents()
         components.scheme = "https"
@@ -40,7 +40,7 @@ extension Spotify {
             userManager: userManager
         )
         
-        userManager.loggedInUser = try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
+        userManager.loggedInUser = try JSONDecoder().decode(Spotify.Model.LoggedInUser.self, from: data)
     }
     
     static func makeAuthenticatedRequest(
@@ -63,6 +63,49 @@ extension Spotify {
             throw Spotify.RequestError.response(detail: "failed - \(httpResponse.statusCode)")
         }
         return data
+    }
+}
+
+extension Spotify.Auth.Constants {
+    fileprivate static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
+    fileprivate static let OAUTH_DUMMY_REDIRECT_URI = "https://github.com/musubi-app/musubi-iOS"
+    
+    /// Reference:
+    /// https://developer.spotify.com/documentation/web-api/concepts/scopes
+    /// As a rule of thumb, Musubi only gives itself write access to things under its version control.
+    fileprivate static var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
+    fileprivate static let ACCESS_SCOPES = [
+//        "ugc-image-upload",
+        "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
+        "playlist-read-private",
+        "playlist-read-collaborative",
+        "playlist-modify-private",
+        "playlist-modify-public",
+//        "user-follow-modify",
+        "user-follow-read",
+        "user-read-playback-position",
+        "user-top-read",
+        "user-read-recently-played",
+//        "user-library-modify",
+        "user-library-read",
+//        "user-read-email",
+//        "user-read-private",
+    ]
+    
+    /// Reference:
+    /// https://developer.spotify.com/documentation/web-api/concepts/api-calls
+    fileprivate static let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
+}
+
+extension Spotify.Auth {
+    private struct OAuthResponse: Codable {
+        let access_token: String
+        let expires_in: Int
+        let refresh_token: String?
+        let scope: String
+        let token_type: String
     }
     
     private static func fetchOAuthToken(
@@ -101,7 +144,7 @@ extension Spotify {
         cacheOAuthToken(response: response, userManager: userManager)
     }
     
-    private static func requestOAuthToken(queryItems: [URLQueryItem]) async throws -> Spotify.OAuthResponse {
+    private static func requestOAuthToken(queryItems: [URLQueryItem]) async throws -> OAuthResponse {
         var request = URLRequest(url: URL(string: "https://accounts.spotify.com/api/token")!)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
@@ -119,11 +162,11 @@ extension Spotify {
         guard (httpResponse.statusCode == 200) else {
             throw Spotify.AuthError.any(detail: "requestOAuthToken errored: \(httpResponse.statusCode)")
         }
-        return try JSONDecoder().decode(Spotify.OAuthResponse.self, from: data)
+        return try JSONDecoder().decode(OAuthResponse.self, from: data)
     }
     
     private static func cacheOAuthToken(
-        response: Spotify.OAuthResponse,
+        response: OAuthResponse,
         userManager: Musubi.UserManager
     ) {
         save(oauthToken: response.access_token, userManager: userManager)
@@ -135,43 +178,10 @@ extension Spotify {
     }
 }
 
-extension Spotify.Constants {
-    fileprivate static let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
-    fileprivate static let OAUTH_DUMMY_REDIRECT_URI = "https://github.com/musubi-app/musubi-iOS"
-    
-    /// Reference:
-    /// https://developer.spotify.com/documentation/web-api/concepts/scopes
-    /// As a rule of thumb, Musubi only gives itself write access to things under its version control.
-    fileprivate static var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
-    fileprivate static let ACCESS_SCOPES = [
-//        "ugc-image-upload",
-        "user-read-playback-state",
-        "user-modify-playback-state",
-        "user-read-currently-playing",
-        "playlist-read-private",
-        "playlist-read-collaborative",
-        "playlist-modify-private",
-        "playlist-modify-public",
-//        "user-follow-modify",
-        "user-follow-read",
-        "user-read-playback-position",
-        "user-top-read",
-        "user-read-recently-played",
-//        "user-library-modify",
-        "user-library-read",
-//        "user-read-email",
-//        "user-read-private",
-    ]
-    
-    /// Reference:
-    /// https://developer.spotify.com/documentation/web-api/concepts/api-calls
-    fileprivate static let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
-}
-
 // MARK: OAuth caching
 // TODO: can we make this more generic / reduce code duplication? (see eof)
 // note we can't make these static funcs since logOut is tied to an instance of SpotifyWebClient
-extension Spotify {
+extension Spotify.Auth {
     private typealias Keychain = Musubi.Storage.Keychain
     private typealias KeyIdentifier = Keychain.KeyIdentifier
     

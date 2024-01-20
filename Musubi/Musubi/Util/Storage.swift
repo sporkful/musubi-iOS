@@ -132,7 +132,7 @@ extension Musubi.Storage.Local {
     private static func objectURL<T>(
         type: T.Type,
         objectID: String,
-        userID: Spotify.ID
+        userID: Spotify.Model.ID
     ) throws -> URL {
         let dirName = switch type {
             case is Musubi.Model.Repository.Type: reposDirName
@@ -147,7 +147,7 @@ extension Musubi.Storage.Local {
             .appending(path: objectID, directoryHint: .notDirectory)
     }
     
-    static func save<T: Codable>(object: T, objectID: String, userID: Spotify.ID) throws {
+    static func save<T: Codable>(object: T, objectID: String, userID: Spotify.Model.ID) throws {
         let objectData = try JSONEncoder().encode(object)
         try objectData.write(
             to: objectURL(type: T.self, objectID: objectID, userID: userID),
@@ -155,14 +155,14 @@ extension Musubi.Storage.Local {
         )
     }
     
-    static func retrieve<T: Codable>(objectID: String, userID: Spotify.ID) throws -> T {
+    static func retrieve<T: Codable>(objectID: String, userID: Spotify.Model.ID) throws -> T {
         return try JSONDecoder().decode(
             T.self,
             from: Data(contentsOf: objectURL(type: T.self, objectID: objectID, userID: userID))
         )
     }
     
-    static func createDirs(userID: Spotify.ID) throws {
+    static func createDirs(userID: Spotify.Model.ID) throws {
         try FileManager.default.createDirectory(
             at: baseDirURL,
             withIntermediateDirectories: false

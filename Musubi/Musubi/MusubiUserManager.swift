@@ -5,11 +5,11 @@ import Foundation
 extension Musubi {
     @Observable
     class UserManager {
-        var loggedInUser: Spotify.LoggedInUser?
+        var loggedInUser: Spotify.Model.LoggedInUser?
         
         @MainActor
         func logOut() {
-            Spotify.clearOAuthCache()
+            Spotify.Auth.clearOAuthCache()
             self.loggedInUser = nil
         }
     }

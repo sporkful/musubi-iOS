@@ -2,7 +2,7 @@
 
 import Foundation
 
-extension Spotify {
+extension Spotify.Requests {
     private enum HTTPMethod: String {
         case GET, PUT, POST, DELETE
     }
@@ -52,4 +52,8 @@ extension Spotify {
         request.timeoutInterval = 30
         return request
     }
+}
+
+extension Spotify.Requests {
+    
 }

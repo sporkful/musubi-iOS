@@ -7,7 +7,7 @@ extension Musubi.ViewModel {
     typealias Commit = Musubi.Model.Commit
     
     struct Playlist: Identifiable {
-        let id: Spotify.ID
+        let id: Spotify.Model.ID
         var name: String
         var description: String
         var items: [Item]
@@ -25,7 +25,7 @@ extension Musubi.ViewModel {
             // the logically correct index of the item in the playlist.
             
             let index: Int
-            let audioTrackID: Spotify.ID
+            let audioTrackID: Spotify.Model.ID
         }
         
         static func from(playlist: Musubi.Model.Playlist) -> Self {

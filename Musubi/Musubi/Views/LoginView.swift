@@ -22,6 +22,7 @@ struct LoginView: View {
             } label: {
                 Text("Log in with Spotify")
                     .padding()
+                    .foregroundColor(.white)
                     .background(
                         RoundedRectangle(
                             cornerRadius: 20,
@@ -30,16 +31,21 @@ struct LoginView: View {
                         .stroke(.white, lineWidth: 2)
                     )
             }
-            .sheet(isPresented: $showSheetWebLogin) {
-                // TODO: make sure a new WebView is instantiated every time this sheet is presented
-                // i.e. prevent view caching here.
-                SpotifyLoginWebView(
-                    showSheetWebLogin: $showSheetWebLogin,
-                    showAlertLoginError: $showAlertLoginError,
-                    pkceVerifier: Musubi.newPKCEVerifier()
-                )
-            }
             Spacer()
+        }
+        // TODO: better way to specify exchange of these two sheets?
+        .sheet(isPresented: $showSheetWebLogin) {
+            // TODO: make sure a new WebView is instantiated every time this sheet is presented
+            // i.e. prevent view caching here.
+            SpotifyLoginWebView(
+                showSheetWebLogin: $showSheetWebLogin,
+                showAlertLoginError: $showAlertLoginError,
+                pkceVerifier: Musubi.newPKCEVerifier()
+            )
+        }
+        .fullScreenCover(item: $userManager.loggedInUser) { _ in
+            HomeView()
+                .interactiveDismissDisabled()
         }
         .alert(
             "Error when logging in with Spotify.",
@@ -47,11 +53,6 @@ struct LoginView: View {
             actions: {},
             message: { Text(Musubi.ErrorMessage(suggestedFix: .reopen).text) }
         )
-        .fullScreenCover(item: $userManager.loggedInUser) { _ in
-            Text(userManager.loggedInUser?.display_name ?? "errored")
-            // TODO: create a new view model instance passing in this (immutable) loggedInUser
-            // TODO: create HomeView with above view model as environment object
-        }
     }
 }
 
@@ -73,7 +74,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         }
         
         self.webView.navigationDelegate = context.coordinator
-        self.webView.load(Spotify.createWebLoginRequest(pkceChallenge: pkceChallenge))
+        self.webView.load(Spotify.Auth.createWebLoginRequest(pkceChallenge: pkceChallenge))
         return self.webView
     }
 
@@ -124,7 +125,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             
             Task {
                 do {
-                    try await Spotify.handleNewLogin(
+                    try await Spotify.Auth.handleNewLogin(
                         authCode: authCode,
                         pkceVerifier: pkceVerifier,
                         userManager: userManager
