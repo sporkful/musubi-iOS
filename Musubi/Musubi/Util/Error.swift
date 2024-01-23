@@ -47,11 +47,13 @@ extension Spotify {
     enum RequestError: LocalizedError {
         case creation(detail: String)
         case response(detail: String)
+        case other(detail: String)
 
         var errorDescription: String? {
             let description = switch self {
                 case let .creation(detail): "(creation) \(detail)"
                 case let .response(detail): "(response) \(detail)"
+                case let .other(detail): "\(detail)"
             }
             return "[SpotifyWebClient::Request] \(description)"
         }

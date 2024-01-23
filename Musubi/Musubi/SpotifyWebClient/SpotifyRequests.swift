@@ -52,8 +52,54 @@ extension Spotify.Requests {
         request.timeoutInterval = 30
         return request
     }
+    
+    private static func htmlToPlaintext(html: String) throws -> String {
+        let attributedString = try? NSAttributedString(
+            data: Data(html.utf8),
+            options: [.documentType: NSAttributedString.DocumentType.html],
+            documentAttributes: nil
+        )
+        guard let attributedString = attributedString else {
+            throw Spotify.RequestError.other(detail: "failed to convert html to plaintext")
+        }
+        return attributedString.string
+    }
 }
 
-extension Spotify.Requests {
+extension Spotify.Requests.Read {
+    static func fetchAudioTrack(audioTrackID: Spotify.Model.ID, userManager: Musubi.UserManager)
+        async throws -> SpotifyAPIModel.AudioTrack
+    {
+        var request = try newURLRequest(type: HTTPMethod.GET,
+                                        path: "/tracks/" + audioTrackID)
+        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
+        return try JSONDecoder().decode(SpotifyAPIModel.AudioTrack.self, from: data)
+    }
     
+    static func fetchArtist(artistID: Spotify.Model.ID, userManager: Musubi.UserManager)
+        async throws -> SpotifyAPIModel.Artist
+    {
+        var request = try newURLRequest(type: HTTPMethod.GET,
+                                        path: "/artists/" + artistID)
+        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
+        return try JSONDecoder().decode(SpotifyAPIModel.Artist.self, from: data)
+    }
+    
+    static func fetchAlbum(albumID: Spotify.Model.ID, userManager: Musubi.UserManager)
+        async throws -> SpotifyAPIModel.Album
+    {
+        var request = try newURLRequest(type: HTTPMethod.GET,
+                                        path: "/albums/" + albumID)
+        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
+        return try JSONDecoder().decode(SpotifyAPIModel.Album.self, from: data)
+    }
+    
+    static func fetchPlaylist(playlistID: Spotify.Model.ID, userManager: Musubi.UserManager)
+        async throws -> SpotifyAPIModel.Playlist
+    {
+        var request = try newURLRequest(type: HTTPMethod.GET,
+                                        path: "/playlists/" + playlistID)
+        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
+        return try JSONDecoder().decode(SpotifyAPIModel.Playlist.self, from: data)
+    }
 }

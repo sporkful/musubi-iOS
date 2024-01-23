@@ -24,5 +24,17 @@ struct Spotify {
         struct Constants {
             private init() { }
         }
+        
+        struct Read {
+            private init() { }
+        }
+        
+        struct Write {
+            private init() { }
+        }
+        
+        struct Playback {
+            private init() { }
+        }
     }
 }
