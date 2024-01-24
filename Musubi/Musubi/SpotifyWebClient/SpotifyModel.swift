@@ -4,7 +4,7 @@ import Foundation
 
 protocol SpotifyModel: Codable { }
 
-protocol SpotifyModelIdentifiable: Identifiable {
+protocol SpotifyModelIdentifiable: SpotifyModel, Identifiable {
     var id: Spotify.Model.ID { get }
 }
 
@@ -18,7 +18,7 @@ protocol SpotifyModelPage: SpotifyModel {
 extension Spotify.Model {
     typealias ID = String
     
-    struct LoggedInUser: SpotifyModel, SpotifyModelIdentifiable {
+    struct LoggedInUser: SpotifyModelIdentifiable {
 //        let country: String
         let display_name: String
 //        let explicit_content: [String: Bool]
@@ -28,7 +28,7 @@ extension Spotify.Model {
 //        let product: String
     }
     
-    struct OtherUser: SpotifyModel, SpotifyModelIdentifiable {
+    struct OtherUser: SpotifyModelIdentifiable {
         let display_name: String
         let external_urls: [String: String]
         let id: Spotify.Model.ID
@@ -41,7 +41,7 @@ extension Spotify.Model {
         let width: Int?
     }
     
-    struct AudioTrack: SpotifyModel, SpotifyModelIdentifiable {
+    struct AudioTrack: SpotifyModelIdentifiable {
         let id: Spotify.Model.ID
         let album: Album?
         let artists: [Artist]
@@ -54,7 +54,7 @@ extension Spotify.Model {
         let preview_url: String?
     }
     
-    struct Artist: SpotifyModel, SpotifyModelIdentifiable {
+    struct Artist: SpotifyModelIdentifiable {
         let id: Spotify.Model.ID
         let name: String
         let images: [SpotifyImage]?
@@ -63,13 +63,13 @@ extension Spotify.Model {
             let tracks: [AudioTrack]
         }
         
-        struct AlbumPage: SpotifyModel, SpotifyModelPage {
+        struct AlbumPage: SpotifyModelPage {
             let items: [Album]
             let next: String?
         }
     }
     
-    struct Album: SpotifyModel, SpotifyModelIdentifiable {
+    struct Album: SpotifyModelIdentifiable {
         let id: Spotify.Model.ID
         let name: String
         let album_type: String
@@ -78,13 +78,13 @@ extension Spotify.Model {
         let uri: String
         let artists: [Artist]
         
-        struct AudioTrackPage: SpotifyModel, SpotifyModelPage {
+        struct AudioTrackPage: SpotifyModelPage {
             let items: [AudioTrack]
             let next: String?
         }
     }
     
-    struct Playlist: SpotifyModel, SpotifyModelIdentifiable {
+    struct Playlist: SpotifyModelIdentifiable {
         let id: Spotify.Model.ID
         let description: String
         let external_urls: [String: String]
@@ -94,12 +94,12 @@ extension Spotify.Model {
         let snapshot_id: String
         let uri: String
         
-        struct AudioTrackPage: SpotifyModel, SpotifyModelPage {
+        struct AudioTrackPage: SpotifyModelPage {
             let items: [AudioTrackItem]
             let next: String?
         }
         
-        struct AudioTrackItem: SpotifyModel, SpotifyModelIdentifiable {
+        struct AudioTrackItem: SpotifyModelIdentifiable {
             let track: AudioTrack
             
             // TODO: make sure this computed property doesn't mess up JSON decoding
