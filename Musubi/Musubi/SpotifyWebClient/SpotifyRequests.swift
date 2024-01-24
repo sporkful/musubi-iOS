@@ -67,39 +67,136 @@ extension Spotify.Requests {
 }
 
 extension Spotify.Requests.Read {
-    static func fetchAudioTrack(audioTrackID: Spotify.Model.ID, userManager: Musubi.UserManager)
-        async throws -> SpotifyAPIModel.AudioTrack
-    {
-        var request = try newURLRequest(type: HTTPMethod.GET,
-                                        path: "/tracks/" + audioTrackID)
-        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
-        return try JSONDecoder().decode(SpotifyAPIModel.AudioTrack.self, from: data)
+    private typealias Requests = Spotify.Requests
+    private typealias HTTPMethod = Requests.HTTPMethod
+    
+    private static func makeAuthenticatedRequest<T: SpotifyModel>(
+        request: inout URLRequest,
+        userManager: Musubi.UserManager
+    ) async throws -> T {
+        let data = try await Spotify.Auth.makeAuthenticatedRequest(
+            request: &request,
+            userManager: userManager
+        )
+        return try JSONDecoder().decode(T.self, from: data)
     }
     
-    static func fetchArtist(artistID: Spotify.Model.ID, userManager: Musubi.UserManager)
-        async throws -> SpotifyAPIModel.Artist
-    {
-        var request = try newURLRequest(type: HTTPMethod.GET,
-                                        path: "/artists/" + artistID)
-        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
-        return try JSONDecoder().decode(SpotifyAPIModel.Artist.self, from: data)
+    private static func multipageList<T: SpotifyModelPage>(
+        firstPage: T,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Model.ID] {
+        var currentPage = firstPage
+        var items: [Spotify.Model.ID] = currentPage.items.map { $0.id }
+        while let nextPageURLString = currentPage.next,
+              let nextPageURL = URL(string: nextPageURLString)
+        {
+            // TODO: remove this print
+            print("fetching page at " + nextPageURLString)
+            var request = try Requests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
+            currentPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+            items.append(contentsOf: currentPage.items.map { $0.id })
+        }
+        return items
     }
     
-    static func fetchAlbum(albumID: Spotify.Model.ID, userManager: Musubi.UserManager)
-        async throws -> SpotifyAPIModel.Album
-    {
-        var request = try newURLRequest(type: HTTPMethod.GET,
-                                        path: "/albums/" + albumID)
-        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
-        return try JSONDecoder().decode(SpotifyAPIModel.Album.self, from: data)
+    static func audioTrack(
+        audioTrackID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Model.AudioTrack {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/tracks/" + audioTrackID
+        )
+        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
     }
     
-    static func fetchPlaylist(playlistID: Spotify.Model.ID, userManager: Musubi.UserManager)
-        async throws -> SpotifyAPIModel.Playlist
-    {
-        var request = try newURLRequest(type: HTTPMethod.GET,
-                                        path: "/playlists/" + playlistID)
-        let data = try await spotifyUserManager.makeAuthenticatedRequest(request: &request)
-        return try JSONDecoder().decode(SpotifyAPIModel.Playlist.self, from: data)
+    static func artist(
+        artistID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Model.Artist {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/artists/" + artistID
+        )
+        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+    }
+    
+    static func album(
+        albumID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Model.Album {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/albums/" + albumID
+        )
+        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+    }
+    
+    static func playlist(
+        playlistID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Model.Playlist {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/playlists/" + playlistID
+        )
+        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+    }
+    
+    static func albumTracklist(
+        albumID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Model.ID] {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/albums/" + albumID + "/tracks/",
+            queryItems: [URLQueryItem(name: "limit", value: "50")]
+        )
+        let firstPage: Spotify.Model.Album.AudioTrackPage
+        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        return try await multipageList(firstPage: firstPage, userManager: userManager)
+    }
+    
+    static func playlistTracklist(
+        playlistID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Model.ID] {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/playlists/" + playlistID + "/tracks/",
+            queryItems: [URLQueryItem(name: "limit", value: "50")]
+        )
+        let firstPage: Spotify.Model.Playlist.AudioTrackPage
+        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        return try await multipageList(firstPage: firstPage, userManager: userManager)
+    }
+    
+    static func artistAlbums(
+        artistID: Spotify.Model.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Model.ID] {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/artists/" + artistID + "/albums",
+            queryItems: [URLQueryItem(name: "limit", value: "50")]
+        )
+        let firstPage: Spotify.Model.Artist.AlbumPage
+        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        return try await multipageList(firstPage: firstPage, userManager: userManager)
+    }
+    
+    // TODO: why does this require market query
+    static func artistTopTracks(
+        artistID: String,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Model.ID] {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/artists/" + artistID + "/top-tracks",
+            queryItems: [URLQueryItem(name: "market", value: "US")]
+        )
+        let topTracks: Spotify.Model.Artist.TopTracks
+        topTracks = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        return topTracks.tracks.map({ $0.id })
     }
 }

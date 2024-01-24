@@ -2,34 +2,47 @@
 
 import Foundation
 
+protocol SpotifyModel: Codable { }
+
+protocol SpotifyModelIdentifiable: Identifiable {
+    var id: Spotify.Model.ID { get }
+}
+
+protocol SpotifyModelPage: SpotifyModel {
+    associatedtype ItemType: SpotifyModelIdentifiable
+    
+    var items: [ItemType] { get }
+    var next: String? { get }
+}
+
 extension Spotify.Model {
     typealias ID = String
     
-    struct LoggedInUser: Codable, Identifiable {
+    struct LoggedInUser: SpotifyModel, SpotifyModelIdentifiable {
 //        let country: String
         let display_name: String
 //        let explicit_content: [String: Bool]
 //        let external_urls: [String: String]
-        let id: String
+        let id: Spotify.Model.ID
 //        let images: [SpotifyImage]?
 //        let product: String
     }
     
-    struct OtherUser: Codable, Identifiable {
+    struct OtherUser: SpotifyModel, SpotifyModelIdentifiable {
         let display_name: String
         let external_urls: [String: String]
-        let id: String
+        let id: Spotify.Model.ID
         let images: [SpotifyImage]?
     }
     
-    struct SpotifyImage: Codable {
+    struct SpotifyImage: SpotifyModel {
         let url: String
         let height: Int?
         let width: Int?
     }
     
-    struct AudioTrack: Codable, Identifiable {
-        let id: String
+    struct AudioTrack: SpotifyModel, SpotifyModelIdentifiable {
+        let id: Spotify.Model.ID
         let album: Album?
         let artists: [Artist]
         let available_markets: [String]?
@@ -41,23 +54,23 @@ extension Spotify.Model {
         let preview_url: String?
     }
     
-    struct Artist: Codable, Identifiable {
-        let id: String
+    struct Artist: SpotifyModel, SpotifyModelIdentifiable {
+        let id: Spotify.Model.ID
         let name: String
         let images: [SpotifyImage]?
         
-        struct TopTracks: Codable {
+        struct TopTracks: SpotifyModel {
             let tracks: [AudioTrack]
         }
         
-        struct AlbumPage: Codable {
+        struct AlbumPage: SpotifyModel, SpotifyModelPage {
             let items: [Album]
             let next: String?
         }
     }
     
-    struct Album: Codable, Identifiable {
-        let id: String
+    struct Album: SpotifyModel, SpotifyModelIdentifiable {
+        let id: Spotify.Model.ID
         let name: String
         let album_type: String
         let images: [SpotifyImage]?
@@ -65,14 +78,14 @@ extension Spotify.Model {
         let uri: String
         let artists: [Artist]
         
-        struct AudioTrackPage: Codable {
+        struct AudioTrackPage: SpotifyModel, SpotifyModelPage {
             let items: [AudioTrack]
             let next: String?
         }
     }
     
-    struct Playlist: Codable, Identifiable {
-        let id: String
+    struct Playlist: SpotifyModel, SpotifyModelIdentifiable {
+        let id: Spotify.Model.ID
         let description: String
         let external_urls: [String: String]
         let images: [SpotifyImage]?
@@ -81,35 +94,38 @@ extension Spotify.Model {
         let snapshot_id: String
         let uri: String
         
-        struct AudioTrackPage: Codable {
+        struct AudioTrackPage: SpotifyModel, SpotifyModelPage {
             let items: [AudioTrackItem]
             let next: String?
         }
         
-        struct AudioTrackItem: Codable {
+        struct AudioTrackItem: SpotifyModel, SpotifyModelIdentifiable {
             let track: AudioTrack
+            
+            // TODO: make sure this computed property doesn't mess up JSON decoding
+            var id: Spotify.Model.ID { track.id }
         }
     }
     
-    struct SearchResults: Codable {
+    struct SearchResults: SpotifyModel {
         var albums: Albums
         var artists: Artists
         var tracks: AudioTracks
         var playlists: Playlists
         
-        struct Albums: Codable {
+        struct Albums: SpotifyModel {
             let items: [Album]
         }
         
-        struct Artists: Codable {
+        struct Artists: SpotifyModel {
             let items: [Artist]
         }
         
-        struct AudioTracks: Codable {
+        struct AudioTracks: SpotifyModel {
             let items: [AudioTrack]
         }
         
-        struct Playlists: Codable {
+        struct Playlists: SpotifyModel {
             let items: [Playlist]
         }
     }
