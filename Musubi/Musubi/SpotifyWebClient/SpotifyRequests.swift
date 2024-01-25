@@ -231,4 +231,20 @@ extension Spotify.Requests.Read {
         topTracks = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
         return topTracks.tracks.map({ $0.id })
     }
+    
+    static func search(
+        query: String,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Model.SearchResults {
+        var request = try Requests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/search",
+            queryItems: [
+                URLQueryItem(name: "q", value: query),
+                URLQueryItem(name: "type", value: "artist,album,playlist,track"),
+                URLQueryItem(name: "limit", value: "5")
+            ]
+        )
+        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+    }
 }

@@ -30,7 +30,8 @@ extension Musubi.Model {
         let playlistItemsHash: HashPointer
     }
     
-    struct Playlist {
+    // To enable persistence of "staging area" across app runs.
+    struct Playlist: Codable {
         let id: Spotify.Model.ID
         let name: String
         let description: String
