@@ -13,7 +13,7 @@ struct HomeView: View {
                 }
             SearchView()
                 .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
+                    Label("Search Spotify", systemImage: "magnifyingglass")
                 }
             AccountView()
 //                .badge("!") // TODO: notifications

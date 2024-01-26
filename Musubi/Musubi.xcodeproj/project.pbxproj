@@ -29,6 +29,7 @@
 		794733942B4CE08B001C3FEB /* LocalReposView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733932B4CE08B001C3FEB /* LocalReposView.swift */; };
 		794733962B4CE1A7001C3FEB /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733952B4CE1A7001C3FEB /* SearchView.swift */; };
 		794733982B4CE1AE001C3FEB /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733972B4CE1AE001C3FEB /* AccountView.swift */; };
+		7947339A2B4CE922001C3FEB /* UIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733992B4CE922001C3FEB /* UIConstants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 		794733932B4CE08B001C3FEB /* LocalReposView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalReposView.swift; sourceTree = "<group>"; };
 		794733952B4CE1A7001C3FEB /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		794733972B4CE1AE001C3FEB /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		794733992B4CE922001C3FEB /* UIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConstants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -192,6 +194,7 @@
 				794733712B469C01001C3FEB /* Cryptography.swift */,
 				794733772B469E11001C3FEB /* Storage.swift */,
 				7947337B2B472754001C3FEB /* Error.swift */,
+				794733992B4CE922001C3FEB /* UIConstants.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -337,6 +340,7 @@
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,
+				7947339A2B4CE922001C3FEB /* UIConstants.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
 				794733922B4C6A79001C3FEB /* SpotifyWebClient.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchView.swift in Sources */,

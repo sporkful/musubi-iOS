@@ -128,5 +128,14 @@ extension Spotify.Model {
         struct Playlists: SpotifyModel {
             let items: [Playlist]
         }
+        
+        static func blank() -> Self {
+            return Self(
+                albums: Albums(items: []),
+                artists: Artists(items: []),
+                tracks: AudioTracks(items: []),
+                playlists: Playlists(items: [])
+            )
+        }
     }
 }
