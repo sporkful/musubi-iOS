@@ -15,8 +15,21 @@ protocol SpotifyModelPage: SpotifyModel {
     var next: String? { get }
 }
 
+protocol SpotifyModelCardable: SpotifyModel {
+    var name: String { get }
+    var images: [Spotify.Model.SpotifyImage]? { get }
+    
+    // TODO: playback?
+}
+
 extension Spotify.Model {
     typealias ID = String
+    
+    struct SpotifyImage: SpotifyModel, Hashable {
+        let url: String
+        let height: Int?
+        let width: Int?
+    }
     
     struct LoggedInUser: SpotifyModelIdentifiable {
 //        let country: String
@@ -28,20 +41,14 @@ extension Spotify.Model {
 //        let product: String
     }
     
-    struct OtherUser: SpotifyModelIdentifiable {
+    struct OtherUser: SpotifyModelIdentifiable, Hashable {
         let display_name: String
         let external_urls: [String: String]
         let id: Spotify.Model.ID
         let images: [SpotifyImage]?
     }
     
-    struct SpotifyImage: SpotifyModel {
-        let url: String
-        let height: Int?
-        let width: Int?
-    }
-    
-    struct AudioTrack: SpotifyModelIdentifiable {
+    struct AudioTrack: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let album: Album?
         let artists: [Artist]
@@ -52,9 +59,12 @@ extension Spotify.Model {
         let external_urls: [String: String]
         let name: String
         let preview_url: String?
+        
+        // TODO: make sure this computed property doesn't mess up JSON decoding
+        var images: [Spotify.Model.SpotifyImage]? { album?.images }
     }
     
-    struct Artist: SpotifyModelIdentifiable {
+    struct Artist: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let name: String
         let images: [SpotifyImage]?
@@ -69,7 +79,7 @@ extension Spotify.Model {
         }
     }
     
-    struct Album: SpotifyModelIdentifiable {
+    struct Album: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let name: String
         let album_type: String
@@ -84,7 +94,7 @@ extension Spotify.Model {
         }
     }
     
-    struct Playlist: SpotifyModelIdentifiable {
+    struct Playlist: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let description: String
         let external_urls: [String: String]
