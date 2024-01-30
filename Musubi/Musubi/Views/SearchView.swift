@@ -38,9 +38,7 @@ struct SearchView: View {
                     if showAudioTrackResults {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
-                                NavigationLink(value: audioTrack) {
-                                    CardView(item: audioTrack)
-                                }
+                                ListCellView(item: audioTrack)
                             }
                         }
                     }
@@ -48,7 +46,7 @@ struct SearchView: View {
                         Section("Artists") {
                             ForEach(searchResults.artists.items) { artist in
                                 NavigationLink(value: artist) {
-                                    CardView(item: artist)
+                                    ListCellView(item: artist)
                                 }
                             }
                         }
@@ -57,7 +55,7 @@ struct SearchView: View {
                         Section("Albums") {
                             ForEach(searchResults.albums.items) { album in
                                 NavigationLink(value: album) {
-                                    CardView(item: album)
+                                    ListCellView(item: album)
                                 }
                             }
                         }
@@ -66,7 +64,7 @@ struct SearchView: View {
                         Section("Playlists") {
                             ForEach(searchResults.playlists.items) { playlist in
                                 NavigationLink(value: playlist) {
-                                    CardView(item: playlist)
+                                    ListCellView(item: playlist)
                                 }
                             }
                         }
@@ -96,6 +94,7 @@ struct SearchView: View {
                     } catch {
                         print("[Musubi::SearchView] (likely nonfatal) search spotify error")
                         print(error)
+                        searchResults = Spotify.Model.SearchResults.blank()
                     }
                 }
             }

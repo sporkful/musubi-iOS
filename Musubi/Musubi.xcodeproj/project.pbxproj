@@ -34,7 +34,7 @@
 		794733A02B4D11B0001C3FEB /* ArtistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947339F2B4D11B0001C3FEB /* ArtistDetailView.swift */; };
 		794733A22B4D11B8001C3FEB /* AlbumDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A12B4D11B8001C3FEB /* AlbumDetailView.swift */; };
 		794733A42B4D11C4001C3FEB /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */; };
-		794733A72B4D15BD001C3FEB /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A62B4D15BD001C3FEB /* CardView.swift */; };
+		794733A72B4D15BD001C3FEB /* ListCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A62B4D15BD001C3FEB /* ListCellView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,7 +85,7 @@
 		7947339F2B4D11B0001C3FEB /* ArtistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistDetailView.swift; sourceTree = "<group>"; };
 		794733A12B4D11B8001C3FEB /* AlbumDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailView.swift; sourceTree = "<group>"; };
 		794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
-		794733A62B4D15BD001C3FEB /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
+		794733A62B4D15BD001C3FEB /* ListCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCellView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,13 +177,13 @@
 		794733602B46450B001C3FEB /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				794733A82B4DC2AB001C3FEB /* Common */,
 				7947339C2B4D1185001C3FEB /* Detail */,
 				794733812B4A7D32001C3FEB /* LoginView.swift */,
 				794733852B4B180E001C3FEB /* HomeView.swift */,
 				794733972B4CE1AE001C3FEB /* AccountView.swift */,
 				794733932B4CE08B001C3FEB /* LocalReposView.swift */,
 				794733952B4CE1A7001C3FEB /* SearchView.swift */,
-				794733A62B4D15BD001C3FEB /* CardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -220,6 +220,14 @@
 				794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */,
 			);
 			path = Detail;
+			sourceTree = "<group>";
+		};
+		794733A82B4DC2AB001C3FEB /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				794733A62B4D15BD001C3FEB /* ListCellView.swift */,
+			);
+			path = Common;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -370,7 +378,7 @@
 				794733A42B4D11C4001C3FEB /* PlaylistDetailView.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchView.swift in Sources */,
 				7947339E2B4D11A6001C3FEB /* AudioTrackDetailView.swift in Sources */,
-				794733A72B4D15BD001C3FEB /* CardView.swift in Sources */,
+				794733A72B4D15BD001C3FEB /* ListCellView.swift in Sources */,
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
 				794733902B4BDED7001C3FEB /* SpotifyAuth.swift in Sources */,
 				794733A22B4D11B8001C3FEB /* AlbumDetailView.swift in Sources */,
