@@ -5,11 +5,14 @@ import SwiftUI
 // TODO: playback ability
 
 struct ListCellView: View {
-    let item: SpotifyModelCardable
+    @Binding private var navigationPath: NavigationPath
     
+    let item: SpotifyModelCardable
     let caption: String
     
-    init(item: SpotifyModelCardable) {
+    init(item: SpotifyModelCardable, navigationPath: Binding<NavigationPath>) {
+        self._navigationPath = navigationPath
+        
         self.item = item
         self.caption = {
             switch item.self {
@@ -35,6 +38,7 @@ struct ListCellView: View {
     
     var body: some View {
         HStack {
+            HStack {
             if item.images != nil && !(item.images!.isEmpty) {
                 AsyncImage(url: URL(string: item.images![0].url)) { image in
                     image.resizable()
@@ -54,8 +58,17 @@ struct ListCellView: View {
                         .lineLimit(1)
                 }
             }
+            Spacer()
+            }
+            .contentShape(Rectangle())
+            .allowsHitTesting(item.self is Spotify.Model.AudioTrack)
+            .onTapGesture {
+                // TODO: implement playback
+                // TODO: better error handling (in case allowsHitTesting doesn't work as expected)
+                let audioTrack = item.self as! Spotify.Model.AudioTrack
+                print("playing \(audioTrack.name)")
+            }
             if item.self is Spotify.Model.AudioTrack {
-                Spacer()
                 Menu {
                     Button {
                         // TODO: impl

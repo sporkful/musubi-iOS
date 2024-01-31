@@ -38,7 +38,7 @@ struct SearchView: View {
                     if showAudioTrackResults {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
-                                ListCellView(item: audioTrack)
+                                ListCellView(item: audioTrack, navigationPath: $navigationPath)
                             }
                         }
                     }
@@ -46,7 +46,7 @@ struct SearchView: View {
                         Section("Artists") {
                             ForEach(searchResults.artists.items) { artist in
                                 NavigationLink(value: artist) {
-                                    ListCellView(item: artist)
+                                    ListCellView(item: artist, navigationPath: $navigationPath)
                                 }
                             }
                         }
@@ -55,7 +55,7 @@ struct SearchView: View {
                         Section("Albums") {
                             ForEach(searchResults.albums.items) { album in
                                 NavigationLink(value: album) {
-                                    ListCellView(item: album)
+                                    ListCellView(item: album, navigationPath: $navigationPath)
                                 }
                             }
                         }
@@ -64,7 +64,7 @@ struct SearchView: View {
                         Section("Playlists") {
                             ForEach(searchResults.playlists.items) { playlist in
                                 NavigationLink(value: playlist) {
-                                    ListCellView(item: playlist)
+                                    ListCellView(item: playlist, navigationPath: $navigationPath)
                                 }
                             }
                         }
