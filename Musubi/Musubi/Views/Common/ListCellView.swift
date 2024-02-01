@@ -17,13 +17,13 @@ struct ListCellView: View {
         self.caption = {
             switch item.self {
             case is Spotify.Model.AudioTrack:
-                let track = item as! Spotify.Model.AudioTrack
-                let albumString = if let trackAlbum = track.album {
-                    " • " + trackAlbum.name
+                let audioTrack = item as! Spotify.Model.AudioTrack
+                let albumString = if let album = audioTrack.album {
+                    " • " + album.name
                 } else {
                     ""
                 }
-                return track.artists.map { $0.name }.joined(separator: ", ") + albumString
+                return audioTrack.artists.map { $0.name }.joined(separator: ", ") + albumString
             case is Spotify.Model.Album:
                 let album = item as! Spotify.Model.Album
                 return album.artists.map { $0.name }.joined(separator: ", ")
@@ -39,26 +39,26 @@ struct ListCellView: View {
     var body: some View {
         HStack {
             HStack {
-            if item.images != nil && !(item.images!.isEmpty) {
-                AsyncImage(url: URL(string: item.images![0].url)) { image in
-                    image.resizable()
-                        .scaledToFill()
-                        .clipped()
-                } placeholder: {
-                    ProgressView()
+                if item.images != nil && !(item.images!.isEmpty) {
+                    AsyncImage(url: URL(string: item.images![0].url)) { image in
+                        image.resizable()
+                            .scaledToFill()
+                            .clipped()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: THUMBNAIL_DIM, height: THUMBNAIL_DIM)
                 }
-                .frame(width: THUMBNAIL_DIM, height: THUMBNAIL_DIM)
-            }
-            VStack(alignment: .leading) {
-                Text(item.name)
-                    .lineLimit(1)
-                if caption != "" {
-                    Text(caption)
-                        .font(.caption)
+                VStack(alignment: .leading) {
+                    Text(item.name)
                         .lineLimit(1)
+                    if caption != "" {
+                        Text(caption)
+                            .font(.caption)
+                            .lineLimit(1)
+                    }
                 }
-            }
-            Spacer()
+                Spacer()
             }
             .contentShape(Rectangle())
             .allowsHitTesting(item.self is Spotify.Model.AudioTrack)
@@ -69,6 +69,7 @@ struct ListCellView: View {
                 print("playing \(audioTrack.name)")
             }
             if item.self is Spotify.Model.AudioTrack {
+                let audioTrack = item.self as! Spotify.Model.AudioTrack
                 Menu {
                     Button {
                         // TODO: impl
@@ -103,7 +104,9 @@ struct ListCellView: View {
                         }
                     }
                     Button {
-                        // TODO: impl
+                        if let album = audioTrack.album {
+                            navigationPath.append(album)
+                        }
                     } label: {
                         HStack {
                             Image(systemName: "smallcircle.circle")
@@ -111,7 +114,9 @@ struct ListCellView: View {
                         }
                     }
                     Button {
-                        // TODO: impl
+                        if let primaryArtist = audioTrack.artists.first {
+                            navigationPath.append(primaryArtist)
+                        }
                     } label: {
                         HStack {
                             Image(systemName: "person")

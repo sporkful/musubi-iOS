@@ -70,9 +70,6 @@ struct SearchView: View {
                         }
                     }
                 }
-                .navigationDestination(for: Spotify.Model.AudioTrack.self) { audioTrack in
-                    AudioTrackDetailView(audioTrack: audioTrack)
-                }
                 .navigationDestination(for: Spotify.Model.Artist.self) { artist in
                     ArtistDetailView(artist: artist)
                 }
