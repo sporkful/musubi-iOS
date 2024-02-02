@@ -10,6 +10,8 @@ struct ListCellView: View {
     let item: SpotifyModelCardable
     let caption: String
     
+    @State var showAlertUnsupportedAction = false
+    
     init(item: SpotifyModelCardable, navigationPath: Binding<NavigationPath>) {
         self._navigationPath = navigationPath
         
@@ -70,9 +72,11 @@ struct ListCellView: View {
             }
             if item.self is Spotify.Model.AudioTrack {
                 let audioTrack = item.self as! Spotify.Model.AudioTrack
+                
                 Menu {
                     Button {
                         // TODO: impl
+                        showAlertUnsupportedAction = true
                     } label: {
                         HStack {
                             Image(systemName: "plus")
@@ -81,6 +85,7 @@ struct ListCellView: View {
                     }
                     Button {
                         // TODO: impl
+                        showAlertUnsupportedAction = true
                     } label: {
                         HStack {
                             Image(systemName: "text.badge.plus")
@@ -89,6 +94,7 @@ struct ListCellView: View {
                     }
                     Button {
                         // TODO: impl
+                        showAlertUnsupportedAction = true
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
@@ -97,6 +103,7 @@ struct ListCellView: View {
                     }
                     Button {
                         // TODO: impl
+                        showAlertUnsupportedAction = true
                     } label: {
                         HStack {
                             Image(systemName: "dot.radiowaves.left.and.right")
@@ -125,6 +132,7 @@ struct ListCellView: View {
                     }
                     Button {
                         // TODO: impl
+                        showAlertUnsupportedAction = true
                     } label: {
                         HStack {
                             Image(systemName: "person.3")
@@ -137,6 +145,7 @@ struct ListCellView: View {
                 }
             }
         }
+        .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
     }
 }
 

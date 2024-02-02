@@ -30,6 +30,17 @@ extension Musubi {
             return "[Musubi::Cryptography] \(description)"
         }
     }
+    
+    enum UIError: LocalizedError {
+        case any(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .any(detail): "\(detail)"
+            }
+            return "[Musubi::UI] \(description)"
+        }
+    }
 }
 
 extension Spotify {
