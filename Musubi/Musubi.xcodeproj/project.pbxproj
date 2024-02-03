@@ -33,7 +33,8 @@
 		794733A02B4D11B0001C3FEB /* ArtistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947339F2B4D11B0001C3FEB /* ArtistDetailView.swift */; };
 		794733A22B4D11B8001C3FEB /* AlbumDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A12B4D11B8001C3FEB /* AlbumDetailView.swift */; };
 		794733A42B4D11C4001C3FEB /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */; };
-		794733A72B4D15BD001C3FEB /* ListCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A62B4D15BD001C3FEB /* ListCellView.swift */; };
+		794733A72B4D15BD001C3FEB /* AudioTrackListCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A62B4D15BD001C3FEB /* AudioTrackListCellView.swift */; };
+		794733AC2B4E01E3001C3FEB /* ListCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733AB2B4E01E3001C3FEB /* ListCellView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,7 +84,8 @@
 		7947339F2B4D11B0001C3FEB /* ArtistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistDetailView.swift; sourceTree = "<group>"; };
 		794733A12B4D11B8001C3FEB /* AlbumDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailView.swift; sourceTree = "<group>"; };
 		794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
-		794733A62B4D15BD001C3FEB /* ListCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCellView.swift; sourceTree = "<group>"; };
+		794733A62B4D15BD001C3FEB /* AudioTrackListCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackListCellView.swift; sourceTree = "<group>"; };
+		794733AB2B4E01E3001C3FEB /* ListCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCellView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,8 +177,8 @@
 		794733602B46450B001C3FEB /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				794733A82B4DC2AB001C3FEB /* Common */,
-				7947339C2B4D1185001C3FEB /* Detail */,
+				794733A82B4DC2AB001C3FEB /* Elements */,
+				7947339C2B4D1185001C3FEB /* Pages */,
 				794733812B4A7D32001C3FEB /* LoginView.swift */,
 				794733852B4B180E001C3FEB /* HomeView.swift */,
 				794733972B4CE1AE001C3FEB /* AccountView.swift */,
@@ -209,22 +211,23 @@
 			path = Util;
 			sourceTree = "<group>";
 		};
-		7947339C2B4D1185001C3FEB /* Detail */ = {
+		7947339C2B4D1185001C3FEB /* Pages */ = {
 			isa = PBXGroup;
 			children = (
 				7947339F2B4D11B0001C3FEB /* ArtistDetailView.swift */,
 				794733A12B4D11B8001C3FEB /* AlbumDetailView.swift */,
 				794733A32B4D11C4001C3FEB /* PlaylistDetailView.swift */,
 			);
-			path = Detail;
+			path = Pages;
 			sourceTree = "<group>";
 		};
-		794733A82B4DC2AB001C3FEB /* Common */ = {
+		794733A82B4DC2AB001C3FEB /* Elements */ = {
 			isa = PBXGroup;
 			children = (
-				794733A62B4D15BD001C3FEB /* ListCellView.swift */,
+				794733A62B4D15BD001C3FEB /* AudioTrackListCellView.swift */,
+				794733AB2B4E01E3001C3FEB /* ListCellView.swift */,
 			);
-			path = Common;
+			path = Elements;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -364,6 +367,7 @@
 				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733A02B4D11B0001C3FEB /* ArtistDetailView.swift in Sources */,
+				794733AC2B4E01E3001C3FEB /* ListCellView.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
 				794733942B4CE08B001C3FEB /* LocalReposView.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
@@ -374,7 +378,7 @@
 				794733922B4C6A79001C3FEB /* SpotifyWebClient.swift in Sources */,
 				794733A42B4D11C4001C3FEB /* PlaylistDetailView.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchView.swift in Sources */,
-				794733A72B4D15BD001C3FEB /* ListCellView.swift in Sources */,
+				794733A72B4D15BD001C3FEB /* AudioTrackListCellView.swift in Sources */,
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
 				794733902B4BDED7001C3FEB /* SpotifyAuth.swift in Sources */,
 				794733A22B4D11B8001C3FEB /* AlbumDetailView.swift in Sources */,
