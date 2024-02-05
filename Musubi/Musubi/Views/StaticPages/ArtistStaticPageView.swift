@@ -1,8 +1,8 @@
-// ArtistDetailView.swift
+// ArtistStaticPageView.swift
 
 import SwiftUI
 
-struct ArtistDetailView: View {
+struct ArtistStaticPageView: View {
     let artist: Spotify.Model.Artist
     
     var body: some View {
@@ -12,5 +12,5 @@ struct ArtistDetailView: View {
 }
 
 //#Preview {
-//    ArtistDetailView()
+//    ArtistStaticPageView()
 //}

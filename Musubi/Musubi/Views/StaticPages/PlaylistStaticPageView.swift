@@ -1,8 +1,8 @@
-// PlaylistDetailView.swift
+// PlaylistStaticPageView.swift
 
 import SwiftUI
 
-struct PlaylistDetailView: View {
+struct PlaylistStaticPageView: View {
     let playlist: Spotify.Model.Playlist
     
     var body: some View {
@@ -12,5 +12,5 @@ struct PlaylistDetailView: View {
 }
 
 //#Preview {
-//    PlaylistDetailView()
+//    PlaylistStaticPageView()
 //}
