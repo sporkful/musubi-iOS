@@ -35,6 +35,7 @@
 		79A7A9772B4E069400634C5B /* ArtistStaticPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A7A9762B4E069400634C5B /* ArtistStaticPageView.swift */; };
 		79A7A9792B4E069E00634C5B /* AlbumStaticPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A7A9782B4E069E00634C5B /* AlbumStaticPageView.swift */; };
 		79A7A97B2B4E06A900634C5B /* PlaylistStaticPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A7A97A2B4E06A900634C5B /* PlaylistStaticPageView.swift */; };
+		79A7A9832B4E13C400634C5B /* ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A7A9822B4E13C400634C5B /* ImageProcessing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +87,7 @@
 		79A7A9762B4E069400634C5B /* ArtistStaticPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistStaticPageView.swift; sourceTree = "<group>"; };
 		79A7A9782B4E069E00634C5B /* AlbumStaticPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumStaticPageView.swift; sourceTree = "<group>"; };
 		79A7A97A2B4E06A900634C5B /* PlaylistStaticPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistStaticPageView.swift; sourceTree = "<group>"; };
+		79A7A9822B4E13C400634C5B /* ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessing.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,6 +209,7 @@
 				794733772B469E11001C3FEB /* Storage.swift */,
 				7947337B2B472754001C3FEB /* Error.swift */,
 				794733992B4CE922001C3FEB /* UIConstants.swift */,
+				79A7A9822B4E13C400634C5B /* ImageProcessing.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -368,6 +371,7 @@
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733AC2B4E01E3001C3FEB /* ListCellView.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
+				79A7A9832B4E13C400634C5B /* ImageProcessing.swift in Sources */,
 				794733942B4CE08B001C3FEB /* LocalReposView.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,

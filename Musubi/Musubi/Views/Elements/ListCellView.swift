@@ -27,19 +27,18 @@ struct ListCellView: View {
         }()
     }
     
-    private let THUMBNAIL_DIM = Musubi.UIConstants.THUMBNAIL_DIM
-    
     var body: some View {
         HStack {
             if item.images != nil && !(item.images!.isEmpty) {
-                AsyncImage(url: URL(string: item.images![0].url)) { image in
-                    image.resizable()
+                AsyncImage(url: URL(string: item.images![0].url)) { loadedImage in
+                    loadedImage
+                        .resizable()
                         .scaledToFill()
                         .clipped()
                 } placeholder: {
                     ProgressView()
                 }
-                .frame(width: THUMBNAIL_DIM, height: THUMBNAIL_DIM)
+                .frame(width: Musubi.UIConstants.ImageDimension.cellThumbnail.rawValue)
             }
             VStack(alignment: .leading) {
                 Text(item.name)
@@ -52,6 +51,7 @@ struct ListCellView: View {
             }
             Spacer()
         }
+        .frame(height: Musubi.UIConstants.ImageDimension.cellThumbnail.rawValue)
     }
 }
 

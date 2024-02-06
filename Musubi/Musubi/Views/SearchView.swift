@@ -74,7 +74,7 @@ struct SearchView: View {
                     ArtistStaticPageView(artist: artist)
                 }
                 .navigationDestination(for: Spotify.Model.Album.self) { album in
-                    AlbumStaticPageView(album: album)
+                    AlbumStaticPageView(album: album, navigationPath: $navigationPath)
                 }
                 .navigationDestination(for: Spotify.Model.Playlist.self) { playlist in
                     PlaylistStaticPageView(playlist: playlist)

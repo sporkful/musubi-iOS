@@ -10,12 +10,13 @@ extension Musubi {
 }
 
 extension Musubi.UIConstants {
-    static let THUMBNAIL_DIM: CGFloat = 42
-    static let THUMBNAIL_DIM_LARGE: Double = 88
-    
-    static let IMAGE_DIM: Double = 127
-    static let IMAGE_DIM_MEDIUM: Double = 140
-    static let IMAGE_DIM_LARGE: Double = 210
+    // TODO: clip by device dimensions
+    enum ImageDimension: CGFloat {
+        case cellThumbnail = 42
+        case albumCover = 262
+        case artistCover = 162
+        case trackCover = 286
+    }
     
     static let MENU_SYMBOL_SIZE: Double = 25
 }
