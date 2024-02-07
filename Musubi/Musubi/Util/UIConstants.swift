@@ -1,6 +1,7 @@
 // UIConstants.swift
 
 import Foundation
+import UIKit
 
 // namespaces
 extension Musubi {
@@ -17,6 +18,11 @@ extension Musubi.UIConstants {
         case artistCover = 162
         case trackCover = 286
     }
+    
+    static let IMAGE_SHADOW_RADIUS: CGFloat = 5
+    
+    static let SCROLLVIEW_BACKGROUND_CUTOFF = 0.5
+//        = ImageDimension.albumCover.rawValue / UIScreen.main.bounds.size.height
     
     static let MENU_SYMBOL_SIZE: Double = 25
 }

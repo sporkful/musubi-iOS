@@ -14,9 +14,12 @@ struct AlbumStaticPageView: View {
     @State private var image: UIImage?
     private let ALBUM_COVER_DIM = Musubi.UIConstants.ImageDimension.albumCover.rawValue
     
-    private var imageDominantColor: UIColor {
-        image?.musubi_DominantColor() ?? .black
+    private var backgroundHighlightColor: UIColor {
+        image?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
+    
+    private let IMAGE_SHADOW_RADIUS = Musubi.UIConstants.IMAGE_SHADOW_RADIUS
+    private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UIConstants.SCROLLVIEW_BACKGROUND_CUTOFF
     
     var body: some View {
         ScrollView {
@@ -24,7 +27,10 @@ struct AlbumStaticPageView: View {
                 if let image = image {
                     ZStack {
                         LinearGradient(
-                            colors: [Color(imageDominantColor), .black],
+                            colors: [
+                                Color(backgroundHighlightColor),
+                                .black
+                            ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -35,6 +41,7 @@ struct AlbumStaticPageView: View {
                                 .scaledToFill()
                                 .clipped()
                                 .frame(width: ALBUM_COVER_DIM, height: ALBUM_COVER_DIM)
+                                .shadow(radius: IMAGE_SHADOW_RADIUS)
                             Spacer()
                         }
                     }
@@ -68,8 +75,20 @@ struct AlbumStaticPageView: View {
                 .padding()
                 Spacer()
             }
+            .background(.black)
         }
         .ignoresSafeArea(.all, edges: [.horizontal])
+        .background(
+            LinearGradient(
+                stops: [
+                    .init(color: Color(backgroundHighlightColor), location: SCROLLVIEW_BACKGROUND_CUTOFF),
+                    .init(color: .black, location: SCROLLVIEW_BACKGROUND_CUTOFF + 0.01)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .scrollContentBackground(.hidden)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
