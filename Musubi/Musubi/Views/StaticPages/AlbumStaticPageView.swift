@@ -14,11 +14,20 @@ struct AlbumStaticPageView: View {
     @State private var image: UIImage?
     private let ALBUM_COVER_DIM = Musubi.UIConstants.ImageDimension.albumCover.rawValue
     
+    private var imageDominantColor: UIColor {
+        image?.musubi_DominantColor() ?? .black
+    }
+    
     var body: some View {
         ScrollView {
             VStack {
-                VStack(alignment: .leading) {
-                    if let image = image {
+                if let image = image {
+                    ZStack {
+                        LinearGradient(
+                            colors: [Color(imageDominantColor), .black],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                         HStack {
                             Spacer()
                             Image(uiImage: image)
@@ -29,6 +38,8 @@ struct AlbumStaticPageView: View {
                             Spacer()
                         }
                     }
+                }
+                VStack(alignment: .leading) {
                     Text(album.name)
                         .font(.title)
                         .fontWeight(.bold)
@@ -49,15 +60,16 @@ struct AlbumStaticPageView: View {
                     }
                     Text("Album • \(album.release_date)")
                         .font(.caption)
+                    ForEach(audioTrackList) { audioTrack in
+                        Divider()
+                        AudioTrackListCellView(audioTrack: audioTrack, navigationPath: $navigationPath)
+                    }
                 }
-                ForEach(audioTrackList) { audioTrack in
-                    Divider()
-                    AudioTrackListCellView(audioTrack: audioTrack, navigationPath: $navigationPath)
-                }
+                .padding()
                 Spacer()
             }
-            .padding()
         }
+        .ignoresSafeArea(.all, edges: [.horizontal])
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
