@@ -23,8 +23,7 @@ struct AlbumStaticPageView: View {
     
     var body: some View {
         ScrollView {
-            VStack {
-                if let image = image {
+            VStack(spacing: .zero) {
                     ZStack {
                         LinearGradient(
                             colors: [
@@ -34,6 +33,8 @@ struct AlbumStaticPageView: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
+                VStack(alignment: .leading) {
+                    if let image = image {
                         HStack {
                             Spacer()
                             Image(uiImage: image)
@@ -45,8 +46,6 @@ struct AlbumStaticPageView: View {
                             Spacer()
                         }
                     }
-                }
-                VStack(alignment: .leading) {
                     Text(album.name)
                         .font(.title)
                         .fontWeight(.bold)
@@ -67,13 +66,17 @@ struct AlbumStaticPageView: View {
                     }
                     Text("Album • \(album.release_date)")
                         .font(.caption)
+                }
+                .padding([.horizontal])
+                }
+                VStack {
                     ForEach(audioTrackList) { audioTrack in
                         Divider()
                         AudioTrackListCellView(audioTrack: audioTrack, navigationPath: $navigationPath)
                     }
+                    Spacer()
                 }
-                .padding()
-                Spacer()
+                .padding([.horizontal, .bottom])
             }
             .background(.black)
         }
@@ -93,11 +96,13 @@ struct AlbumStaticPageView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack {
-                    Text(album.name)
-                        .font(.headline)
+                    // TODO: fade in depending on scroll position
+//                    Text(album.name)
+//                        .font(.headline)
                 }
             }
         }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .task {
             await loadContents()
         }
