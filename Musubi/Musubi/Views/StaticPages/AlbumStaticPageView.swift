@@ -24,50 +24,50 @@ struct AlbumStaticPageView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: .zero) {
-                    ZStack {
-                        LinearGradient(
-                            colors: [
-                                Color(backgroundHighlightColor),
-                                .black
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                VStack(alignment: .leading) {
-                    if let image = image {
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(backgroundHighlightColor),
+                            .black
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    VStack(alignment: .leading) {
+                        if let image = image {
+                            HStack {
+                                Spacer()
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                                    .frame(width: ALBUM_COVER_DIM, height: ALBUM_COVER_DIM)
+                                    .shadow(radius: IMAGE_SHADOW_RADIUS)
+                                Spacer()
+                            }
+                        }
+                        Text(album.name)
+                            .font(.title)
+                            .fontWeight(.bold)
                         HStack {
-                            Spacer()
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .clipped()
-                                .frame(width: ALBUM_COVER_DIM, height: ALBUM_COVER_DIM)
-                                .shadow(radius: IMAGE_SHADOW_RADIUS)
-                            Spacer()
-                        }
-                    }
-                    Text(album.name)
-                        .font(.title)
-                        .fontWeight(.bold)
-                    HStack {
-                        ForEach(Array(zip(album.artists.indices, album.artists)), id: \.0) { index, artist in
-                            if index != 0 {
-                                Text("•")
-                            }
-                            Button {
-                                navigationPath.append(artist)
-                            } label: {
-                                Text(artist.name)
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
+                            ForEach(Array(zip(album.artists.indices, album.artists)), id: \.0) { index, artist in
+                                if index != 0 {
+                                    Text("•")
+                                }
+                                Button {
+                                    navigationPath.append(artist)
+                                } label: {
+                                    Text(artist.name)
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
                             }
                         }
+                        Text("Album • \(album.release_date)")
+                            .font(.caption)
                     }
-                    Text("Album • \(album.release_date)")
-                        .font(.caption)
-                }
-                .padding([.horizontal])
+                    .padding([.horizontal])
                 }
                 VStack {
                     ForEach(audioTrackList) { audioTrack in
