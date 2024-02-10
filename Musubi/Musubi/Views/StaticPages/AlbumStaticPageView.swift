@@ -21,6 +21,11 @@ struct AlbumStaticPageView: View {
     private let IMAGE_SHADOW_RADIUS = Musubi.UIConstants.IMAGE_SHADOW_RADIUS
     private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UIConstants.SCROLLVIEW_BACKGROUND_CUTOFF
     
+    @State private var scrollPosition: CGFloat = 0
+    private var isScrollBelowCover: Bool {
+        scrollPosition > ALBUM_COVER_DIM + IMAGE_SHADOW_RADIUS
+    }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: .zero) {
@@ -78,7 +83,17 @@ struct AlbumStaticPageView: View {
                 }
                 .padding([.horizontal, .bottom])
             }
-            .background(.black)
+            .background(
+                GeometryReader { proxy -> Color in
+                    DispatchQueue.main.async {
+                        scrollPosition = -proxy
+                            .frame(in: .named("AlbumStaticPageView::ScrollView"))
+                            .origin.y
+                        print("scroll position \(scrollPosition)")
+                    }
+                    return Color.black
+                }
+            )
         }
         .ignoresSafeArea(.all, edges: [.horizontal])
         .background(
@@ -92,17 +107,16 @@ struct AlbumStaticPageView: View {
             )
         )
         .scrollContentBackground(.hidden)
+        .coordinateSpace(name: "AlbumStaticPageView::ScrollView")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack {
-                    // TODO: fade in depending on scroll position
-//                    Text(album.name)
-//                        .font(.headline)
-                }
+                Text(album.name)
+                    .font(.headline)
+                    .opacity(isScrollBelowCover ? 1.0 : 0.0)
             }
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarBackground(isScrollBelowCover ? .automatic : .hidden, for: .navigationBar)
         .task {
             await loadContents()
         }
