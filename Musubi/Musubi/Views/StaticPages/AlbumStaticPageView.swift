@@ -21,9 +21,22 @@ struct AlbumStaticPageView: View {
     private let IMAGE_SHADOW_RADIUS = Musubi.UIConstants.IMAGE_SHADOW_RADIUS
     private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UIConstants.SCROLLVIEW_BACKGROUND_CUTOFF
     
+    private let SCROLLVIEW_IMAGE_BOTTOM_Y = Musubi.UIConstants.SCROLLVIEW_IMAGE_BOTTOM_Y
+    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UIConstants.SCROLLVIEW_TITLE_HEIGHT
+    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UIConstants.SCROLLVIEW_TITLE_SAT_POINT
+    
+    // remember scrollPosition=0 at top and increases as user scrolls down.
     @State private var scrollPosition: CGFloat = 0
     private var isScrollBelowCover: Bool {
-        scrollPosition > ALBUM_COVER_DIM + IMAGE_SHADOW_RADIUS
+        scrollPosition > SCROLLVIEW_IMAGE_BOTTOM_Y
+    }
+    private var navigationTitleOpacity: Double {
+        // lerp between
+        //  (~SCROLLVIEW_IMAGE_BOTTOM_Y, 0.0) and
+        //  (~SCROLLVIEW_IMAGE_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT, 1.0)
+        let unclamped = (scrollPosition - (SCROLLVIEW_IMAGE_BOTTOM_Y + 5))
+            / (SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT)
+        return min(max(unclamped, 0), 1)
     }
     
     var body: some View {
@@ -113,7 +126,7 @@ struct AlbumStaticPageView: View {
             ToolbarItem(placement: .principal) {
                 Text(album.name)
                     .font(.headline)
-                    .opacity(isScrollBelowCover ? 1.0 : 0.0)
+                    .opacity(navigationTitleOpacity)
             }
         }
         .toolbarBackground(isScrollBelowCover ? .automatic : .hidden, for: .navigationBar)
