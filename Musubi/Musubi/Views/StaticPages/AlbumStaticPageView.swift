@@ -11,30 +11,30 @@ struct AlbumStaticPageView: View {
     
     @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
     
-    @State private var image: UIImage?
-    private let ALBUM_COVER_DIM = Musubi.UIConstants.ImageDimension.albumCover.rawValue
+    @State private var coverImage: UIImage?
+    private let COVER_IMAGE_DIM = Musubi.UIConstants.ImageDimension.audioTracklistCover.rawValue
     
     private var backgroundHighlightColor: UIColor {
-        image?.musubi_DominantColor()?.musubi_Muted() ?? .black
+        coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
     
-    private let IMAGE_SHADOW_RADIUS = Musubi.UIConstants.IMAGE_SHADOW_RADIUS
+    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UIConstants.COVER_IMAGE_SHADOW_RADIUS
     private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UIConstants.SCROLLVIEW_BACKGROUND_CUTOFF
     
-    private let SCROLLVIEW_IMAGE_BOTTOM_Y = Musubi.UIConstants.SCROLLVIEW_IMAGE_BOTTOM_Y
+    private let SCROLLVIEW_COVER_BOTTOM_Y = Musubi.UIConstants.SCROLLVIEW_COVER_BOTTOM_Y
     private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UIConstants.SCROLLVIEW_TITLE_HEIGHT
     private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UIConstants.SCROLLVIEW_TITLE_SAT_POINT
     
     // remember scrollPosition=0 at top and increases as user scrolls down.
     @State private var scrollPosition: CGFloat = 0
     private var isScrollBelowCover: Bool {
-        scrollPosition > SCROLLVIEW_IMAGE_BOTTOM_Y
+        scrollPosition > SCROLLVIEW_COVER_BOTTOM_Y
     }
     private var navigationTitleOpacity: Double {
         // lerp between
-        //  (~SCROLLVIEW_IMAGE_BOTTOM_Y, 0.0) and
-        //  (~SCROLLVIEW_IMAGE_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT, 1.0)
-        let unclamped = (scrollPosition - (SCROLLVIEW_IMAGE_BOTTOM_Y + 5))
+        //  (~SCROLLVIEW_COVER_BOTTOM_Y, 0.0) and
+        //  (~SCROLLVIEW_COVER_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT, 1.0)
+        let unclamped = (scrollPosition - (SCROLLVIEW_COVER_BOTTOM_Y + 5))
             / (SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT)
         return min(max(unclamped, 0), 1)
     }
@@ -52,15 +52,15 @@ struct AlbumStaticPageView: View {
                         endPoint: .bottom
                     )
                     VStack(alignment: .leading) {
-                        if let image = image {
+                        if let image = coverImage {
                             HStack {
                                 Spacer()
                                 Image(uiImage: image)
                                     .resizable()
                                     .scaledToFill()
                                     .clipped()
-                                    .frame(width: ALBUM_COVER_DIM, height: ALBUM_COVER_DIM)
-                                    .shadow(radius: IMAGE_SHADOW_RADIUS)
+                                    .frame(width: COVER_IMAGE_DIM, height: COVER_IMAGE_DIM)
+                                    .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
                                 Spacer()
                             }
                         }
@@ -149,15 +149,15 @@ struct AlbumStaticPageView: View {
         }
         
         do {
-            guard let imageURLString = self.album.images?.first?.url,
-                  let imageURL = URL(string: imageURLString)
+            guard let coverImageURLStr = self.album.images?.first?.url,
+                  let coverImageURL = URL(string: coverImageURLStr)
             else {
                 throw Musubi.UIError.any(detail: "AlbumStaticPageView no image url found")
             }
-            let (imageData, _) = try await URLSession.shared.data(from: imageURL)
-            self.image = UIImage(data: imageData)
+            let (imageData, _) = try await URLSession.shared.data(from: coverImageURL)
+            self.coverImage = UIImage(data: imageData)
         } catch {
-            print("[Musubi::AlbumStaticPageView] unable to load image")
+            print("[Musubi::AlbumStaticPageView] unable to load cover image")
             print(error)
         }
     }
