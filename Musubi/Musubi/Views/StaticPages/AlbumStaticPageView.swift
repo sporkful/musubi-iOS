@@ -12,31 +12,56 @@ struct AlbumStaticPageView: View {
     @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
     
     @State private var coverImage: UIImage?
-    private let COVER_IMAGE_DIM = Musubi.UIConstants.ImageDimension.audioTracklistCover.rawValue
+    private let COVER_IMAGE_DIM = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
     
     private var backgroundHighlightColor: UIColor {
         coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
     
-    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UIConstants.COVER_IMAGE_SHADOW_RADIUS
-    private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UIConstants.SCROLLVIEW_BACKGROUND_CUTOFF
+    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
+    private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UI.SCROLLVIEW_BACKGROUND_CUTOFF
     
-    private let SCROLLVIEW_COVER_BOTTOM_Y = Musubi.UIConstants.SCROLLVIEW_COVER_BOTTOM_Y
-    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UIConstants.SCROLLVIEW_TITLE_HEIGHT
-    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UIConstants.SCROLLVIEW_TITLE_SAT_POINT
+    private let SCROLLVIEW_COVER_BOTTOM_Y = Musubi.UI.SCROLLVIEW_COVER_BOTTOM_Y
+    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
+    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UI.SCROLLVIEW_TITLE_SAT_POINT
     
     // remember scrollPosition=0 at top and increases as user scrolls down.
     @State private var scrollPosition: CGFloat = 0
+    private var coverImageDimension: CGFloat {
+        return Musubi.UI.lerp(
+            x: scrollPosition,
+            x1: 0.0,
+            y1: COVER_IMAGE_DIM,
+            x2: COVER_IMAGE_DIM,
+            y2: 0.0,
+            minY: 0.0,
+            maxY: COVER_IMAGE_DIM
+        )
+    }
+    private var coverImageOpacity: CGFloat {
+        return Musubi.UI.lerp(
+            x: scrollPosition,
+            x1: COVER_IMAGE_DIM / 2,
+            y1: 1.0,
+            x2: COVER_IMAGE_DIM,
+            y2: 0.0,
+            minY: 0.0,
+            maxY: 1.0
+        )
+    }
     private var isScrollBelowCover: Bool {
         scrollPosition > SCROLLVIEW_COVER_BOTTOM_Y
     }
     private var navigationTitleOpacity: Double {
-        // lerp between
-        //  (~SCROLLVIEW_COVER_BOTTOM_Y, 0.0) and
-        //  (~SCROLLVIEW_COVER_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT, 1.0)
-        let unclamped = (scrollPosition - (SCROLLVIEW_COVER_BOTTOM_Y + 5))
-            / (SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT)
-        return min(max(unclamped, 0), 1)
+        return Musubi.UI.lerp(
+            x: scrollPosition,
+            x1: SCROLLVIEW_COVER_BOTTOM_Y + 5,
+            y1: 0.0,
+            x2: SCROLLVIEW_COVER_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
+            y2: 1.0,
+            minY: 0.0,
+            maxY: 1.0
+        )
     }
     
     var body: some View {

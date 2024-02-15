@@ -38,7 +38,7 @@ struct ListCellView: View {
                 } placeholder: {
                     ProgressView()
                 }
-                .frame(width: Musubi.UIConstants.ImageDimension.cellThumbnail.rawValue)
+                .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
             }
             VStack(alignment: .leading) {
                 Text(item.name)
@@ -51,7 +51,7 @@ struct ListCellView: View {
             }
             Spacer()
         }
-        .frame(height: Musubi.UIConstants.ImageDimension.cellThumbnail.rawValue)
+        .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
     }
 }
 

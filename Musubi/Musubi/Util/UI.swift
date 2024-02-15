@@ -1,16 +1,16 @@
-// UIConstants.swift
+// UI.swift
 
 import Foundation
 import UIKit
 
 // namespaces
 extension Musubi {
-    struct UIConstants {
+    struct UI {
         private init() {}
     }
 }
 
-extension Musubi.UIConstants {
+extension Musubi.UI {
     // TODO: clip by device dimensions
     enum ImageDimension: CGFloat {
         case cellThumbnail = 42
@@ -33,4 +33,18 @@ extension Musubi.UIConstants {
     static let SCROLLVIEW_TITLE_SAT_POINT: Double = 0.75 // navtitle.opacity=1 when x of title is covered.
     
     static let MENU_SYMBOL_SIZE: Double = 25
+}
+
+extension Musubi.UI {
+    static func lerp(
+        x: CGFloat,
+        x1: CGFloat,
+        y1: CGFloat,
+        x2: CGFloat,
+        y2: CGFloat,
+        minY: CGFloat,
+        maxY: CGFloat
+    ) -> CGFloat {
+        return min(max((y2 - y1) / (x2 - x1) * (x - x1) + y1, minY), maxY)
+    }
 }

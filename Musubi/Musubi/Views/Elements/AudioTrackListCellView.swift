@@ -11,7 +11,7 @@ struct AudioTrackListCellView: View {
     
     @State var showAlertUnsupportedAction = false
     
-    private let MENU_SYMBOL_SIZE = Musubi.UIConstants.MENU_SYMBOL_SIZE
+    private let MENU_SYMBOL_SIZE = Musubi.UI.MENU_SYMBOL_SIZE
     
     var body: some View {
         HStack {
