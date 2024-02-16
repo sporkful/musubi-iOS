@@ -11,6 +11,9 @@ extension Musubi {
 }
 
 extension Musubi.UI {
+    static let SCREEN_HEIGHT = UIScreen.main.bounds.size.height
+    static let SCREEN_WIDTH = UIScreen.main.bounds.size.width
+    
     // TODO: clip by device dimensions
     enum ImageDimension: CGFloat {
         case cellThumbnail = 42

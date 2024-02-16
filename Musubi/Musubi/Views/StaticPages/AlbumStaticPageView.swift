@@ -21,7 +21,6 @@ struct AlbumStaticPageView: View {
     private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
     private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UI.SCROLLVIEW_BACKGROUND_CUTOFF
     
-    private let SCROLLVIEW_COVER_BOTTOM_Y = Musubi.UI.SCROLLVIEW_COVER_BOTTOM_Y
     private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
     private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UI.SCROLLVIEW_TITLE_SAT_POINT
     
@@ -35,29 +34,29 @@ struct AlbumStaticPageView: View {
             x2: COVER_IMAGE_DIM,
             y2: 0.0,
             minY: 0.0,
-            maxY: COVER_IMAGE_DIM
+            maxY: Musubi.UI.SCREEN_WIDTH * 50
         )
     }
     private var coverImageOpacity: CGFloat {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: COVER_IMAGE_DIM / 2,
+            x1: COVER_IMAGE_DIM / 4,
             y1: 1.0,
-            x2: COVER_IMAGE_DIM,
+            x2: COVER_IMAGE_DIM / 2,
             y2: 0.0,
             minY: 0.0,
             maxY: 1.0
         )
     }
     private var isScrollBelowCover: Bool {
-        scrollPosition > SCROLLVIEW_COVER_BOTTOM_Y
+        scrollPosition > coverImageDimension
     }
     private var navigationTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: SCROLLVIEW_COVER_BOTTOM_Y + 5,
+            x1: coverImageDimension + 5,
             y1: 0.0,
-            x2: SCROLLVIEW_COVER_BOTTOM_Y + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
+            x2: coverImageDimension + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
             y2: 1.0,
             minY: 0.0,
             maxY: 1.0
@@ -84,8 +83,10 @@ struct AlbumStaticPageView: View {
                                     .resizable()
                                     .scaledToFill()
                                     .clipped()
-                                    .frame(width: COVER_IMAGE_DIM, height: COVER_IMAGE_DIM)
+                                    .frame(width: coverImageDimension, height: coverImageDimension)
                                     .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
+                                    .opacity(coverImageOpacity)
+                                    .ignoresSafeArea()
                                 Spacer()
                             }
                         }
@@ -123,7 +124,7 @@ struct AlbumStaticPageView: View {
             }
             .background(
                 GeometryReader { proxy -> Color in
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         scrollPosition = -proxy
                             .frame(in: .named("AlbumStaticPageView::ScrollView"))
                             .origin.y
