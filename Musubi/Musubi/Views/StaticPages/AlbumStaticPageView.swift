@@ -34,7 +34,7 @@ struct AlbumStaticPageView: View {
             x2: COVER_IMAGE_DIM,
             y2: 0.0,
             minY: 0.0,
-            maxY: Musubi.UI.SCREEN_WIDTH * 50
+            maxY: Musubi.UI.SCREEN_WIDTH
         )
     }
     private var coverImageOpacity: CGFloat {
@@ -64,8 +64,6 @@ struct AlbumStaticPageView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: .zero) {
                 ZStack {
                     LinearGradient(
                         colors: [
@@ -73,23 +71,31 @@ struct AlbumStaticPageView: View {
                             .black
                         ],
                         startPoint: .top,
-                        endPoint: .bottom
+                        endPoint: UnitPoint(x: 0.5, y: coverImageDimension / Musubi.UI.SCREEN_HEIGHT)
                     )
-                    VStack(alignment: .leading) {
+                    .ignoresSafeArea(.all, edges: [.horizontal, .top])
+                    VStack {
                         if let image = coverImage {
-                            HStack {
-                                Spacer()
                                 Image(uiImage: image)
                                     .resizable()
-                                    .scaledToFill()
-                                    .clipped()
-                                    .frame(width: coverImageDimension, height: coverImageDimension)
+                                    .aspectRatio(contentMode: .fit)
+//                                    .scaledToFill()
+//                                    .clipped()
+//                                    .frame(width: coverImageDimension, height: coverImageDimension)
+                                    .frame(height: coverImageDimension)
                                     .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
                                     .opacity(coverImageOpacity)
-                                    .ignoresSafeArea()
-                                Spacer()
-                            }
                         }
+                        Spacer()
+                    }
+                    .ignoresSafeArea(.all, edges: [.horizontal])
+            ScrollView {
+                VStack(alignment: .leading) {
+                    if let image = coverImage {
+                        Rectangle()
+                            .frame(height: coverImageDimension)
+                            .hidden()
+                    }
                         Text(album.name)
                             .font(.title)
                             .fontWeight(.bold)
@@ -110,18 +116,12 @@ struct AlbumStaticPageView: View {
                         }
                         Text("Album • \(album.release_date)")
                             .font(.caption)
-                    }
-                    .padding([.horizontal])
-                }
-                VStack {
                     ForEach(audioTrackList) { audioTrack in
                         Divider()
                         AudioTrackListCellView(audioTrack: audioTrack, navigationPath: $navigationPath)
                     }
-                    Spacer()
                 }
                 .padding([.horizontal, .bottom])
-            }
             .background(
                 GeometryReader { proxy -> Color in
                     Task { @MainActor in
@@ -130,23 +130,14 @@ struct AlbumStaticPageView: View {
                             .origin.y
                         print("scroll position \(scrollPosition)")
                     }
-                    return Color.black
+                    return Color.clear
                 }
             )
         }
         .ignoresSafeArea(.all, edges: [.horizontal])
-        .background(
-            LinearGradient(
-                stops: [
-                    .init(color: Color(backgroundHighlightColor), location: SCROLLVIEW_BACKGROUND_CUTOFF),
-                    .init(color: .black, location: SCROLLVIEW_BACKGROUND_CUTOFF + 0.01)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
         .scrollContentBackground(.hidden)
         .coordinateSpace(name: "AlbumStaticPageView::ScrollView")
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
