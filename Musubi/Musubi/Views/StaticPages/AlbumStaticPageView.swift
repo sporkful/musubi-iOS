@@ -12,17 +12,12 @@ struct AlbumStaticPageView: View {
     @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
     
     @State private var coverImage: UIImage?
-    private let COVER_IMAGE_DIM = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
+    private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
+    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
     
     private var backgroundHighlightColor: UIColor {
         coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
-    
-    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
-    private let SCROLLVIEW_BACKGROUND_CUTOFF = Musubi.UI.SCROLLVIEW_BACKGROUND_CUTOFF
-    
-    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
-    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UI.SCROLLVIEW_TITLE_SAT_POINT
     
     // remember scrollPosition=0 at top and increases as user scrolls down.
     @State private var scrollPosition: CGFloat = 0
@@ -30,9 +25,9 @@ struct AlbumStaticPageView: View {
         return Musubi.UI.lerp(
             x: scrollPosition,
             x1: 0.0,
-            y1: COVER_IMAGE_DIM,
-            x2: COVER_IMAGE_DIM,
-            y2: 0.0,
+            y1: COVER_IMAGE_INITIAL_DIMENSION,
+            x2: COVER_IMAGE_INITIAL_DIMENSION,
+            y2: COVER_IMAGE_INITIAL_DIMENSION * 0.5,
             minY: 0.0,
             maxY: Musubi.UI.SCREEN_WIDTH
         )
@@ -40,23 +35,26 @@ struct AlbumStaticPageView: View {
     private var coverImageOpacity: CGFloat {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: COVER_IMAGE_DIM / 4,
+            x1: 0.0,
             y1: 1.0,
-            x2: COVER_IMAGE_DIM / 2,
+            x2: COVER_IMAGE_INITIAL_DIMENSION * 0.75,
             y2: 0.0,
             minY: 0.0,
             maxY: 1.0
         )
     }
-    private var isScrollBelowCover: Bool {
-        scrollPosition > coverImageDimension
+    
+    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
+    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UI.SCROLLVIEW_TITLE_SAT_POINT
+    private var isTextBehindNavBar: Bool {
+        scrollPosition > COVER_IMAGE_INITIAL_DIMENSION
     }
-    private var navigationTitleOpacity: Double {
+    private var navTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: coverImageDimension + 5,
+            x1: COVER_IMAGE_INITIAL_DIMENSION + 5,
             y1: 0.0,
-            x2: coverImageDimension + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
+            x2: COVER_IMAGE_INITIAL_DIMENSION + SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
             y2: 1.0,
             minY: 0.0,
             maxY: 1.0
@@ -65,35 +63,42 @@ struct AlbumStaticPageView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(backgroundHighlightColor),
-                    .black
-                ],
-                startPoint: .top,
-                endPoint: UnitPoint(x: 0.5, y: coverImageDimension / Musubi.UI.SCREEN_HEIGHT)
-            )
-            .ignoresSafeArea(.all, edges: [.horizontal, .top])
+            VStack {
+                LinearGradient(
+                    stops: [
+                        Gradient.Stop(color: Color(backgroundHighlightColor), location: 0),
+                        Gradient.Stop(color: Color(backgroundHighlightColor), location: 0.5),
+                        Gradient.Stop(color: .black, location: 1),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                // TODO: this seems unreliable
+                // Note behavior changes depending on order of the following two modifiers.
+                // By calling frame after, we don't need to add any offset for safe area / navbar.
+                .ignoresSafeArea(.all, edges: [.horizontal, .top])
+                .frame(height: COVER_IMAGE_INITIAL_DIMENSION + SCROLLVIEW_TITLE_HEIGHT)
+                .opacity(coverImageOpacity)
+                Spacer()
+            }
             VStack {
                 if let image = coverImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-//                            .scaledToFill()
-//                            .clipped()
-//                            .frame(width: coverImageDimension, height: coverImageDimension)
-                            .frame(height: coverImageDimension)
-                            .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
-                            .opacity(coverImageOpacity)
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(height: coverImageDimension)
+//                        .clipped()
+                        .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
+                        .opacity(coverImageOpacity)
                 }
                 Spacer()
             }
             .ignoresSafeArea(.all, edges: [.horizontal])
             ScrollView {
                 VStack(alignment: .leading) {
-                    if let image = coverImage {
+                    if coverImage != nil {
                         Rectangle()
-                            .frame(height: coverImageDimension)
+                            .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
                             .hidden()
                     }
                     Text(album.name)
@@ -143,10 +148,10 @@ struct AlbumStaticPageView: View {
             ToolbarItem(placement: .principal) {
                 Text(album.name)
                     .font(.headline)
-                    .opacity(navigationTitleOpacity)
+                    .opacity(navTitleOpacity)
             }
         }
-        .toolbarBackground(isScrollBelowCover ? .automatic : .hidden, for: .navigationBar)
+        .toolbarBackground(isTextBehindNavBar ? .automatic : .hidden, for: .navigationBar)
         .task {
             await loadContents()
         }
