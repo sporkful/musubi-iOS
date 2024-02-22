@@ -50,4 +50,8 @@ extension Musubi.UI {
     ) -> CGFloat {
         return min(max((y2 - y1) / (x2 - x1) * (x - x1) + y1, minY), maxY)
     }
+    
+    static func clamp(y: CGFloat, minY: CGFloat, maxY: CGFloat) -> CGFloat {
+        return min(max(y, minY), maxY)
+    }
 }
