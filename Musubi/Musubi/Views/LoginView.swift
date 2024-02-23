@@ -22,7 +22,6 @@ struct LoginView: View {
             } label: {
                 Text("Log in with Spotify")
                     .padding()
-                    .foregroundColor(.white)
                     .background(
                         RoundedRectangle(
                             cornerRadius: 20,

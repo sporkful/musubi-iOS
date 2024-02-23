@@ -10,6 +10,7 @@ struct MusubiApp: App {
         WindowGroup {
             LoginView()
                 .preferredColorScheme(.dark)
+                .tint(.white)
                 .environment(userManager)
         }
     }

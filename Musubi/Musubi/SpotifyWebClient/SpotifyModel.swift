@@ -8,6 +8,10 @@ protocol SpotifyModelIdentifiable: SpotifyModel, Identifiable {
     var id: Spotify.Model.ID { get }
 }
 
+protocol SpotifyModelNameable: SpotifyModel {
+    var name: String { get }
+}
+
 protocol SpotifyModelPage: SpotifyModel {
     associatedtype ItemType: SpotifyModelIdentifiable
     
@@ -31,7 +35,7 @@ extension Spotify.Model {
         let width: Int?
     }
     
-    struct LoggedInUser: SpotifyModelIdentifiable {
+    struct LoggedInUser: SpotifyModelIdentifiable, SpotifyModelNameable {
 //        let country: String
         let display_name: String
 //        let explicit_content: [String: Bool]
@@ -39,13 +43,17 @@ extension Spotify.Model {
         let id: Spotify.Model.ID
 //        let images: [SpotifyImage]?
 //        let product: String
+        
+        var name: String { display_name }
     }
     
-    struct OtherUser: SpotifyModelIdentifiable, Hashable {
+    struct OtherUser: SpotifyModelIdentifiable, SpotifyModelNameable, Hashable {
         let display_name: String
         let external_urls: [String: String]
         let id: Spotify.Model.ID
         let images: [SpotifyImage]?
+        
+        var name: String { display_name }
     }
     
     struct AudioTrack: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
@@ -64,7 +72,7 @@ extension Spotify.Model {
         var images: [Spotify.Model.SpotifyImage]? { album?.images }
     }
     
-    struct Artist: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
+    struct Artist: SpotifyModelIdentifiable, SpotifyModelNameable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let name: String
         let images: [SpotifyImage]?

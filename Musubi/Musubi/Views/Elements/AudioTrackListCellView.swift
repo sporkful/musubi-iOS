@@ -90,6 +90,8 @@ struct AudioTrackListCellView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: MENU_SYMBOL_SIZE))
+                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                    .contentShape(Rectangle())
             }
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})

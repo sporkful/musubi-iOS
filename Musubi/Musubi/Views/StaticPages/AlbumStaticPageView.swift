@@ -147,7 +147,6 @@ struct AlbumStaticPageView: View {
                                 Text(artist.name)
                                     .font(.caption)
                                     .fontWeight(.bold)
-                                    .foregroundColor(.white)
                             }
                         }
                     }
@@ -190,9 +189,29 @@ struct AlbumStaticPageView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(album.name)
-                    .font(.headline)
-                    .opacity(navTitleOpacity)
+                HStack {
+                    Spacer()
+                    Text(album.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .opacity(navTitleOpacity)
+                    Spacer()
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        // TODO: remove
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus")
+                            Text("PLACEHOLDER")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "clock.arrow.2.circlepath")
+                }
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
