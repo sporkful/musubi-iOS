@@ -8,21 +8,43 @@
 
 Git is a popular distributed version control system commonly used in software engineering.
 
-"Repositories" are the unit of version control under Git. Git tracks changes made within a repository and does not track changes made across different repositories. By default, Git repositories can't be nested.
+"Repositories" are the unit of version control under Git. Git tracks changes made within a repository and does not track changes made across different repositories.
 
-At a high level, a Git repository's internal model is a directed acyclic graph of "commits" (i.e. version snapshots) linked by hashing, such that each commit "points to" one or more parent commits from which it was derived. This results in a well-defined causally-ordered history.
+Multiple *physical* "clones" can be made of the same *logical* repository. Changes can be made/logged on each clone without needing to *coordinate with* / *block on* / *wait for* other clones. Divergent threads of change can be "merged" at a later time to reflect a true/consistent state of the logical repository. This enables collaborators on different physical devices to work asynchronously.
 
-Each collaborating device locally stores its own copy of the entire history DAG. History is represented as a DAG, not linearly i.e. a linked-list, since histories are allowed to "diverge". This is part of the tradeoff for defining "commit" as an "optimistic" operation (in the sense of optimistic concurrency control) that can complete locally without needing to block / coordinate with other collaborating devices.
+Changes in Git are represented as "commits", which are point-in-time snapshots of a repository's content. Creating a commit is a *non-blocking* manual operation available to each clone of the repository. A Git repository's *global logical history* is represented as a *directed acyclic graph* of commits linked by hashing, such that each commit points to one or more parent commits from which it was derived. The DAG can *fork*[^1] when different clones concurrently make their own commits derived from the same parent commit. The DAG can also *join* when concurrent (threads of) commits are "merged" into a single consistent state - this is represented by a new commit with multiple parents.
 
-Diverged history can be reconciled with a "merge" operation, which creates a new commit with more than one parent. A merge is said to have "conflicts" if the divergent (i.e. logically "concurrent" wrt causal order) branches-to-be-merged made different changes (wrt their lowest common ancestor in the DAG) in such a way that the VCS can't automatically determine the desired merged result. E.g. concurrent+differing changes to the same line in the same file would be marked as a conflict in Git. Under this definition, conflicts can only be resolved manually by users (who have a level of semantic understanding of the content that the VCS doesn't), and a merge can't complete until all conflicts are resolved.
+[^1]: The term *fork* (and *join*) is used here to describe a mental model for how a Git repository's global history flows as a DAG / to explain why history is not just represented as a linked-list (or tree). This usage of the term *fork* is related to but **should not be conflated with ["forking" in GitHub](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks)**. This is also related to but not exactly the same as "branching" in Git - "branching" is a physical/local construct while *forking* (as used here) is a logical/global concept.
+
+Each clone of a repository holds its own physical copy of the repository's global logical history DAG. These physical copies may be incomplete due to the distributed/non-blocking nature of Git - each clone will need to manually/periodically "fetch" new commits it's interested in from other clones (aka "remotes").
+
+To physically organize logical threads of commits that are concurrent, Git provides the "branch" construct - a branch is essentially just a named reference to the commit representing the "head" of a logical thread. In particular, each clone maintains "remote branches" that track the progress of other clones. A great explanation of remote branches can be found [here](https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches). **Note that for simplicity of use, Musubi does not allow multiple *logical* branches. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no things like "feature" branches. The concept of branching is ultimately abstracted away from the user, again for simplicity.**
+
+As mentioned earlier, concurrent commits (often the heads of concurrent logical threads) can be "merged" into a single consistent state - this is represented by a new commit with multiple parents. A merge is said to have "conflicts" if the commits-to-be-merged made different changes (wrt their lowest common ancestor in the global logical history DAG) in such a way that the VCS can't automatically determine the desired merged result. E.g. concurrent+differing changes to the same line in the same file would be marked as a conflict in Git. Under this definition, conflicts can only be resolved manually by users (who have a level of semantic understanding of the content that the VCS doesn't), and a merge can't complete until all conflicts are resolved.
 
 #### GitHub
 
-GitHub is a third-party service that hosts a highly-available central copy of any Git repository that users "push" to GitHub. Instead of needing to sync/backup in a peer-to-peer manner, users can just sync/backup against GitHub.
+GitHub is a third-party service that hosts a highly-available clone of any Git repository that users "push" to GitHub. Instead of needing to sync/backup in a peer-to-peer manner, users can just sync/backup against GitHub.
+
+Crucially, GitHub facilitates the ["Integration-Manager Workflow"](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows#wfdiag_b), which Musubi adopts.
 
 #### Adapting the Git+GitHub model for Musubi
 
-To allow users to collaborate on and subscribe to specific playlists, Musubi version-controls each playlist separately. In Git terms, Musubi treats each playlist as a separate repository. When multiple users collaborate on the same playlist, that playlist is considered as a single logical repository, with each collaborator having their own clone of the repository.
+TODO:
+- staging area = Musubi
+- "local" repo = Musubi cloud services
+    - every commit must go to cloud before "succeeding"
+    - this simplifies things so users don't have to think about committing, pushing, and pull-requesting/merging.
+    - also enables ergonomic improvements to process?
+    - HOWEVER makes Musubi explicitly NOT local-first :(
+        - but Musubi can't be local-first anyways because it's pretty useless without connection to Spotify API.
+    - TODO: how to handle conflicts between multiple Musubi devices for same user??
+- GitHub main repo = Musubi cloud services + original playlist on Spotify with single owner (creator).
+- GitHub fork = Musubi cloud services + independent Spotify playlist copy
+    - but editing directly on Spotify is NOT like editing directly on GitHub since cloud services won't know what changes you made to Spotify until you initiate a push/merge.
+
+
+To allow users to collaborate on and subscribe to specific playlists, Musubi version-controls each playlist separately, i.e. each playlist is a separate "repository". When multiple users collaborate on the same playlist, that playlist is considered as a single logical repository, with each collaborator having their own clone of the repository.
 
 Musubi's UI and underlying merge algorithm are co-designed to make the merging process both safe and intuitive for users. When merging divergent branches, Musubi always lets users manually (de)select which changes to keep; by default, all changes are selected. Notably, while most version control systems can only identify changes as independent *insert*s and *delete*s, Musubi can further identify *reorder*s/*move*s for easier conflict resolution (note for context: Spotify lets users manually define a "custom order" of songs within a playlist).
 - TODO: describe this in separate impl doc.
