@@ -30,6 +30,7 @@ struct ListCell: View {
     var body: some View {
         HStack {
             if item.images != nil && !(item.images!.isEmpty) {
+                // TODO: retry upon failure? (expected due to spotify api rate limits)
                 AsyncImage(url: URL(string: item.images![0].url)) { loadedImage in
                     loadedImage
                         .resizable()

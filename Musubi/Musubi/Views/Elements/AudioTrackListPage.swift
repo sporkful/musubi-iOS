@@ -19,7 +19,11 @@ struct AudioTrackListPage: View {
     @Binding var coverImage: UIImage?
     @Binding var audioTrackList: [Spotify.Model.AudioTrack]
     
-    let authors: [SpotifyModelNameable]  // artists (albums) or users (playlists)
+    enum AssociatedPeople {
+        case artists([Spotify.Model.Artist])
+        case users([Spotify.Model.OtherUser])
+    }
+    let associatedPeople: AssociatedPeople
     let date: String
     
     
@@ -148,16 +152,33 @@ struct AudioTrackListPage: View {
                         .font(.title)
                         .fontWeight(.bold)
                     HStack {
-                        ForEach(Array(zip(authors.indices, authors)), id: \.0) { index, author in
-                            if index != 0 {
-                                Text("•")
+                        // TODO: fix repetition here somehow without turning into ViewBuilder
+                        switch associatedPeople {
+                        case .artists(let artists):
+                            ForEach(Array(zip(artists.indices, artists)), id: \.0) { index, artist in
+                                if index != 0 {
+                                    Text("•")
+                                }
+                                Button {
+                                    navigationPath.append(artist)
+                                } label: {
+                                    Text(artist.name)
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
-                            Button {
-                                navigationPath.append(author)
-                            } label: {
-                                Text(author.name)
-                                    .font(.caption)
-                                    .fontWeight(.bold)
+                        case .users(let users):
+                            ForEach(Array(zip(users.indices, users)), id: \.0) { index, user in
+                                if index != 0 {
+                                    Text("•")
+                                }
+                                Button {
+                                    navigationPath.append(user)
+                                } label: {
+                                    Text(user.name)
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
                         }
                     }
@@ -175,10 +196,9 @@ struct AudioTrackListPage: View {
                             scrollPosition = -proxy
                                 .frame(in: .named("\(viewID.uuidString)::ScrollView"))
                                 .origin.y
-                            print("scroll position \(scrollPosition)")
+//                            print("scroll position \(scrollPosition)")
                         }
-//                        return Color.clear
-                        Color.clear
+                        return Color.clear
                     }
                 )
             }
