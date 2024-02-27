@@ -1,10 +1,10 @@
-// AudioTrackListCellView.swift
+// AudioTrackListCell.swift
 
 import SwiftUI
 
 // TODO: playback ability
 
-struct AudioTrackListCellView: View {
+struct AudioTrackListCell: View {
     let audioTrack: Spotify.Model.AudioTrack
     
     @Binding var navigationPath: NavigationPath
@@ -15,7 +15,7 @@ struct AudioTrackListCellView: View {
     
     var body: some View {
         HStack {
-            ListCellView(item: audioTrack)
+            ListCell(item: audioTrack)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     // TODO: implement playback
@@ -99,5 +99,5 @@ struct AudioTrackListCellView: View {
 }
 
 //#Preview {
-//    AudioTrackListCellView()
+//    AudioTrackListCell()
 //}

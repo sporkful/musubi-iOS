@@ -1,8 +1,8 @@
-// ListCellView.swift
+// ListCell.swift
 
 import SwiftUI
 
-struct ListCellView: View {
+struct ListCell: View {
     let item: SpotifyModelCardable
     let caption: String
     
@@ -56,5 +56,5 @@ struct ListCellView: View {
 }
 
 //#Preview {
-//    ListCellView()
+//    ListCell()
 //}

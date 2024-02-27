@@ -1,23 +1,36 @@
-// AlbumStaticPageView.swift
+// AudioTrackListPage.swift
 
 import SwiftUI
 
-struct AlbumStaticPageView: View {
+struct AudioTrackListPage: View {
     @Environment(Musubi.UserManager.self) private var userManager
-    
-    let album: Spotify.Model.Album
     
     @Binding var navigationPath: NavigationPath
     
-    @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
+    enum ContentType: String {
+        case album = "Album"
+        case playlist = "Playlist"
+    }
     
-    @State private var coverImage: UIImage?
+    let contentType: ContentType
+    let isEditable: Bool
+    
+    @Binding var name: String
+    @Binding var coverImage: UIImage?
+    @Binding var audioTrackList: [Spotify.Model.AudioTrack]
+    
+    let authors: [SpotifyModelNameable]  // artists (albums) or users (playlists)
+    let date: String
+    
+    
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
     private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
     
     private var backgroundHighlightColor: UIColor {
         coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
+    
+    private let viewID = UUID() // for scroll view coordinate space id
     
     // remember scrollPosition=0 at top and increases as user scrolls down.
     @State private var scrollPosition: CGFloat = 0
@@ -68,7 +81,6 @@ struct AlbumStaticPageView: View {
     }
     
     private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
-    private let SCROLLVIEW_TITLE_SAT_POINT = Musubi.UI.SCROLLVIEW_TITLE_SAT_POINT
     private var navTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
@@ -83,7 +95,6 @@ struct AlbumStaticPageView: View {
     private var navBarOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
-//            x1: COVER_IMAGE_INITIAL_DIMENSION - SCROLLVIEW_TITLE_HEIGHT * SCROLLVIEW_TITLE_SAT_POINT,
             x1: COVER_IMAGE_INITIAL_DIMENSION * 0.75,
             y1: 0.0,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
@@ -133,24 +144,24 @@ struct AlbumStaticPageView: View {
                             .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
                             .hidden()
                     }
-                    Text(album.name)
+                    Text(name)
                         .font(.title)
                         .fontWeight(.bold)
                     HStack {
-                        ForEach(Array(zip(album.artists.indices, album.artists)), id: \.0) { index, artist in
+                        ForEach(Array(zip(authors.indices, authors)), id: \.0) { index, author in
                             if index != 0 {
                                 Text("•")
                             }
                             Button {
-                                navigationPath.append(artist)
+                                navigationPath.append(author)
                             } label: {
-                                Text(artist.name)
+                                Text(author.name)
                                     .font(.caption)
                                     .fontWeight(.bold)
                             }
                         }
                     }
-                    Text("Album • \(album.release_date)")
+                    Text("\(contentType.rawValue) • \(date)")
                         .font(.caption)
                     ForEach(audioTrackList) { audioTrack in
                         Divider()
@@ -162,17 +173,18 @@ struct AlbumStaticPageView: View {
                     GeometryReader { proxy -> Color in
                         Task { @MainActor in
                             scrollPosition = -proxy
-                                .frame(in: .named("AlbumStaticPageView::ScrollView"))
+                                .frame(in: .named("\(viewID.uuidString)::ScrollView"))
                                 .origin.y
                             print("scroll position \(scrollPosition)")
                         }
-                        return Color.clear
+//                        return Color.clear
+                        Color.clear
                     }
                 )
             }
             .ignoresSafeArea(.all, edges: [.horizontal])
             .scrollContentBackground(.hidden)
-            .coordinateSpace(name: "AlbumStaticPageView::ScrollView")
+            .coordinateSpace(name: "\(viewID.uuidString)::ScrollView")
             VStack {
                 Color(backgroundHighlightColor)
                     // TODO: this seems unreliable
@@ -191,7 +203,7 @@ struct AlbumStaticPageView: View {
             ToolbarItem(placement: .principal) {
                 HStack {
                     Spacer()
-                    Text(album.name)
+                    Text(name)
                         .font(.headline)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -215,39 +227,9 @@ struct AlbumStaticPageView: View {
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
-        .task {
-            await loadContents()
-        }
-    }
-    
-    @MainActor
-    func loadContents() async {
-        do {
-            self.audioTrackList = try await Spotify.Requests.Read.albumTracklist(
-                albumID: album.id,
-                userManager: userManager
-            )
-        } catch {
-            // TODO: alert user?
-            print("[Musubi::AlbumStaticPageView] unable to load tracklist")
-            print(error)
-        }
-        
-        do {
-            guard let coverImageURLStr = self.album.images?.first?.url,
-                  let coverImageURL = URL(string: coverImageURLStr)
-            else {
-                throw Musubi.UIError.any(detail: "AlbumStaticPageView no image url found")
-            }
-            let (imageData, _) = try await URLSession.shared.data(from: coverImageURL)
-            self.coverImage = UIImage(data: imageData)
-        } catch {
-            print("[Musubi::AlbumStaticPageView] unable to load cover image")
-            print(error)
-        }
     }
 }
 
 //#Preview {
-//    AlbumStaticPageView()
+//    AudioTrackListPage()
 //}
