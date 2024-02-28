@@ -34,6 +34,10 @@ struct AudioTrackListPage: View {
         coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
     }
     
+    private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
+    private let SHUFFLE_SYMBOL_SIZE = Musubi.UI.SHUFFLE_SYMBOL_SIZE
+    private let MENU_SYMBOL_SIZE = Musubi.UI.MENU_SYMBOL_SIZE
+    
     private let viewID = UUID() // for scroll view coordinate space id
     
     // remember scrollPosition=0 at top and increases as user scrolls down.
@@ -65,9 +69,9 @@ struct AudioTrackListPage: View {
         return Musubi.UI.lerp(
             x: scrollPosition,
             x1: 0.0,
-            y1: COVER_IMAGE_INITIAL_DIMENSION + SCROLLVIEW_TITLE_HEIGHT * 2.62,
+            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 2.62,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
-            y2: SCROLLVIEW_TITLE_HEIGHT * 3.30,
+            y2: TITLE_TEXT_HEIGHT * 3.30,
             minY: 1.0,
             maxY: Musubi.UI.SCREEN_HEIGHT
         )
@@ -84,13 +88,13 @@ struct AudioTrackListPage: View {
         )
     }
     
-    private let SCROLLVIEW_TITLE_HEIGHT = Musubi.UI.SCROLLVIEW_TITLE_HEIGHT
+    private let TITLE_TEXT_HEIGHT = Musubi.UI.TITLE_TEXT_HEIGHT
     private var navTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: COVER_IMAGE_INITIAL_DIMENSION + SCROLLVIEW_TITLE_HEIGHT * 0.420,
+            x1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 0.420,
             y1: 0.0,
-            x2: COVER_IMAGE_INITIAL_DIMENSION + SCROLLVIEW_TITLE_HEIGHT * 2.62,
+            x2: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 2.62,
             y2: 1.0,
             minY: 0.0,
             maxY: 1.0
@@ -184,7 +188,69 @@ struct AudioTrackListPage: View {
                     }
                     Text("\(contentType.rawValue) • \(date)")
                         .font(.caption)
-                    ForEach(audioTrackList) { audioTrack in
+                    HStack {
+                        // TODO: finish
+                        if isEditable {
+                            Button {
+                                // TODO: show sheet
+                            } label: {
+                                Image(systemName: "square.and.pencil")
+                            }
+                            Button {
+                                // TODO: show sheet or push onto navstack?
+                            } label: {
+                                Image(systemName: "clock.arrow.2.circlepath")
+                            }
+                        }
+                        Menu {
+                            if isEditable {
+                                Button {
+                                    // TODO: show sheet
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "square.and.pencil")
+                                        Text("Edit")
+                                    }
+                                }
+                                Button {
+                                    // TODO: show sheet or push onto navstack?
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "clock.arrow.2.circlepath")
+                                        Text("Version control")
+                                    }
+                                }
+                            }
+                            Button {
+                                // TODO: impl
+                            } label: {
+                                HStack {
+                                    Image(systemName: "plus")
+                                    Text("Add all tracks in this collection to playlist")
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: MENU_SYMBOL_SIZE))
+                                .frame(height: MENU_SYMBOL_SIZE)
+                                .contentShape(Rectangle())
+                        }
+                        Spacer()
+                        Button {
+                            // TODO: impl
+                        } label: {
+                            Image(systemName: "shuffle")
+                                .font(.system(size: SHUFFLE_SYMBOL_SIZE))
+                            // TODO: opacity depending on toggle state
+                        }
+                        Button {
+                            // TODO: impl
+                        } label: {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: PLAY_SYMBOL_SIZE))
+                        }
+                    }
+                    ForEach($audioTrackList) { $audioTrack in
                         Divider()
                         AudioTrackListCell(audioTrack: audioTrack, navigationPath: $navigationPath)
                     }
@@ -232,18 +298,9 @@ struct AudioTrackListPage: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        // TODO: remove
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus")
-                            Text("PLACEHOLDER")
-                        }
-                    }
-                } label: {
-                    Image(systemName: "clock.arrow.2.circlepath")
-                }
+                // placeholder to center title
+                Image(systemName: "ellipsis")
+                    .hidden()
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)

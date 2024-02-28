@@ -24,18 +24,11 @@ extension Musubi.UI {
     
     static let COVER_IMAGE_SHADOW_RADIUS: CGFloat = 5
     
-    // hack to let background gradient extend beyond ScrollView bounds.
-    static let SCROLLVIEW_BACKGROUND_CUTOFF: Double = 0.5
-//        = ImageDimension.albumCover.rawValue / UIScreen.main.bounds.size.height
-    
-    // hack for dynamic navbar blurring.
-    // remember scrollPosition=0 at top and increases as user scrolls down.
-    static let SCROLLVIEW_COVER_BOTTOM_Y: CGFloat
-        = ImageDimension.audioTracklistCover.rawValue + COVER_IMAGE_SHADOW_RADIUS
-    static let SCROLLVIEW_TITLE_HEIGHT: CGFloat = 40
-    static let SCROLLVIEW_TITLE_SAT_POINT: Double = 0.75 // navtitle.opacity=1 when x of title is covered.
+    static let TITLE_TEXT_HEIGHT: CGFloat = 40
     
     static let MENU_SYMBOL_SIZE: Double = 25
+    static let PLAY_SYMBOL_SIZE: Double = 50
+    static let SHUFFLE_SYMBOL_SIZE: Double = 33
 }
 
 extension Musubi.UI {
