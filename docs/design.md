@@ -22,29 +22,62 @@ To physically organize logical threads of commits that are concurrent, Git provi
 
 As mentioned earlier, concurrent commits (often the heads of concurrent logical threads) can be "merged" into a single consistent state - this is represented by a new commit with multiple parents. A merge is said to have "conflicts" if the commits-to-be-merged made different changes (wrt their lowest common ancestor in the global logical history DAG) in such a way that the VCS can't automatically determine the desired merged result. E.g. concurrent+differing changes to the same line in the same file would be marked as a conflict in Git. Under this definition, conflicts can only be resolved manually by users (who have a level of semantic understanding of the content that the VCS doesn't), and a merge can't complete until all conflicts are resolved.
 
-#### GitHub
+#### GitHub / Integration-Manager Workflow (IMW)
 
 GitHub is a third-party service that hosts a highly-available clone of any Git repository that users "push" to GitHub. Instead of needing to sync/backup in a peer-to-peer manner, users can just sync/backup against GitHub.
 
-Crucially, GitHub facilitates the ["Integration-Manager Workflow"](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows#wfdiag_b), which Musubi adopts.
+Crucially, GitHub facilitates the ["Integration-Manager Workflow (IMW)"](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows#wfdiag_b), which Musubi also adopts.
 
-#### Adapting the Git+GitHub model for Musubi
+#### Adapting the Git+IMW architecture for Musubi
 
-TODO:
-- staging area = Musubi
+To allow users to collaborate on and subscribe to different specific playlists, Musubi version-controls each playlist separately, i.e. Musubi treats each playlist as a separate logical repository.
+
+The architecture of Musubi follows from a couple of key constraints / requirements.
+
+- **Added collaborators do NOT have the ability to modify a shared playlist *through the Spotify API***. In other words, when using the Spotify API, only the "owner"/creator of a playlist can modify it.
+    - (Note that added collaborators do have the ability to modify a shared playlist *through the official Spotify app*.)
+    - This motivates an overall architecture that closely follows the ["Integration-Manager Workflow (IMW)"](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows#wfdiag_b), with the "integration manager + blessed repository" roughly mapping to the playlist+repo on the owner's Spotify+Musubi account and the "developer public + private" roughly mapping to the playlistcopy+clone on a collaborator's Spotify+Musubi account.
+
+- **In the Musubi system model, Spotify itself is both the platform to which changes need to be published AND an external actor with direct write privileges".**
+    - Musubi is not intended to fully replace usage of the official Spotify clients, since there are multiple features that are not directly supported by the Spotify API and would be too costly/impractical to reproduce. It is expected that most if not all Musubi users will also use an official Spotify client concurrently (e.g. official Spotify client for new music discovery + Musubi for more reliable playlist management and organized collaborative editing + official Spotify client for regular/group listening sessions). This means one of Musubi's requirements is to gracefully and safely handle/propagate changes made by users in Spotify itself - changes that Musubi can't directly observe / react to in real-time (without introducing some inefficient mechanism like polling the Spotify API).
+    - An obvious solution-direction that comes to mind is to treat the playlist on Spotify itself as its own clone of the logical repository. This does not directly align with the Git model since the "clone" on Spotify won't be making any explicit "commits" that other clones can organize/synchronize around. However, the spirit of this approach is useful, and Musubi's solution builds on it.
+
+We arrive at the following IMW-based architecture:
+
+The Musubi backend is analogous to the GitHub backend, with key differences being:
+- There is a one-to-one correspondence (bijection) between Musubi-backend-hosted clones and Musubi-local clones. (OTOH there may be a one-to-many mapping from GitHub-hosted clones to local Git clones.)
+    - Note that the relationships between Musubi-backend-hosted clones and other Musubi-backend-hosted clones of the same repo can be many-to-many - these clones can be thought of as analogous to [GitHub "forks"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks).
+- "Pushing" to a Musubi-hosted clone also interacts with Spotify in the following way:
+    1. Check if any changes were made on Spotify (i.e. through official Spotify clients) since the last successful push (which marks the last successful sync between Musubi and Spotify).
+        - If such changes are detected, the Musubi client must first merge in the changes from Spotify to the Musubi local state (creating a new merge commit) before the push can proceed. This is a three-way merge between the current Musubi state, the current Spotify state, and the state at the last successful sync (note this is always an explicit Musubi commit). This makes sure that users don't lose changes they made in Spotify / outside of Musubi. Once the merge is completed locally, the Musubi client restarts the push process (doing the sync check again).
+    2. A successful push will update Spotify itself to reflect the current Musubi state. As described above, a push is an atomic action (wrt Spotify) that only succeeds if there is no merge needed when it starts. This ensures that no changes in Spotify are lost without user review.
+        - Note that *in theory* there is a race condition: in the context of a single push action, the user might make a change in Spotify in the window between Musubi's successful check (a read from Spotify) and subsequent write to Spotify. *In practice*, this window is so small (10s of milliseconds) that the race condition never occurs under normal human-controlled usage. In other words, it's impossible for users to accidentally trigger it. If a user does manage to trigger it (e.g. by having multiple devices open under the same account and consciously trying to simultaneously make a Spotify edit and a Musubi push on the same playlist), we consider them to be "malicious", but we can safely ignore them since exploiting this race condition only harms their own Musubi-Spotify integration experience.
+
+The following table is defined wrt a single logical Musubi repository / Spotify playlist.
+
+| IMW concept | Definition in terms of Git+GitHub | Musubi equivalent |
+| --- | --- | --- |
+| blessed repository | The GitHub-hosted clone considered to be the "official" project. | The Musubi-hosted clone under the Musubi account of the playlist owner. As described above, on every successful "push" to this Musubi-hosted repository, the original playlist on Spotify is also updated to reflect the Musubi state. |
+| integration manager | A local clone with "push" privileges to the blessed repository. Can also review/merge "pull requests" from remote collaborators and push successful merges to the blessed repository. | A Musubi app instance belonging to the playlist owner. |
+| developer public | A GitHub-hosted clone considered to be a ["fork"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks) of the blessed repository. | A Musubi-hosted clone under the Musubi account of a playlist collaborator. Also associated with a complete independent playlist copy on Spotify, itself "owned" by the collaborator. Note that the playlist copy on Spotify plays no IMW-specific role - its sole purpose is to give the collaborator the option of editing Musubi-forked playlists on the official Spotify clients (which may e.g. offer better suggestions for songs to add). |
+| developer private | A local clone with "push" privileges to `developer public`. Can send pull requests (wrt successfully-pushed commits on `developer public`) to the integration manager. | A Musubi app instance belonging to a collaborator on the playlist. |
+
+TODO: clean up old brainstorm here
+- staging area + "local" repo = Musubi
+    - can edit locally, including offline.
+    - for simplicity of use and to encourage users to keep their devices as synchronized as possible, provide "commit + push" as one operation.
+        - this makes Musubi explicitly NOT local-first :( but we note that Musubi can't really be local-first anyways because it's pretty useless without connection to Spotify API.
+    - can checkout historical commits
+
 - "local" repo = Musubi cloud services
-    - every commit must go to cloud before "succeeding"
+    - every commit op must go to cloud before "succeeding"
     - this simplifies things so users don't have to think about committing, pushing, and pull-requesting/merging.
-    - also enables ergonomic improvements to process?
-    - HOWEVER makes Musubi explicitly NOT local-first :(
-        - but Musubi can't be local-first anyways because it's pretty useless without connection to Spotify API.
-    - TODO: how to handle conflicts between multiple Musubi devices for same user??
+    - also enables ergonomic/perf improvements to process?
 - GitHub main repo = Musubi cloud services + original playlist on Spotify with single owner (creator).
 - GitHub fork = Musubi cloud services + independent Spotify playlist copy
     - but editing directly on Spotify is NOT like editing directly on GitHub since cloud services won't know what changes you made to Spotify until you initiate a push/merge.
 
-
-To allow users to collaborate on and subscribe to specific playlists, Musubi version-controls each playlist separately, i.e. each playlist is a separate "repository". When multiple users collaborate on the same playlist, that playlist is considered as a single logical repository, with each collaborator having their own clone of the repository.
+##### Resolving merge conflicts in Musubi
 
 Musubi's UI and underlying merge algorithm are co-designed to make the merging process both safe and intuitive for users. When merging divergent branches, Musubi always lets users manually (de)select which changes to keep; by default, all changes are selected. Notably, while most version control systems can only identify changes as independent *insert*s and *delete*s, Musubi can further identify *reorder*s/*move*s for easier conflict resolution (note for context: Spotify lets users manually define a "custom order" of songs within a playlist).
 - TODO: describe this in separate impl doc.
