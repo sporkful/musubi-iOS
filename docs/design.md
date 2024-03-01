@@ -18,15 +18,17 @@ Changes in Git are represented as "commits", which are point-in-time snapshots o
 
 Each clone of a repository holds its own physical copy of the repository's global logical history DAG. These physical copies may be incomplete due to the distributed/non-blocking nature of Git - each clone will need to manually/periodically "fetch" new commits it's interested in from other clones (aka "remotes").
 
-To physically organize logical threads of commits that are concurrent, Git provides the "branch" construct - a branch is essentially just a named reference to the commit representing the "head" of a logical thread. In particular, each clone maintains "remote branches" that track the progress of other clones. A great explanation of remote branches can be found [here](https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches). **Note that for simplicity of use, Musubi does not allow multiple *logical* branches. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no things like "feature" branches. The concept of branching is ultimately abstracted away from the user, again for simplicity.**
+To physically organize logical threads of commits that are concurrent, Git provides the "branch" construct - a branch is essentially just a named reference to the commit representing the "head" of a logical thread. In particular, each clone maintains "remote branches" that track the progress of other clones. A great explanation of remote branches can be found [here](https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches). **Note that for simplicity of use, Musubi does not allow multiple *logical* branches within any repository. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no user-made "feature" branches. The concept of branching is ultimately abstracted away from the user, again for simplicity.**
 
 As mentioned earlier, concurrent commits (often the heads of concurrent logical threads) can be "merged" into a single consistent state - this is represented by a new commit with multiple parents. A merge is said to have "conflicts" if the commits-to-be-merged made different changes (wrt their lowest common ancestor in the global logical history DAG) in such a way that the VCS can't automatically determine the desired merged result. E.g. concurrent+differing changes to the same line in the same file would be marked as a conflict in Git. Under this definition, conflicts can only be resolved manually by users (who have a level of semantic understanding of the content that the VCS doesn't), and a merge can't complete until all conflicts are resolved.
+
 
 #### GitHub / Integration-Manager Workflow (IMW)
 
 GitHub is a third-party service that hosts a highly-available clone of any Git repository that users "push" to GitHub. Instead of needing to sync/backup in a peer-to-peer manner, users can just sync/backup against GitHub.
 
 Crucially, GitHub facilitates the ["Integration-Manager Workflow (IMW)"](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows#wfdiag_b), which Musubi also adopts.
+
 
 #### Adapting the Git+IMW architecture for Musubi
 
@@ -45,8 +47,11 @@ The architecture of Musubi follows from a couple of key constraints / requiremen
 We arrive at the following IMW-based architecture:
 
 The Musubi backend is analogous to the GitHub backend, with key differences being:
-- There is a one-to-one correspondence (bijection) between Musubi-backend-hosted clones and Musubi-local clones. (OTOH there may be a one-to-many mapping from GitHub-hosted clones to local Git clones.)
-    - Note that the relationships between Musubi-backend-hosted clones and other Musubi-backend-hosted clones of the same repo can be many-to-many - these clones can be thought of as analogous to [GitHub "forks"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks).
+
+- Each Musubi-backend-hosted clone is associated with exactly one Musubi account with direct push access. (OTOH a GitHub-hosted clone may have multiple GitHub accounts with direct push access.) Collaborating through Musubi is all done through [GitHub-like "forking"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks).
+    - Note that a Musubi account can be associated with multiple devices. This is analogous to a GitHub user having multiple local Git clones of the same repo.
+    - Note that a Musubi account is also associated with an account on Spotify itself. Interactions between Musubi and Spotify are described in the next bullet point.
+
 - "Pushing" to a Musubi-hosted clone also interacts with Spotify in the following way:
     1. Check if any changes were made on Spotify (i.e. through official Spotify clients) since the last successful push (which marks the last successful sync between Musubi and Spotify).
         - If such changes are detected, the Musubi client must first merge in the changes from Spotify to the Musubi local state (creating a new merge commit) before the push can proceed. This is a three-way merge between the current Musubi state, the current Spotify state, and the state at the last successful sync (note this is always an explicit Musubi commit). This makes sure that users don't lose changes they made in Spotify / outside of Musubi. Once the merge is completed locally, the Musubi client restarts the push process (doing the sync check again).
@@ -62,22 +67,22 @@ The following table is defined wrt a single logical Musubi repository / Spotify 
 | developer public | A GitHub-hosted clone considered to be a ["fork"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks) of the blessed repository. | A Musubi-hosted clone under the Musubi account of a playlist collaborator. Also associated with a complete independent playlist copy on Spotify, itself "owned" by the collaborator. Note that the playlist copy on Spotify plays no IMW-specific role - its sole purpose is to give the collaborator the option of editing Musubi-forked playlists on the official Spotify clients (which may e.g. offer better suggestions for songs to add). |
 | developer private | A local clone with "push" privileges to `developer public`. Can send pull requests (wrt successfully-pushed commits on `developer public`) to the integration manager. | A Musubi app instance belonging to a collaborator on the playlist. |
 
-TODO: clean up old brainstorm here
-- staging area + "local" repo = Musubi
-    - can edit locally, including offline.
-    - for simplicity of use and to encourage users to keep their devices as synchronized as possible, provide "commit + push" as one operation.
-        - this makes Musubi explicitly NOT local-first :( but we note that Musubi can't really be local-first anyways because it's pretty useless without connection to Spotify API.
-    - can checkout historical commits
+##### Low-level differences between Git and Musubi
 
-- "local" repo = Musubi cloud services
-    - every commit op must go to cloud before "succeeding"
-    - this simplifies things so users don't have to think about committing, pushing, and pull-requesting/merging.
-    - also enables ergonomic/perf improvements to process?
-- GitHub main repo = Musubi cloud services + original playlist on Spotify with single owner (creator).
-- GitHub fork = Musubi cloud services + independent Spotify playlist copy
-    - but editing directly on Spotify is NOT like editing directly on GitHub since cloud services won't know what changes you made to Spotify until you initiate a push/merge.
+Git is an extremely flexible/powerful model that many successful large projects have been organized around. OTOH, Musubi has a much narrower application domain and makes ease-of-use a primary goal.
 
-##### Resolving merge conflicts in Musubi
+To achieve ease-of-use, we note a couple of subgoals for Musubi:
+- Provide only one way to do things.
+- Encourage each user to keep their own clones as synchronized as possible.
+
+To achieve these subgoals, Musubi deviates from the Git model in the following ways:
+
+- "Commit + push" is a single operation in Musubi. When disconnected from the Internet (or if the Musubi service goes down), users can still make local edits but cannot create commits.
+    - Note that all Musubi-based history can be persisted locally on user's devices, so even if the Musubi service goes down forever, users don't lose their logs and may be able to continue building on top of them using alternative services based on the Musubi data format.
+
+- As mentioned earlier, Musubi does not allow multiple *logical* branches within any repository. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no user-made "feature" branches.
+
+##### Merge conflict resolution in Musubi
 
 Musubi's UI and underlying merge algorithm are co-designed to make the merging process both safe and intuitive for users. When merging divergent branches, Musubi always lets users manually (de)select which changes to keep; by default, all changes are selected. Notably, while most version control systems can only identify changes as independent *insert*s and *delete*s, Musubi can further identify *reorder*s/*move*s for easier conflict resolution (note for context: Spotify lets users manually define a "custom order" of songs within a playlist).
 - TODO: describe this in separate impl doc.
