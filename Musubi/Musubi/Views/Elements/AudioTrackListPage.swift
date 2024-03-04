@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-struct AudioTrackListPage: View {
+struct AudioTrackListPage<CustomToolbar: View>: View {
     @Environment(Musubi.UserManager.self) private var userManager
     
     @Binding var navigationPath: NavigationPath
@@ -13,9 +13,9 @@ struct AudioTrackListPage: View {
     }
     
     let contentType: ContentType
-    let isEditable: Bool
     
     @Binding var name: String
+    @Binding var description: String?
     @Binding var coverImage: UIImage?
     @Binding var audioTrackList: [Spotify.Model.AudioTrack]
     
@@ -25,6 +25,8 @@ struct AudioTrackListPage: View {
     }
     let associatedPeople: AssociatedPeople
     let date: String
+    
+    let toolbarBuilder: () -> CustomToolbar
     
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
@@ -155,6 +157,10 @@ struct AudioTrackListPage: View {
                     Text(name)
                         .font(.title)
                         .fontWeight(.bold)
+                    if let description = description {
+                        Text(description)
+                            .font(.caption)
+                    }
                     HStack {
                         // TODO: fix repetition here somehow without turning into ViewBuilder
                         switch associatedPeople {
@@ -188,68 +194,7 @@ struct AudioTrackListPage: View {
                     }
                     Text("\(contentType.rawValue) • \(date)")
                         .font(.caption)
-                    HStack {
-                        // TODO: finish
-                        if isEditable {
-                            Button {
-                                // TODO: show sheet
-                            } label: {
-                                Image(systemName: "square.and.pencil")
-                            }
-                            Button {
-                                // TODO: show sheet or push onto navstack?
-                            } label: {
-                                Image(systemName: "clock.arrow.2.circlepath")
-                            }
-                        }
-                        Menu {
-                            if isEditable {
-                                Button {
-                                    // TODO: show sheet
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "square.and.pencil")
-                                        Text("Edit")
-                                    }
-                                }
-                                Button {
-                                    // TODO: show sheet or push onto navstack?
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "clock.arrow.2.circlepath")
-                                        Text("Version control")
-                                    }
-                                }
-                            }
-                            Button {
-                                // TODO: impl
-                            } label: {
-                                HStack {
-                                    Image(systemName: "plus")
-                                    Text("Add all tracks in this collection to playlist")
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .font(.system(size: MENU_SYMBOL_SIZE))
-                                .frame(height: MENU_SYMBOL_SIZE)
-                                .contentShape(Rectangle())
-                        }
-                        Spacer()
-                        Button {
-                            // TODO: impl
-                        } label: {
-                            Image(systemName: "shuffle")
-                                .font(.system(size: SHUFFLE_SYMBOL_SIZE))
-                            // TODO: opacity depending on toggle state
-                        }
-                        Button {
-                            // TODO: impl
-                        } label: {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: PLAY_SYMBOL_SIZE))
-                        }
-                    }
+                    toolbarBuilder()
                     ForEach($audioTrackList) { $audioTrack in
                         Divider()
                         AudioTrackListCell(audioTrack: audioTrack, navigationPath: $navigationPath)

@@ -13,19 +13,53 @@ struct StaticAlbumPage: View {
     // note the obvious sol seems invalid https://forums.swift.org/t/state-messing-with-initializer-flow/25276/3
     @State var name: String
     
-    @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
+    @State private var description: String? = nil
     @State private var coverImage: UIImage?
+    @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
     
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .album,
-            isEditable: false,
             name: $name,
+            description: $description,
             coverImage: $coverImage,
             audioTrackList: $audioTrackList,
             associatedPeople: .artists(album.artists),
-            date: album.release_date
+            date: album.release_date,
+            toolbarBuilder: {
+                HStack {
+                    Menu {
+                        Button {
+                            // TODO: impl
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus")
+                                Text("Add all tracks in this collection to playlist")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
+                            .frame(height: Musubi.UI.MENU_SYMBOL_SIZE)
+                            .contentShape(Rectangle())
+                    }
+                    Spacer()
+                    Button {
+                        // TODO: impl
+                    } label: {
+                        Image(systemName: "shuffle")
+                            .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                        // TODO: opacity depending on toggle state
+                    }
+                    Button {
+                        // TODO: impl
+                    } label: {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                    }
+                }
+            }
         )
         .task {
             await loadContents()
