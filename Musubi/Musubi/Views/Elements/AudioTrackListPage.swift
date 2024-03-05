@@ -32,9 +32,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
     private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
     
-    private var backgroundHighlightColor: UIColor {
-        coverImage?.musubi_DominantColor()?.musubi_Muted() ?? .black
-    }
+    private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .black }
     
     private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
     private let SHUFFLE_SYMBOL_SIZE = Musubi.UI.SHUFFLE_SYMBOL_SIZE
@@ -71,7 +69,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
         return Musubi.UI.lerp(
             x: scrollPosition,
             x1: 0.0,
-            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 2.62,
+            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
             y2: TITLE_TEXT_HEIGHT * 3.30,
             minY: 1.0,

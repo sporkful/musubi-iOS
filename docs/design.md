@@ -37,6 +37,7 @@ Git(+GitHub/IMW) is an extremely flexible/powerful model that many successful la
 - Encourage each user to keep their own clones (on different devices but under the same user account) as synchronized as possible.
 
 A couple of specific preliminary ways in which Musubi deviates from the core Git model:
+- Every change in Musubi is automatically staged, i.e. there is no Musubi equivalent to a manual "git add".
 - "Commit + push" is a single operation in Musubi. When disconnected from the Internet (or if the Musubi service goes down), users can still make local edits but cannot create commits.
     - Note that all Musubi-based history can be persisted locally on user's devices, so even if the Musubi service goes down forever, users don't lose their logs and may be able to continue building on top of them using alternative services that can ingest the Musubi data format.
 - Musubi does not support multiple *logical* branches within any repository. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no user-made "feature" branches.

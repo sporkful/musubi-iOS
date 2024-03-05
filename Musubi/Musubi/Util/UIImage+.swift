@@ -1,32 +1,10 @@
-// ImageProcessing.swift
+// UIImage+.swift
 
 import Foundation
 import UIKit
 
-extension UIColor {
-    // TODO: mute near-white colors but keep brightness of darker colors (e.g. La La Land cover)
-    func musubi_Muted() -> UIColor {
-        var hue: CGFloat = 0
-        var saturation: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 0
-        self.getHue(
-            &hue,
-            saturation: &saturation,
-            brightness: &brightness,
-            alpha: &alpha
-        )
-        return UIColor(
-            hue: hue,
-            saturation: saturation,
-            brightness: brightness * 0.618,
-            alpha: alpha
-        )
-    }
-}
-
 extension UIImage {
-    func musubi_DominantColor() -> UIColor? {
+    func meanColor() -> UIColor? {
         guard let inputImage = CIImage(image: self) else { return nil }
         let extentVector = CIVector(
             x: inputImage.extent.origin.x,
@@ -66,7 +44,7 @@ extension UIImage {
         )
     }
     
-    func musubi_CenterColor() -> UIColor? {
+    func centerColor() -> UIColor? {
         guard let cgImage = cgImage,
             let pixelData = cgImage.dataProvider?.data
             else { return nil }
@@ -82,20 +60,5 @@ extension UIImage {
         let a = CGFloat(data[pixelInfo+3]) / CGFloat(255.0)
 
         return UIColor(red: r, green: g, blue: b, alpha: a)
-
-        /*
-        let alphaInfo = cgImage.alphaInfo
-        assert(alphaInfo == .premultipliedFirst || alphaInfo == .first || alphaInfo == .noneSkipFirst, "This routine expects alpha to be first component")
-
-        let byteOrderInfo = cgImage.byteOrderInfo
-        assert(byteOrderInfo == .order32Little || byteOrderInfo == .orderDefault, "This routine expects little-endian 32bit format")
-
-        let a: CGFloat = CGFloat(data[pixelInfo+3]) / 255
-        let r: CGFloat = CGFloat(data[pixelInfo+2]) / 255
-        let g: CGFloat = CGFloat(data[pixelInfo+1]) / 255
-        let b: CGFloat = CGFloat(data[pixelInfo  ]) / 255
-
-        return UIColor(red: r, green: g, blue: b, alpha: a)
-         */
     }
 }
