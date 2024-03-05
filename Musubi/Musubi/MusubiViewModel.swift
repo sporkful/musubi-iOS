@@ -3,49 +3,34 @@
 import Foundation
 
 extension Musubi.ViewModel {
-    typealias Repository = Musubi.Model.Repository
-    typealias Commit = Musubi.Model.Commit
+    typealias AudioTrackList = [UIDableAudioTrack]
     
-    struct Playlist: Identifiable {
-        let id: Spotify.Model.ID
-        var name: String
-        var description: String
-        var items: [Item]
+    struct UIDableAudioTrack: Identifiable {
+        let audioTrack: Spotify.Model.AudioTrack
         
-        struct Item: Hashable {
-            // The sole purpose of `index` is to give each Item a temporary but stable identifier
-            // for presentation as an editable SwiftUI List. This is necessary since there may be
-            // repeated audio tracks within a playlist.
-            //
-            // NOTE: `index` is intended to only be stable for the (temporary) lifetime of the
-            // SwiftUI List it backs.
-            //
-            // NOTE: `index` is not dynamically updated after initial materialization.
-            // In particular, if the SwiftUI List it backs is reordered, `index` might no longer be
-            // the logically correct index of the item in the playlist.
-            
-            let index: Int
-            let audioTrackID: Spotify.Model.ID
+        // Unique identifier to allow [UIDableAudioTrack] to be presentable as an editable SwiftUI
+        // List. This is necessary since there may be repeated audio tracks within e.g. a playlist.
+        // Keep in mind that this id is intended to only be stable for the (temporary) lifetime of
+        // the SwiftUI List it backs.
+        let id: Int
+    }
+}
+
+//extension Array where Element == Musubi.ViewModel.UIDableAudioTrack {
+extension Musubi.ViewModel.AudioTrackList {
+    mutating func append(audioTrack: Spotify.Model.AudioTrack) {
+        self.append(Musubi.ViewModel.UIDableAudioTrack(audioTrack: audioTrack, id: self.count))
+    }
+    
+    static func from(audioTrackList: [Spotify.Model.AudioTrack]) -> Self {
+        return audioTrackList.enumerated().map { item in
+            Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset)
         }
-        
-        static func from(playlist: Musubi.Model.Playlist) -> Self {
-            Self(
-                id: playlist.id,
-                name: playlist.name,
-                description: playlist.description,
-                items: playlist.items.enumerated().map( { item in
-                    Item(index: item.offset, audioTrackID: item.element)
-                })
-            )
-        }
-        
-        func into() -> Musubi.Model.Playlist {
-            Musubi.Model.Playlist(
-                id: self.id,
-                name: self.name,
-                description: self.description,
-                items: self.items.map({ item in item.audioTrackID })
-            )
-        }
+    }
+}
+
+extension Array where Element == Spotify.Model.AudioTrack {
+    static func from(audioTrackList: Musubi.ViewModel.AudioTrackList) -> Self {
+        return audioTrackList.map { item in item.audioTrack }
     }
 }

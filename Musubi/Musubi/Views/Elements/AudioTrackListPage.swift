@@ -17,7 +17,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     @Binding var name: String
     @Binding var description: String?
     @Binding var coverImage: UIImage?
-    @Binding var audioTrackList: [Spotify.Model.AudioTrack]
+    @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     enum AssociatedPeople {
         case artists([Spotify.Model.Artist])
@@ -195,9 +195,9 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                     Text("\(contentType.rawValue) • \(date)")
                         .font(.caption)
                     toolbarBuilder()
-                    ForEach($audioTrackList) { $audioTrack in
+                    ForEach($audioTrackList) { $item in
                         Divider()
-                        AudioTrackListCell(audioTrack: audioTrack, navigationPath: $navigationPath)
+                        AudioTrackListCell(audioTrack: item.audioTrack, navigationPath: $navigationPath)
                     }
                 }
                 .padding([.horizontal, .bottom])

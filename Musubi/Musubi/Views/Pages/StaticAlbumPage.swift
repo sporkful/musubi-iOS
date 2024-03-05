@@ -15,7 +15,7 @@ struct StaticAlbumPage: View {
     
     @State private var description: String? = nil
     @State private var coverImage: UIImage?
-    @State private var audioTrackList: [Spotify.Model.AudioTrack] = []
+    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
     
     var body: some View {
         AudioTrackListPage(
@@ -69,10 +69,11 @@ struct StaticAlbumPage: View {
     @MainActor
     private func loadContents() async {
         do {
-            self.audioTrackList = try await Spotify.Requests.Read.albumTracklist(
+            let audioTrackList = try await Spotify.Requests.Read.albumTracklist(
                 albumID: album.id,
                 userManager: userManager
             )
+            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: audioTrackList)
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticAlbumPage] unable to load tracklist")
