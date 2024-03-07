@@ -40,7 +40,9 @@ extension Spotify.Auth {
             userManager: userManager
         )
         
-        userManager.loggedInUser = try JSONDecoder().decode(Spotify.Model.LoggedInUser.self, from: data)
+        userManager.logIn(
+            spotifyInfo: try JSONDecoder().decode(Spotify.Model.LoggedInUser.self, from: data)
+        )
     }
     
     static func makeAuthenticatedRequest(

@@ -2,9 +2,7 @@
 
 import SwiftUI
 
-struct AudioTrackListPage<CustomToolbar: View>: View {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
+struct AudioTrackListPage<CustomToolbar: View>: View {    
     @Binding var navigationPath: NavigationPath
     
     enum ContentType: String {

@@ -9,7 +9,7 @@ struct AccountView: View {
         NavigationStack {
             Form {
                 Section("Current session") {
-                    Text("Logged in as: \(userManager.loggedInUser?.display_name ?? "")")
+                    Text("Logged in as: \(userManager.currentUser?.spotifyInfo.display_name ?? "")")
                     Button(role: .destructive) {
                         // TODO: "are you sure you want to log out? (dw your stuff is saved)"
                         userManager.logOut()

@@ -32,12 +32,13 @@
 		7947339A2B4CE922001C3FEB /* UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733992B4CE922001C3FEB /* UI.swift */; };
 		794733A72B4D15BD001C3FEB /* AudioTrackListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733A62B4D15BD001C3FEB /* AudioTrackListCell.swift */; };
 		794733AC2B4E01E3001C3FEB /* ListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733AB2B4E01E3001C3FEB /* ListCell.swift */; };
+		7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA102B55ADDB00650775 /* UIColor+.swift */; };
+		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F8582B506080005D3880 /* AudioTrackListPage.swift */; };
 		7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */; };
 		7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */; };
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
 		7978F8622B512555005D3880 /* EditablePlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F8612B512555005D3880 /* EditablePlaylistPage.swift */; };
-		79A7A9832B4E13C400634C5B /* ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A7A9822B4E13C400634C5B /* ImageProcessing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,12 +87,13 @@
 		794733992B4CE922001C3FEB /* UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI.swift; sourceTree = "<group>"; };
 		794733A62B4D15BD001C3FEB /* AudioTrackListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackListCell.swift; sourceTree = "<group>"; };
 		794733AB2B4E01E3001C3FEB /* ListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCell.swift; sourceTree = "<group>"; };
+		7961DA102B55ADDB00650775 /* UIColor+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+.swift"; sourceTree = "<group>"; };
+		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7978F8582B506080005D3880 /* AudioTrackListPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackListPage.swift; sourceTree = "<group>"; };
 		7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticAlbumPage.swift; sourceTree = "<group>"; };
 		7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		7978F85F2B51254C005D3880 /* StaticArtistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticArtistPage.swift; sourceTree = "<group>"; };
 		7978F8612B512555005D3880 /* EditablePlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditablePlaylistPage.swift; sourceTree = "<group>"; };
-		79A7A9822B4E13C400634C5B /* ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessing.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,8 +149,8 @@
 				794733702B468FFE001C3FEB /* Util */,
 				794733342B464331001C3FEB /* MusubiApp.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
-				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
+				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				794733382B464333001C3FEB /* Assets.xcassets */,
 				7947333A2B464333001C3FEB /* Preview Content */,
 			);
@@ -213,7 +215,8 @@
 				794733772B469E11001C3FEB /* Storage.swift */,
 				7947337B2B472754001C3FEB /* Error.swift */,
 				794733992B4CE922001C3FEB /* UI.swift */,
-				79A7A9822B4E13C400634C5B /* ImageProcessing.swift */,
+				7961DA102B55ADDB00650775 /* UIColor+.swift */,
+				7961DA122B55ADE200650775 /* UIImage+.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -374,14 +377,15 @@
 				7978F8622B512555005D3880 /* EditablePlaylistPage.swift in Sources */,
 				7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */,
 				7947338C2B4B7955001C3FEB /* SpotifyRequests.swift in Sources */,
+				7961DA132B55ADE200650775 /* UIImage+.swift in Sources */,
 				794733982B4CE1AE001C3FEB /* AccountView.swift in Sources */,
 				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733AC2B4E01E3001C3FEB /* ListCell.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
-				79A7A9832B4E13C400634C5B /* ImageProcessing.swift in Sources */,
 				794733942B4CE08B001C3FEB /* LocalReposView.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
+				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,

@@ -3,7 +3,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @Environment(Musubi.UserManager.self) private var userManager
+    @Environment(Musubi.User.self) private var currentUser
     
     var body: some View {
         TabView {
@@ -20,10 +20,6 @@ struct HomeView: View {
                 .tabItem {
                     Label("My Account", systemImage: "person.crop.circle.fill")
                 }
-        }
-        .onAppear {
-            // TODO: if this is a new Musubi user, trigger alert then set up e.g. provision storage
-            // TODO: start playback controller if this is a premium user
         }
         // TODO: overlay with floating playback card
     }
