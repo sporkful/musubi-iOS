@@ -3,10 +3,19 @@
 import Foundation
 import CryptoKit
 
+// namespaces
+extension Musubi {
+    struct Cryptography {
+        private init() {}
+    }
+}
+
+// TODO: namespace
+
 extension Musubi {
     typealias HashPointer = String
     
-    static func cryptoHash<T: Encodable>(content: T) throws -> HashPointer {
+    static func cryptographicHash<T: Encodable>(content: T) throws -> HashPointer {
         return SHA256.hash(data: try JSONEncoder().encode(content))
             .compactMap { String(format: "%02x", $0) }
             .joined()

@@ -11,7 +11,6 @@ struct LoginView: View {
     
     // This trivial custom binding allows userManager.currentUser to be private(set) and still be a
     // valid fullScreenCover item. Safe since this fullScreenCover is non-dismissable.
-    // TODO: check that this works with @Observable userManager without @Bindable below
     var currentUser: Binding<Musubi.User?> {
         Binding(
             get: { userManager.currentUser },
@@ -20,8 +19,6 @@ struct LoginView: View {
     }
     
     var body: some View {
-//        @Bindable var userManager = userManager
-        
         VStack {
             Spacer()
             Text("Musubi")
@@ -53,9 +50,8 @@ struct LoginView: View {
             )
         }
         .fullScreenCover(item: currentUser) { currentUser in
-            HomeView()
+            HomeView(currentUser: currentUser)
                 .interactiveDismissDisabled()
-                .environment(currentUser)
         }
         .alert(
             "Error when logging in with Spotify.",

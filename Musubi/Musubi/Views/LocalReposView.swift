@@ -3,8 +3,10 @@
 import SwiftUI
 
 struct LocalReposView: View {
+    @Environment(Musubi.User.self) private var currentUser
+    
     var body: some View {
-        Text("My Local Repositories")
+        Text("\(currentUser.spotifyInfo.display_name)")
     }
 }
 

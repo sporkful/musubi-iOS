@@ -3,28 +3,23 @@
 import SwiftUI
 
 struct HomeView: View {
-    @Environment(Musubi.User.self) private var currentUser
+    var currentUser: Musubi.User
     
     var body: some View {
         TabView {
             LocalReposView()
-                .tabItem {
-                    Label("My Local Repositories", systemImage: "books.vertical")
-                }
+                .environment(currentUser)
+                .tabItem { Label("My Local Repositories", systemImage: "books.vertical") }
             SearchView()
-                .tabItem {
-                    Label("Search Spotify", systemImage: "magnifyingglass")
-                }
+                .tabItem { Label("Search Spotify", systemImage: "magnifyingglass") }
             AccountView()
 //                .badge("!") // TODO: notifications
-                .tabItem {
-                    Label("My Account", systemImage: "person.crop.circle.fill")
-                }
+                .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
         }
         // TODO: overlay with floating playback card
     }
 }
 
-#Preview {
-    HomeView()
-}
+//#Preview {
+//    HomeView()
+//}

@@ -28,16 +28,46 @@ extension Musubi {
     @Observable
     class User: Identifiable {
         let spotifyInfo: Spotify.Model.LoggedInUser
-        private(set) var repositories: [Musubi.Model.RepositoryHandle]
+        
+        private(set) var localClones: [RepositoryHandle]
         
         var id: Spotify.Model.ID { spotifyInfo.id }
         
-        init(spotifyInfo: Spotify.Model.LoggedInUser) {
+        private var localBaseDir: URL {
+            URL.libraryDirectory
+                .appending(path: "MusubiLocal", directoryHint: .isDirectory)
+                .appending(path: "Users", directoryHint: .isDirectory)
+                .appending(path: self.id, directoryHint: .isDirectory)
+                .appending(path: "LocalClones", directoryHint: .isDirectory)
+        }
+        
+        init?(spotifyInfo: Spotify.Model.LoggedInUser) {
             self.spotifyInfo = spotifyInfo
-            // TODO: load repos from disk / create if don't exist
-            // TODO: create Musubi cloud account for this Spotify user if doesn't exist
-            // TODO: start playback controller if this is a premium user
-            self.repositories = []
+            self.localClones = []
+            
+            do {
+                if Musubi.Storage.LocalFS.doesDirExist(at: self.localBaseDir) {
+                    self.localClones = try Musubi.Storage.LocalFS.contentsOf(dirURL: self.localBaseDir)
+                        .map { url in url.lastPathComponent }
+                        .map { playlistID in
+                            Musubi.RepositoryHandle(
+                                userID: self.spotifyInfo.id,
+                                playlistID: playlistID
+                            )
+                        }
+                } else {
+                    try Musubi.Storage.LocalFS.createNewDir(
+                        at: self.localBaseDir,
+                        withIntermediateDirectories: true
+                    )
+                }
+                
+                // TODO: create Musubi cloud account for this Spotify user if doesn't exist
+                // TODO: start playback controller if this is a premium user
+            } catch {
+                print("[Musubi::User] failed to init user for \(spotifyInfo.display_name)")
+                return nil
+            }
         }
     }
 }
