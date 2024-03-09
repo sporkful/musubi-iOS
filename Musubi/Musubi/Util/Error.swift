@@ -20,7 +20,7 @@ extension Musubi {
         // TODO: add `failureReason` and `recoverySuggestion`?
     }
     
-    enum CryptoError: LocalizedError {
+    enum CryptographyError: LocalizedError {
         case pkce(detail: String)
 
         var errorDescription: String? {

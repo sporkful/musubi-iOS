@@ -2,11 +2,18 @@
 
 import Foundation
 
+// namespaces
+extension Musubi {
+    struct Model {
+        private init() { }
+    }
+}
+
 extension Musubi.Model {
-    typealias HashPointer = Musubi.HashPointer
+    typealias HashPointer = Musubi.Cryptography.HashPointer
     
     // Hashable conformance here is only for SwiftUI List materialization,
-    // NOT FOR STABLE ID ACROSS APP RUNS - for that, use `Musubi::Cryptography::cryptographicHash`.
+    // NOT FOR STABLE ID ACROSS APP RUNS - for that, use `Musubi::Cryptography::hash`.
     struct Commit: Codable, Hashable {
         let authorID: Spotify.Model.ID
         let date: Date

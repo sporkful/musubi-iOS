@@ -2,6 +2,13 @@
 
 import Foundation
 
+// namespaces
+extension Musubi {
+    struct ViewModel {
+        private init() { }
+    }
+}
+
 extension Musubi.ViewModel {
     typealias AudioTrackList = [UIDableAudioTrack]
     

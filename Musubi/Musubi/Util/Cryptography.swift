@@ -10,12 +10,10 @@ extension Musubi {
     }
 }
 
-// TODO: namespace
-
-extension Musubi {
+extension Musubi.Cryptography {
     typealias HashPointer = String
     
-    static func cryptographicHash<T: Encodable>(content: T) throws -> HashPointer {
+    static func hash<T: Encodable>(content: T) throws -> HashPointer {
         return SHA256.hash(data: try JSONEncoder().encode(content))
             .compactMap { String(format: "%02x", $0) }
             .joined()
@@ -38,14 +36,14 @@ extension Musubi {
 //        var randomBytes = [UInt8](repeating: 0, count: 32)
 //        let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
 //        if status != errSecSuccess {
-//            throw CryptoError.pkce(detail: "failed to generate random bytes; status=\(status)")
+//            throw CryptographyError.pkce(detail: "failed to generate random bytes; status=\(status)")
 //        }
 //        return encodeBase64URL(bytes: randomBytes)
     }
     
     static func newPKCEChallenge(pkceVerifier: String) throws -> String {
         guard let pkceVerifier = pkceVerifier.data(using: .ascii) else {
-            throw CryptoError.pkce(detail: "failed to generate challenge")
+            throw Musubi.CryptographyError.pkce(detail: "failed to generate challenge")
         }
         return encodeBase64URL(bytes: SHA256.hash(data: pkceVerifier))
     }

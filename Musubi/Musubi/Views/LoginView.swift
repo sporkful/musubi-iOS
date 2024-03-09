@@ -46,7 +46,7 @@ struct LoginView: View {
             SpotifyLoginWebView(
                 showSheetWebLogin: $showSheetWebLogin,
                 showAlertLoginError: $showAlertLoginError,
-                pkceVerifier: Musubi.newPKCEVerifier()
+                pkceVerifier: Musubi.Cryptography.newPKCEVerifier()
             )
         }
         .fullScreenCover(item: currentUser) { currentUser in
@@ -73,7 +73,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     let webView = WKWebView()
 
     func makeUIView(context: UIViewRepresentableContext<SpotifyLoginWebView>) -> WKWebView {
-        guard let pkceChallenge = try? Musubi.newPKCEChallenge(pkceVerifier: pkceVerifier) else {
+        guard let pkceChallenge = try? Musubi.Cryptography.newPKCEChallenge(pkceVerifier: pkceVerifier) else {
             showAlertLoginError = true
             showSheetWebLogin = false
             return self.webView
