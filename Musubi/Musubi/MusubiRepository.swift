@@ -10,14 +10,26 @@ import Foundation
 //          index
 
 extension Musubi {
-    @Observable
-    class RepositoryHandle {
+    struct RepositoryHandle {
         let userID: Spotify.Model.ID
         let playlistID: Spotify.Model.ID
+    }
+    
+    @Observable
+    class Repository {
+        let handle: RepositoryHandle
         
-        init(userID: Spotify.Model.ID, playlistID: Spotify.Model.ID) {
-            self.userID = userID
-            self.playlistID = playlistID
+        var stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
+        
+        init(handle: RepositoryHandle) {
+            self.handle = handle
+            
+            // TODO: load
+            self.stagedAudioTrackList = []
+        }
+        
+        func commit() {
+            
         }
     }
 }
