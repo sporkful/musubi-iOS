@@ -151,6 +151,7 @@
 				794733702B468FFE001C3FEB /* Util */,
 				794733342B464331001C3FEB /* MusubiApp.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
+				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
 				7961DA162B56510B00650775 /* MusubiRepository.swift */,
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
@@ -205,7 +206,6 @@
 				7947336C2B46566F001C3FEB /* SpotifyModel.swift */,
 				7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */,
 				7947338F2B4BDED6001C3FEB /* SpotifyAuth.swift */,
-				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
 				794733912B4C6A79001C3FEB /* SpotifyWebClient.swift */,
 			);
 			path = SpotifyWebClient;

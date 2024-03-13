@@ -8,24 +8,6 @@ import Foundation
 
 extension Musubi {
     @Observable
-    class UserManager {
-        private(set) var currentUser: Musubi.User? = nil
-        
-        @MainActor
-        func logIn(spotifyInfo: Spotify.Model.LoggedInUser) {
-            self.currentUser = User(spotifyInfo: spotifyInfo)
-        }
-        
-        @MainActor
-        func logOut() {
-            Spotify.Auth.clearOAuthCache()
-            self.currentUser = nil
-        }
-    }
-}
-
-extension Musubi {
-    @Observable
     class User: Identifiable {
         let spotifyInfo: Spotify.Model.LoggedInUser
         
