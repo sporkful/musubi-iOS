@@ -1,25 +1,25 @@
-// SpotifyModel.swift
+// SpotifyViewModel.swift
 
 import Foundation
 
-protocol SpotifyModel: Codable { }
+protocol SpotifyViewModel: Codable { }
 
-protocol SpotifyModelIdentifiable: SpotifyModel, Identifiable {
+protocol SpotifyIdentifiable: SpotifyViewModel, Identifiable {
     var id: Spotify.Model.ID { get }
 }
 
-protocol SpotifyModelNameable: SpotifyModel {
+protocol SpotifyNameable: SpotifyViewModel {
     var name: String { get }
 }
 
-protocol SpotifyModelPage: SpotifyModel {
-    associatedtype ItemType: SpotifyModelIdentifiable
+protocol SpotifyListPage: SpotifyViewModel {
+    associatedtype ItemType: SpotifyIdentifiable
     
     var items: [ItemType] { get }
     var next: String? { get }
 }
 
-protocol SpotifyModelCardable: SpotifyModel {
+protocol SpotifyModelCardable: SpotifyViewModel {
     var name: String { get }
     var images: [Spotify.Model.SpotifyImage]? { get }
     
@@ -29,13 +29,13 @@ protocol SpotifyModelCardable: SpotifyModel {
 extension Spotify.Model {
     typealias ID = String
     
-    struct SpotifyImage: SpotifyModel, Hashable {
+    struct SpotifyImage: SpotifyViewModel, Hashable {
         let url: String
         let height: Int?
         let width: Int?
     }
     
-    struct LoggedInUser: SpotifyModelIdentifiable, SpotifyModelNameable {
+    struct LoggedInUser: SpotifyIdentifiable, SpotifyNameable {
 //        let country: String
         let display_name: String
 //        let explicit_content: [String: Bool]
@@ -47,7 +47,7 @@ extension Spotify.Model {
         var name: String { display_name }
     }
     
-    struct OtherUser: SpotifyModelIdentifiable, SpotifyModelNameable, Hashable {
+    struct OtherUser: SpotifyIdentifiable, SpotifyNameable, Hashable {
         let display_name: String
         let external_urls: [String: String]
         let id: Spotify.Model.ID
@@ -56,7 +56,7 @@ extension Spotify.Model {
         var name: String { display_name }
     }
     
-    struct AudioTrack: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
+    struct AudioTrack: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let album: Album?
         let artists: [Artist]
@@ -72,22 +72,22 @@ extension Spotify.Model {
         var images: [Spotify.Model.SpotifyImage]? { album?.images }
     }
     
-    struct Artist: SpotifyModelIdentifiable, SpotifyModelNameable, SpotifyModelCardable, Hashable {
+    struct Artist: SpotifyIdentifiable, SpotifyNameable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let name: String
         let images: [SpotifyImage]?
         
-        struct TopTracks: SpotifyModel {
+        struct TopTracks: SpotifyViewModel {
             let tracks: [AudioTrack]
         }
         
-        struct AlbumPage: SpotifyModelPage {
+        struct AlbumListPage: SpotifyListPage {
             let items: [Album]
             let next: String?
         }
     }
     
-    struct Album: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
+    struct Album: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let name: String
         let album_type: String
@@ -96,13 +96,13 @@ extension Spotify.Model {
         let uri: String
         let artists: [Artist]
         
-        struct AudioTrackPage: SpotifyModelPage {
+        struct AudioTrackListPage: SpotifyListPage {
             let items: [AudioTrack]
             let next: String?
         }
     }
     
-    struct Playlist: SpotifyModelIdentifiable, SpotifyModelCardable, Hashable {
+    struct Playlist: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.Model.ID
         let description: String
         let external_urls: [String: String]
@@ -112,12 +112,12 @@ extension Spotify.Model {
         let snapshot_id: String
         let uri: String
         
-        struct AudioTrackPage: SpotifyModelPage {
+        struct AudioTrackListPage: SpotifyListPage {
             let items: [AudioTrackItem]
             let next: String?
         }
         
-        struct AudioTrackItem: SpotifyModelIdentifiable {
+        struct AudioTrackItem: SpotifyIdentifiable {
             let track: AudioTrack
             
             // TODO: make sure this computed property doesn't mess up JSON decoding
@@ -125,25 +125,25 @@ extension Spotify.Model {
         }
     }
     
-    struct SearchResults: SpotifyModel {
+    struct SearchResults: SpotifyViewModel {
         var albums: Albums
         var artists: Artists
         var tracks: AudioTracks
         var playlists: Playlists
         
-        struct Albums: SpotifyModel {
+        struct Albums: SpotifyViewModel {
             let items: [Album]
         }
         
-        struct Artists: SpotifyModel {
+        struct Artists: SpotifyViewModel {
             let items: [Artist]
         }
         
-        struct AudioTracks: SpotifyModel {
+        struct AudioTracks: SpotifyViewModel {
             let items: [AudioTrack]
         }
         
-        struct Playlists: SpotifyModel {
+        struct Playlists: SpotifyViewModel {
             let items: [Playlist]
         }
         

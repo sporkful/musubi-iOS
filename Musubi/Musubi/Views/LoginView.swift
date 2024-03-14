@@ -80,7 +80,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         }
         
         self.webView.navigationDelegate = context.coordinator
-        self.webView.load(Spotify.Auth.createWebLoginRequest(pkceChallenge: pkceChallenge))
+        self.webView.load(userManager.createWebLoginRequest(pkceChallenge: pkceChallenge))
         return self.webView
     }
 
@@ -131,10 +131,9 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             
             Task {
                 do {
-                    try await Spotify.Auth.handleNewLogin(
+                    try await userManager.handleNewLogin(
                         authCode: authCode,
-                        pkceVerifier: pkceVerifier,
-                        userManager: userManager
+                        pkceVerifier: pkceVerifier
                     )
                 } catch {
                     showAlertLoginError = true

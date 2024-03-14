@@ -70,21 +70,18 @@ extension Spotify.Requests.Read {
     private typealias Requests = Spotify.Requests
     private typealias HTTPMethod = Requests.HTTPMethod
     
-    private static func makeAuthenticatedRequest<T: SpotifyModel>(
+    private static func makeAuthenticatedRequest<T: SpotifyViewModel>(
         request: inout URLRequest,
         userManager: Musubi.UserManager
     ) async throws -> T {
-        let data = try await Spotify.Auth.makeAuthenticatedRequest(
-            request: &request,
-            userManager: userManager
-        )
+        let data = try await userManager.makeAuthenticatedRequest(request: &request)
         return try JSONDecoder().decode(T.self, from: data)
     }
     
-    private static func multipageList<T: SpotifyModelPage>(
+    private static func multipageList<T: SpotifyListPage>(
         firstPage: T,
         userManager: Musubi.UserManager
-    ) async throws -> [SpotifyModel] {
+    ) async throws -> [SpotifyViewModel] {
         var currentPage = firstPage
         var items = currentPage.items
         while let nextPageURLString = currentPage.next,
@@ -101,7 +98,7 @@ extension Spotify.Requests.Read {
     
     // Intended to reduce memory usage, including intermediate spikes, so do not just call
     // `multipageList` followed by a map operation.
-    private static func multipageListIDs<T: SpotifyModelPage>(
+    private static func multipageListIDs<T: SpotifyListPage>(
         firstPage: T,
         userManager: Musubi.UserManager
     ) async throws -> [Spotify.Model.ID] {
@@ -172,7 +169,7 @@ extension Spotify.Requests.Read {
             path: "/albums/" + albumID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Model.Album.AudioTrackPage
+        let firstPage: Spotify.Model.Album.AudioTrackListPage
         firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
         let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let tracklist = tracklist as? [Spotify.Model.AudioTrack] else {
@@ -190,7 +187,7 @@ extension Spotify.Requests.Read {
             path: "/playlists/" + playlistID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Model.Playlist.AudioTrackPage
+        let firstPage: Spotify.Model.Playlist.AudioTrackListPage
         firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
         let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let tracklist = tracklist as? [Spotify.Model.Playlist.AudioTrackItem] else {
@@ -208,7 +205,7 @@ extension Spotify.Requests.Read {
             path: "/artists/" + artistID + "/albums",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Model.Artist.AlbumPage
+        let firstPage: Spotify.Model.Artist.AlbumListPage
         firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
         let albumlist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let albumlist = albumlist as? [Spotify.Model.Album] else {
