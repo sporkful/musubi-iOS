@@ -9,11 +9,11 @@ import Foundation
 extension Musubi {
     @Observable
     class User: Identifiable {
-        let spotifyInfo: Spotify.Model.LoggedInUser
+        let spotifyInfo: Spotify.LoggedInUser
         
         private(set) var localClones: [RepositoryHandle]
         
-        var id: Spotify.Model.ID { spotifyInfo.id }
+        var id: Spotify.ID { spotifyInfo.id }
         
         private var localBaseDir: URL {
             URL.libraryDirectory
@@ -23,7 +23,7 @@ extension Musubi {
                 .appending(path: "LocalClones", directoryHint: .isDirectory)
         }
         
-        init?(spotifyInfo: Spotify.Model.LoggedInUser) {
+        init?(spotifyInfo: Spotify.LoggedInUser) {
             self.spotifyInfo = spotifyInfo
             self.localClones = []
             
@@ -89,14 +89,14 @@ extension Musubi {
             
             var currentUserRequest = URLRequest(url: URL(string: "https://api.spotify.com/v1/me")!)
             currentUserRequest.httpMethod = "GET"
-            let data = try await makeAuthenticatedRequest(request: &currentUserRequest)
+            let data = try await makeAuthdSpotifyRequest(request: &currentUserRequest)
             
             self.currentUser = User(
-                spotifyInfo: try JSONDecoder().decode(Spotify.Model.LoggedInUser.self, from: data)
+                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
             )
         }
         
-        func makeAuthenticatedRequest(request: inout URLRequest) async throws -> Data {
+        func makeAuthdSpotifyRequest(request: inout URLRequest) async throws -> Data {
             try await refreshOAuthToken()
             request.setValue(
                 "Bearer \(retrieveOAuthToken())",
@@ -216,7 +216,6 @@ extension Musubi {
             save(oauthExpirationDate: newExpirationDate)
         }
         
-        // MARK: - OAuth caching in iOS Keychain
         // TODO: can we make this more generic / reduce code duplication? (see eof)
 
         private typealias Keychain = Musubi.Storage.Keychain

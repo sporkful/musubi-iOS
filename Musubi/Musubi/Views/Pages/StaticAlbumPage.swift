@@ -7,7 +7,7 @@ struct StaticAlbumPage: View {
     
     @Binding var navigationPath: NavigationPath
     
-    let album: Spotify.Model.Album
+    let album: Spotify.Album
     
     // TODO: find way to automatically init this based on album.name
     // note the obvious sol seems invalid https://forums.swift.org/t/state-messing-with-initializer-flow/25276/3
@@ -69,7 +69,7 @@ struct StaticAlbumPage: View {
     @MainActor
     private func loadContents() async {
         do {
-            let audioTrackList = try await Spotify.Requests.Read.albumTracklist(
+            let audioTrackList = try await SpotifyRequests.Read.albumTracklist(
                 albumID: album.id,
                 userManager: userManager
             )

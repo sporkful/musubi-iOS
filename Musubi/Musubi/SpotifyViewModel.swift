@@ -2,10 +2,15 @@
 
 import Foundation
 
+// namespaces
+struct Spotify {
+    private init() { }
+}
+
 protocol SpotifyViewModel: Codable { }
 
 protocol SpotifyIdentifiable: SpotifyViewModel, Identifiable {
-    var id: Spotify.Model.ID { get }
+    var id: Spotify.ID { get }
 }
 
 protocol SpotifyNameable: SpotifyViewModel {
@@ -21,15 +26,15 @@ protocol SpotifyListPage: SpotifyViewModel {
 
 protocol SpotifyModelCardable: SpotifyViewModel {
     var name: String { get }
-    var images: [Spotify.Model.SpotifyImage]? { get }
+    var images: [Spotify.Image]? { get }
     
     // TODO: playback?
 }
 
-extension Spotify.Model {
+extension Spotify {
     typealias ID = String
     
-    struct SpotifyImage: SpotifyViewModel, Hashable {
+    struct Image: SpotifyViewModel, Hashable {
         let url: String
         let height: Int?
         let width: Int?
@@ -40,8 +45,8 @@ extension Spotify.Model {
         let display_name: String
 //        let explicit_content: [String: Bool]
 //        let external_urls: [String: String]
-        let id: Spotify.Model.ID
-//        let images: [SpotifyImage]?
+        let id: Spotify.ID
+//        let images: [Spotify.Image]?
 //        let product: String
         
         var name: String { display_name }
@@ -50,14 +55,14 @@ extension Spotify.Model {
     struct OtherUser: SpotifyIdentifiable, SpotifyNameable, Hashable {
         let display_name: String
         let external_urls: [String: String]
-        let id: Spotify.Model.ID
-        let images: [SpotifyImage]?
+        let id: Spotify.ID
+        let images: [Spotify.Image]?
         
         var name: String { display_name }
     }
     
     struct AudioTrack: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
-        let id: Spotify.Model.ID
+        let id: Spotify.ID
         let album: Album?
         let artists: [Artist]
         let available_markets: [String]?
@@ -69,13 +74,13 @@ extension Spotify.Model {
         let preview_url: String?
         
         // TODO: make sure this computed property doesn't mess up JSON decoding
-        var images: [Spotify.Model.SpotifyImage]? { album?.images }
+        var images: [Spotify.Image]? { album?.images }
     }
     
     struct Artist: SpotifyIdentifiable, SpotifyNameable, SpotifyModelCardable, Hashable {
-        let id: Spotify.Model.ID
+        let id: Spotify.ID
         let name: String
-        let images: [SpotifyImage]?
+        let images: [Spotify.Image]?
         
         struct TopTracks: SpotifyViewModel {
             let tracks: [AudioTrack]
@@ -88,10 +93,10 @@ extension Spotify.Model {
     }
     
     struct Album: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
-        let id: Spotify.Model.ID
+        let id: Spotify.ID
         let name: String
         let album_type: String
-        let images: [SpotifyImage]?
+        let images: [Spotify.Image]?
         let release_date: String
         let uri: String
         let artists: [Artist]
@@ -103,10 +108,10 @@ extension Spotify.Model {
     }
     
     struct Playlist: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
-        let id: Spotify.Model.ID
+        let id: Spotify.ID
         let description: String
         let external_urls: [String: String]
-        let images: [SpotifyImage]?
+        let images: [Spotify.Image]?
         let name: String
         let owner: OtherUser
         let snapshot_id: String
@@ -121,7 +126,7 @@ extension Spotify.Model {
             let track: AudioTrack
             
             // TODO: make sure this computed property doesn't mess up JSON decoding
-            var id: Spotify.Model.ID { track.id }
+            var id: Spotify.ID { track.id }
         }
     }
     

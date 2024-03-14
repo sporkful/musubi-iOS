@@ -20,8 +20,8 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     enum AssociatedPeople {
-        case artists([Spotify.Model.Artist])
-        case users([Spotify.Model.OtherUser])
+        case artists([Spotify.Artist])
+        case users([Spotify.OtherUser])
     }
     let associatedPeople: AssociatedPeople
     let date: String

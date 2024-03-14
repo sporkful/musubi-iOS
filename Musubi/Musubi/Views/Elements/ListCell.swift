@@ -10,16 +10,16 @@ struct ListCell: View {
         self.item = item
         self.caption = {
             switch item.self {
-            case is Spotify.Model.AudioTrack:
-                let audioTrack = item as! Spotify.Model.AudioTrack
+            case is Spotify.AudioTrack:
+                let audioTrack = item as! Spotify.AudioTrack
                 let albumString = if let album = audioTrack.album {
                     " • " + album.name
                 } else {
                     ""
                 }
                 return audioTrack.artists.map { $0.name }.joined(separator: ", ") + albumString
-            case is Spotify.Model.Album:
-                let album = item as! Spotify.Model.Album
+            case is Spotify.Album:
+                let album = item as! Spotify.Album
                 return album.artists.map { $0.name }.joined(separator: ", ")
             default:
                 return ""

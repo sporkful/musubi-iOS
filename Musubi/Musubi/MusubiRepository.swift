@@ -11,8 +11,8 @@ import Foundation
 
 extension Musubi {
     struct RepositoryHandle {
-        let userID: Spotify.Model.ID
-        let playlistID: Spotify.Model.ID
+        let userID: Spotify.ID
+        let playlistID: Spotify.ID
     }
     
     @Observable

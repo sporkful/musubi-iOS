@@ -8,7 +8,7 @@ struct SearchView: View {
     @State private var navigationPath = NavigationPath()
     
     @State private var searchText = ""
-    @State private var searchResults: Spotify.Model.SearchResults = Spotify.Model.SearchResults.blank()
+    @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank()
     
     @State private var showAudioTrackResults = true
     @State private var showArtistResults = true
@@ -70,13 +70,13 @@ struct SearchView: View {
                         }
                     }
                 }
-                .navigationDestination(for: Spotify.Model.Artist.self) { artist in
+                .navigationDestination(for: Spotify.Artist.self) { artist in
 //                    ArtistStaticPageView(artist: artist)
                 }
-                .navigationDestination(for: Spotify.Model.Album.self) { album in
+                .navigationDestination(for: Spotify.Album.self) { album in
                     StaticAlbumPage(navigationPath: $navigationPath, album: album, name: album.name)
                 }
-                .navigationDestination(for: Spotify.Model.Playlist.self) { playlist in
+                .navigationDestination(for: Spotify.Playlist.self) { playlist in
 //                    PlaylistStaticPageView(playlist: playlist)
                 }
             }
@@ -84,14 +84,14 @@ struct SearchView: View {
             .onChange(of: searchText) { oldValue, newValue in
                 Task {
                     do {
-                        searchResults = try await Spotify.Requests.Read.search(
+                        searchResults = try await SpotifyRequests.Read.search(
                             query: newValue,
                             userManager: userManager
                         )
                     } catch {
                         print("[Musubi::SearchView] (likely nonfatal) search spotify error")
                         print(error)
-                        searchResults = Spotify.Model.SearchResults.blank()
+                        searchResults = Spotify.SearchResults.blank()
                     }
                 }
             }

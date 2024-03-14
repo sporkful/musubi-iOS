@@ -15,7 +15,7 @@ extension Musubi.Model {
     // Hashable conformance here is only for SwiftUI List materialization,
     // NOT FOR STABLE ID ACROSS APP RUNS - for that, use `Musubi::Cryptography::hash`.
     struct Commit: Codable, Hashable {
-        let authorID: Spotify.Model.ID
+        let authorID: Spotify.ID
         let date: Date
         let message: String
         let nonce: UInt64
@@ -29,5 +29,5 @@ extension Musubi.Model {
         let audioTrackListBlob: HashPointer
     }
     
-    typealias AudioTrackList = [Spotify.Model.ID]
+    typealias AudioTrackList = [Spotify.ID]
 }

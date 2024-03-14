@@ -5,7 +5,7 @@ import SwiftUI
 // TODO: playback ability
 
 struct AudioTrackListCell: View {
-    let audioTrack: Spotify.Model.AudioTrack
+    let audioTrack: Spotify.AudioTrack
     
     @Binding var navigationPath: NavigationPath
     
