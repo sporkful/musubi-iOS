@@ -86,14 +86,6 @@ extension SpotifyRequests {
 extension SpotifyRequests.Read {
     private typealias HTTPMethod = SpotifyRequests.HTTPMethod
     
-    private static func makeAuthenticatedRequest<T: SpotifyViewModel>(
-        request: inout URLRequest,
-        userManager: Musubi.UserManager
-    ) async throws -> T {
-        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-    
     private static func multipageList<T: SpotifyListPage>(
         firstPage: T,
         userManager: Musubi.UserManager
@@ -106,7 +98,8 @@ extension SpotifyRequests.Read {
             // TODO: remove this print
             print("fetching page at " + nextPageURLString)
             var request = try SpotifyRequests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
-            currentPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+            let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+            currentPage = try JSONDecoder().decode(T.self, from: data)
             items.append(contentsOf: currentPage.items)
         }
         return items
@@ -126,7 +119,8 @@ extension SpotifyRequests.Read {
             // TODO: remove this print
             print("fetching page at " + nextPageURLString)
             var request = try SpotifyRequests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
-            currentPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+            let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+            currentPage = try JSONDecoder().decode(T.self, from: data)
             items.append(contentsOf: currentPage.items.map { $0.id })
         }
         return items
@@ -140,7 +134,8 @@ extension SpotifyRequests.Read {
             type: HTTPMethod.GET,
             path: "/tracks/" + audioTrackID
         )
-        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(Spotify.AudioTrack.self, from: data)
     }
     
     static func artist(
@@ -151,7 +146,8 @@ extension SpotifyRequests.Read {
             type: HTTPMethod.GET,
             path: "/artists/" + artistID
         )
-        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(Spotify.Artist.self, from: data)
     }
     
     static func album(
@@ -162,7 +158,8 @@ extension SpotifyRequests.Read {
             type: HTTPMethod.GET,
             path: "/albums/" + albumID
         )
-        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(Spotify.Album.self, from: data)
     }
     
     static func playlist(
@@ -173,7 +170,8 @@ extension SpotifyRequests.Read {
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID
         )
-        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(Spotify.Playlist.self, from: data)
     }
     
     static func albumTracklist(
@@ -186,7 +184,8 @@ extension SpotifyRequests.Read {
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
         let firstPage: Spotify.Album.AudioTrackListPage
-        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        firstPage = try JSONDecoder().decode(Spotify.Album.AudioTrackListPage.self, from: data)
         let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let tracklist = tracklist as? [Spotify.AudioTrack] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
@@ -204,7 +203,8 @@ extension SpotifyRequests.Read {
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
         let firstPage: Spotify.Playlist.AudioTrackListPage
-        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        firstPage = try JSONDecoder().decode(Spotify.Playlist.AudioTrackListPage.self, from: data)
         let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let tracklist = tracklist as? [Spotify.Playlist.AudioTrackItem] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
@@ -222,7 +222,8 @@ extension SpotifyRequests.Read {
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
         let firstPage: Spotify.Artist.AlbumListPage
-        firstPage = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        firstPage = try JSONDecoder().decode(Spotify.Artist.AlbumListPage.self, from: data)
         let albumlist = try await multipageList(firstPage: firstPage, userManager: userManager)
         guard let albumlist = albumlist as? [Spotify.Album] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) artistAlbums multipage types")
@@ -241,7 +242,8 @@ extension SpotifyRequests.Read {
             queryItems: [URLQueryItem(name: "market", value: "US")]
         )
         let topTracks: Spotify.Artist.TopTracks
-        topTracks = try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        topTracks = try JSONDecoder().decode(Spotify.Artist.TopTracks.self, from: data)
         return topTracks.tracks.map({ $0.id })
     }
     
@@ -258,6 +260,7 @@ extension SpotifyRequests.Read {
                 URLQueryItem(name: "limit", value: "5")
             ]
         )
-        return try await makeAuthenticatedRequest(request: &request, userManager: userManager)
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(Spotify.SearchResults.self, from: data)
     }
 }
