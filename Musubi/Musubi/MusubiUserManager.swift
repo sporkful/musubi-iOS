@@ -2,10 +2,6 @@
 
 import Foundation
 
-// UserManager and User are intentionally separated for better organization throughout the app.
-// For example, most subviews of HomeView need to be able to refer to the current user but
-// don't need / shouldn't have access to login-logout functionality.
-
 extension Musubi {
     @Observable
     class User: Identifiable {

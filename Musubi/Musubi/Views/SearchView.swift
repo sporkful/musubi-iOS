@@ -71,13 +71,16 @@ struct SearchView: View {
                     }
                 }
                 .navigationDestination(for: Spotify.Artist.self) { artist in
-//                    ArtistStaticPageView(artist: artist)
+                    StaticArtistPage(artist: artist)
                 }
                 .navigationDestination(for: Spotify.Album.self) { album in
                     StaticAlbumPage(navigationPath: $navigationPath, album: album, name: album.name)
                 }
                 .navigationDestination(for: Spotify.Playlist.self) { playlist in
-//                    PlaylistStaticPageView(playlist: playlist)
+                    StaticPlaylistPage(navigationPath: $navigationPath, playlist: playlist, name: playlist.name)
+                }
+                .navigationDestination(for: Spotify.OtherUser.self) { user in
+                    StaticUserPage(user: user)
                 }
             }
             .searchable(text: $searchText, placement: .navigationBarDrawer)
