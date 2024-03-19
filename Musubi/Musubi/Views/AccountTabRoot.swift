@@ -1,8 +1,8 @@
-// AccountView.swift
+// AccountTabRoot.swift
 
 import SwiftUI
 
-struct AccountView: View {
+struct AccountTabRoot: View {
     @Environment(Musubi.UserManager.self) private var userManager
     
     var body: some View {
@@ -24,5 +24,5 @@ struct AccountView: View {
 }
 
 #Preview {
-    AccountView()
+    AccountTabRoot()
 }

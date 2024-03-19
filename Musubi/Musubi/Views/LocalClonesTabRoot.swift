@@ -1,8 +1,8 @@
-// LocalReposView.swift
+// LocalClonesTabRoot.swift
 
 import SwiftUI
 
-struct LocalReposView: View {
+struct LocalClonesTabRoot: View {
     @Environment(Musubi.User.self) private var currentUser
     
     var body: some View {
@@ -11,5 +11,5 @@ struct LocalReposView: View {
 }
 
 #Preview {
-    LocalReposView()
+    LocalClonesTabRoot()
 }

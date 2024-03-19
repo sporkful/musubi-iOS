@@ -7,12 +7,12 @@ struct HomeView: View {
     
     var body: some View {
         TabView {
-            LocalReposView()
+            LocalClonesTabRoot()
                 .environment(currentUser)
                 .tabItem { Label("My Local Repositories", systemImage: "books.vertical") }
-            SearchView()
+            SearchTabRoot()
                 .tabItem { Label("Search Spotify", systemImage: "magnifyingglass") }
-            AccountView()
+            AccountTabRoot()
 //                .badge("!") // TODO: notifications
                 .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
         }

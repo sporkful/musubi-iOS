@@ -1,8 +1,8 @@
-// SearchView.swift
+// SearchTabRoot.swift
 
 import SwiftUI
 
-struct SearchView: View {
+struct SearchTabRoot: View {
     @Environment(Musubi.UserManager.self) private var userManager
     
     @State private var navigationPath = NavigationPath()
@@ -104,5 +104,5 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView()
+    SearchTabRoot()
 }
