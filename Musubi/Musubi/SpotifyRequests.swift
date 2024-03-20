@@ -86,12 +86,13 @@ extension SpotifyRequests {
 extension SpotifyRequests.Read {
     private typealias HTTPMethod = SpotifyRequests.HTTPMethod
     
-    private static func multipageList<T: SpotifyListPage>(
+    static func restOfList<T: SpotifyListPage>(
         firstPage: T,
         userManager: Musubi.UserManager
     ) async throws -> [SpotifyViewModel] {
+        var items: [SpotifyViewModel] = []
         var currentPage = firstPage
-        var items = currentPage.items
+//        var items = currentPage.items
         while let nextPageURLString = currentPage.next,
               let nextPageURL = URL(string: nextPageURLString)
         {
@@ -101,27 +102,6 @@ extension SpotifyRequests.Read {
             let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
             currentPage = try JSONDecoder().decode(T.self, from: data)
             items.append(contentsOf: currentPage.items)
-        }
-        return items
-    }
-    
-    // Intended to reduce memory usage, including intermediate spikes, so do not just call
-    // `multipageList` followed by a map operation.
-    private static func multipageListIDs<T: SpotifyListPage>(
-        firstPage: T,
-        userManager: Musubi.UserManager
-    ) async throws -> [Spotify.ID] {
-        var currentPage = firstPage
-        var items: [Spotify.ID] = currentPage.items.map { $0.id }
-        while let nextPageURLString = currentPage.next,
-              let nextPageURL = URL(string: nextPageURLString)
-        {
-            // TODO: remove this print
-            print("fetching page at " + nextPageURLString)
-            var request = try SpotifyRequests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
-            let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
-            currentPage = try JSONDecoder().decode(T.self, from: data)
-            items.append(contentsOf: currentPage.items.map { $0.id })
         }
         return items
     }
@@ -174,42 +154,54 @@ extension SpotifyRequests.Read {
         return try JSONDecoder().decode(Spotify.Playlist.self, from: data)
     }
     
-    static func albumTracklist(
+    static func albumTrackListFirstPage(
         albumID: Spotify.ID,
         userManager: Musubi.UserManager
-    ) async throws -> [Spotify.AudioTrack] {
+    ) async throws -> Spotify.Album.AudioTrackListPage {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/albums/" + albumID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Album.AudioTrackListPage
         let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
-        firstPage = try JSONDecoder().decode(Spotify.Album.AudioTrackListPage.self, from: data)
-        let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
-        guard let tracklist = tracklist as? [Spotify.AudioTrack] else {
-            throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
-        }
-        return tracklist
+        return try JSONDecoder().decode(Spotify.Album.AudioTrackListPage.self, from: data)
     }
     
-    static func playlistTracklist(
-        playlistID: Spotify.ID,
+    static func albumTrackListFull(
+        albumID: Spotify.ID,
         userManager: Musubi.UserManager
     ) async throws -> [Spotify.AudioTrack] {
+        let firstPage = try await albumTrackListFirstPage(albumID: albumID, userManager: userManager)
+        let restOfTrackList = try await restOfList(firstPage: firstPage, userManager: userManager)
+        guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
+            throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
+        }
+        return firstPage.items + restOfTrackList
+    }
+    
+    static func playlistTrackListFirstPage(
+        playlistID: Spotify.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> Spotify.Playlist.AudioTrackListPage {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Playlist.AudioTrackListPage
         let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
-        firstPage = try JSONDecoder().decode(Spotify.Playlist.AudioTrackListPage.self, from: data)
-        let tracklist = try await multipageList(firstPage: firstPage, userManager: userManager)
-        guard let tracklist = tracklist as? [Spotify.Playlist.AudioTrackItem] else {
+        return try JSONDecoder().decode(Spotify.Playlist.AudioTrackListPage.self, from: data)
+    }
+    
+    static func playlistTrackListFull(
+        playlistID: Spotify.ID,
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.Playlist.AudioTrackItem] {
+        let firstPage = try await playlistTrackListFirstPage(playlistID: playlistID, userManager: userManager)
+        let restOfTrackList = try await restOfList(firstPage: firstPage, userManager: userManager)
+        guard let restOfTrackList = restOfTrackList as? [Spotify.Playlist.AudioTrackItem] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
         }
-        return tracklist.map { $0.track }
+        return firstPage.items + restOfTrackList
     }
     
     static func artistAlbums(
@@ -224,11 +216,11 @@ extension SpotifyRequests.Read {
         let firstPage: Spotify.Artist.AlbumListPage
         let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
         firstPage = try JSONDecoder().decode(Spotify.Artist.AlbumListPage.self, from: data)
-        let albumlist = try await multipageList(firstPage: firstPage, userManager: userManager)
-        guard let albumlist = albumlist as? [Spotify.Album] else {
+        let restOfAlbumList = try await restOfList(firstPage: firstPage, userManager: userManager)
+        guard let restOfAlbumList = restOfAlbumList as? [Spotify.Album] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) artistAlbums multipage types")
         }
-        return albumlist
+        return firstPage.items + restOfAlbumList
     }
     
     // TODO: why does this require market query

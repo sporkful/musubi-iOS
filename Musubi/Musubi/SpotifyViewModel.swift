@@ -129,7 +129,15 @@ extension Spotify {
             var id: Spotify.ID { track.id }
         }
     }
-    
+}
+
+extension Array where Element == Spotify.AudioTrack {
+    static func from(playlistTrackItems: [Spotify.Playlist.AudioTrackItem]) -> Self {
+        return playlistTrackItems.map { item in item.track }
+    }
+}
+
+extension Spotify {
     struct SearchResults: SpotifyViewModel {
         var albums: Albums
         var artists: Artists

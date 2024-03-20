@@ -66,20 +66,7 @@ struct StaticPlaylistPage: View {
         }
     }
     
-    @MainActor
     private func loadContents() async {
-        do {
-            let audioTrackList = try await SpotifyRequests.Read.playlistTracklist(
-                playlistID: playlist.id,
-                userManager: userManager
-            )
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: audioTrackList)
-        } catch {
-            // TODO: alert user?
-            print("[Musubi::StaticAlbumPage] unable to load tracklist")
-            print(error)
-        }
-        
         do {
             guard let coverImageURLStr = self.playlist.images?.first?.url,
                   let coverImageURL = URL(string: coverImageURLStr)
@@ -91,6 +78,33 @@ struct StaticPlaylistPage: View {
         } catch {
             // TODO: try again?
             print("[Musubi::StaticAlbumPage] unable to load cover image")
+            print(error)
+        }
+        
+        do {
+            let playlistTrackListFirstPage = try await SpotifyRequests.Read.playlistTrackListFirstPage(
+                playlistID: playlist.id,
+                userManager: userManager
+            )
+            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
+                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: playlistTrackListFirstPage.items)
+            )
+            
+            let restOfTrackList = try await SpotifyRequests.Read.restOfList(
+                firstPage: playlistTrackListFirstPage,
+                userManager: userManager
+            )
+            guard let restOfTrackList = restOfTrackList as? [Spotify.Playlist.AudioTrackItem] else {
+                throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
+            }
+            self.audioTrackList.append(
+                contentsOf: Musubi.ViewModel.AudioTrackList.from(
+                    audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfTrackList)
+                )
+            )
+        } catch {
+            // TODO: alert user?
+            print("[Musubi::StaticPlaylistPage] unable to load tracklist")
             print(error)
         }
     }

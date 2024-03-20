@@ -66,20 +66,7 @@ struct StaticAlbumPage: View {
         }
     }
     
-    @MainActor
     private func loadContents() async {
-        do {
-            let audioTrackList = try await SpotifyRequests.Read.albumTracklist(
-                albumID: album.id,
-                userManager: userManager
-            )
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: audioTrackList)
-        } catch {
-            // TODO: alert user?
-            print("[Musubi::StaticAlbumPage] unable to load tracklist")
-            print(error)
-        }
-        
         do {
             guard let coverImageURLStr = self.album.images?.first?.url,
                   let coverImageURL = URL(string: coverImageURLStr)
@@ -91,6 +78,31 @@ struct StaticAlbumPage: View {
         } catch {
             // TODO: try again?
             print("[Musubi::StaticAlbumPage] unable to load cover image")
+            print(error)
+        }
+        
+        do {
+            let albumTrackListFirstPage = try await SpotifyRequests.Read.albumTrackListFirstPage(
+                albumID: album.id,
+                userManager: userManager
+            )
+            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
+                audioTrackList: albumTrackListFirstPage.items
+            )
+            
+            let restOfTrackList = try await SpotifyRequests.Read.restOfList(
+                firstPage: albumTrackListFirstPage,
+                userManager: userManager
+            )
+            guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
+                throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
+            }
+            self.audioTrackList.append(
+                contentsOf: Musubi.ViewModel.AudioTrackList.from(audioTrackList: restOfTrackList)
+            )
+        } catch {
+            // TODO: alert user?
+            print("[Musubi::StaticAlbumPage] unable to load tracklist")
             print(error)
         }
     }
