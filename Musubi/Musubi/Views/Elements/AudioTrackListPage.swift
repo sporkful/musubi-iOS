@@ -49,7 +49,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             y1: COVER_IMAGE_INITIAL_DIMENSION,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
             y2: COVER_IMAGE_INITIAL_DIMENSION * 0.5,
-            minY: 0.0,
+            minY: COVER_IMAGE_INITIAL_DIMENSION * 0.25, // has faded away at this point
             maxY: Musubi.UI.SCREEN_WIDTH
         )
     }
@@ -73,7 +73,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             x2: COVER_IMAGE_INITIAL_DIMENSION,
             y2: TITLE_TEXT_HEIGHT * 3.30,
             minY: 1.0,
-            maxY: Musubi.UI.SCREEN_HEIGHT
+            maxY: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88
         )
     }
     private var gradientOpacity: CGFloat {
