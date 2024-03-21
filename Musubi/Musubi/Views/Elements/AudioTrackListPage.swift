@@ -146,7 +146,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             }
             .ignoresSafeArea(.all, edges: [.horizontal])
             ScrollView {
-                VStack(alignment: .leading) {
+                LazyVStack(alignment: .leading) {
                     if coverImage != nil {
                         Rectangle()
                             .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
