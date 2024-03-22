@@ -34,6 +34,8 @@
 		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA162B56510B00650775 /* MusubiRepository.swift */; };
 		7961DA1B2B5998CF00650775 /* StaticUserPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA1A2B5998CF00650775 /* StaticUserPage.swift */; };
+		7961DA1E2B59ACEE00650775 /* RetryableAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */; };
+		7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA1F2B59B15000650775 /* SpotifyConstants.swift */; };
 		7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F8582B506080005D3880 /* AudioTrackListPage.swift */; };
 		7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */; };
 		7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */; };
@@ -88,6 +90,8 @@
 		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7961DA162B56510B00650775 /* MusubiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiRepository.swift; sourceTree = "<group>"; };
 		7961DA1A2B5998CF00650775 /* StaticUserPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticUserPage.swift; sourceTree = "<group>"; };
+		7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryableAsyncImage.swift; sourceTree = "<group>"; };
+		7961DA1F2B59B15000650775 /* SpotifyConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyConstants.swift; sourceTree = "<group>"; };
 		7978F8582B506080005D3880 /* AudioTrackListPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackListPage.swift; sourceTree = "<group>"; };
 		7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticAlbumPage.swift; sourceTree = "<group>"; };
 		7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
@@ -149,9 +153,10 @@
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
-				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
 				7947336C2B46566F001C3FEB /* SpotifyViewModel.swift */,
 				7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */,
+				7961DA1F2B59B15000650775 /* SpotifyConstants.swift */,
+				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
 				794733382B464333001C3FEB /* Assets.xcassets */,
 				7947333A2B464333001C3FEB /* Preview Content */,
 			);
@@ -217,6 +222,7 @@
 				794733A62B4D15BD001C3FEB /* AudioTrackListCell.swift */,
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				794733AB2B4E01E3001C3FEB /* ListCell.swift */,
+				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -369,6 +375,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7961DA1E2B59ACEE00650775 /* RetryableAsyncImage.swift in Sources */,
 				7947336D2B46566F001C3FEB /* SpotifyViewModel.swift in Sources */,
 				794733782B469E11001C3FEB /* Storage.swift in Sources */,
 				7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */,
@@ -388,6 +395,7 @@
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,
+				7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchTabRoot.swift in Sources */,
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,

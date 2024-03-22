@@ -67,11 +67,11 @@ extension Musubi {
             components.host = "accounts.spotify.com"
             components.path = "/authorize"
             components.queryItems = [
-                URLQueryItem(name: "client_id", value: API_CLIENT_ID),
+                URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "redirect_uri", value: OAUTH_DUMMY_REDIRECT_URI),
+                URLQueryItem(name: "redirect_uri", value: SpotifyConstants.OAUTH_DUMMY_REDIRECT_URI),
     //            URLQueryItem(name: "state", value: ),
-                URLQueryItem(name: "scope", value: ACCESS_SCOPES_STR),
+                URLQueryItem(name: "scope", value: SpotifyConstants.ACCESS_SCOPES_STR),
                 URLQueryItem(name: "code_challenge_method", value: "S256"),
                 URLQueryItem(name: "code_challenge", value: pkceChallenge),
             ]
@@ -104,7 +104,7 @@ extension Musubi {
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw Spotify.RequestError.response(detail: "unable to parse response as HTTP")
             }
-            guard HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
+            guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
                 // TODO: auto log out on error code 401?
                 throw Spotify.RequestError.response(detail: "failed - \(httpResponse.statusCode)")
             }
@@ -112,35 +112,6 @@ extension Musubi {
         }
         
         private let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
-        private let OAUTH_DUMMY_REDIRECT_URI = "https://github.com/musubi-app/musubi-iOS"
-        
-        /// Reference:
-        /// https://developer.spotify.com/documentation/web-api/concepts/scopes
-        /// As a rule of thumb, Musubi only gives itself write access to things under its version control.
-        private var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
-        private let ACCESS_SCOPES = [
-    //        "ugc-image-upload",
-            "user-read-playback-state",
-            "user-modify-playback-state",
-            "user-read-currently-playing",
-            "playlist-read-private",
-            "playlist-read-collaborative",
-            "playlist-modify-private",
-            "playlist-modify-public",
-    //        "user-follow-modify",
-            "user-follow-read",
-            "user-read-playback-position",
-            "user-top-read",
-            "user-read-recently-played",
-    //        "user-library-modify",
-            "user-library-read",
-    //        "user-read-email",
-    //        "user-read-private",
-        ]
-        
-        /// Reference:
-        /// https://developer.spotify.com/documentation/web-api/concepts/api-calls
-        private let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
         
         private struct OAuthResponse: Codable {
             let access_token: String
@@ -155,8 +126,8 @@ extension Musubi {
                 queryItems: [
                     URLQueryItem(name: "grant_type", value: "authorization_code"),
                     URLQueryItem(name: "code", value: authCode),
-                    URLQueryItem(name: "redirect_uri", value: OAUTH_DUMMY_REDIRECT_URI),
-                    URLQueryItem(name: "client_id", value: API_CLIENT_ID),
+                    URLQueryItem(name: "redirect_uri", value: SpotifyConstants.OAUTH_DUMMY_REDIRECT_URI),
+                    URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
                     URLQueryItem(name: "code_verifier", value: pkceVerifier),
                 ]
             )
@@ -175,7 +146,7 @@ extension Musubi {
                 queryItems: [
                     URLQueryItem(name: "grant_type", value: "refresh_token"),
                     URLQueryItem(name: "refresh_token", value: lastRefreshToken),
-                    URLQueryItem(name: "client_id", value: API_CLIENT_ID),
+                    URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
                 ]
             )
             
