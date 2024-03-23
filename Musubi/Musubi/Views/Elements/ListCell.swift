@@ -29,8 +29,9 @@ struct ListCell: View {
     
     var body: some View {
         HStack {
-            if item.images != nil && !(item.images!.isEmpty),
-               let url = URL(string: item.images![0].url)
+            if let images = item.images,
+               let firstImage = images.first,
+               let url = URL(string: firstImage.url)
             {
                 RetryableAsyncImage(url: url)
                     .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
