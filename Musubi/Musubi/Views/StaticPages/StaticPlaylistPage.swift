@@ -98,9 +98,7 @@ struct StaticPlaylistPage: View {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
             }
             self.audioTrackList.append(
-                contentsOf: Musubi.ViewModel.AudioTrackList.from(
-                    audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfTrackList)
-                )
+                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfTrackList)
             )
         } catch {
             // TODO: alert user?

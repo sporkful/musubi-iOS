@@ -29,6 +29,15 @@ extension Musubi.ViewModel.AudioTrackList {
         self.append(Musubi.ViewModel.UIDableAudioTrack(audioTrack: audioTrack, id: self.count))
     }
     
+    mutating func append(audioTrackList: [Spotify.AudioTrack]) {
+        let origCount = self.count
+        self.append(
+            contentsOf: audioTrackList.enumerated().map { item in
+                Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset + origCount)
+            }
+        )
+    }
+    
     static func from(audioTrackList: [Spotify.AudioTrack]) -> Self {
         return audioTrackList.enumerated().map { item in
             Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset)

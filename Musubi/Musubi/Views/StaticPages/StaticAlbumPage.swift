@@ -97,9 +97,7 @@ struct StaticAlbumPage: View {
             guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
             }
-            self.audioTrackList.append(
-                contentsOf: Musubi.ViewModel.AudioTrackList.from(audioTrackList: restOfTrackList)
-            )
+            self.audioTrackList.append(audioTrackList: restOfTrackList)
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticAlbumPage] unable to load tracklist")
