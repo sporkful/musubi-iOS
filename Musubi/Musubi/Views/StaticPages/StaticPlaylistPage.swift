@@ -17,6 +17,8 @@ struct StaticPlaylistPage: View {
     @State private var coverImage: UIImage?
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
     
+    @State private var hasLoadedContents = false
+    
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
@@ -67,6 +69,11 @@ struct StaticPlaylistPage: View {
     }
     
     private func loadContents() async {
+        if hasLoadedContents {
+            return
+        }
+        hasLoadedContents = true
+        
         do {
             guard let coverImageURLStr = self.playlist.images?.first?.url,
                   let coverImageURL = URL(string: coverImageURLStr)
@@ -79,6 +86,7 @@ struct StaticPlaylistPage: View {
             // TODO: try again?
             print("[Musubi::StaticAlbumPage] unable to load cover image")
             print(error)
+            hasLoadedContents = false
         }
         
         do {
@@ -104,6 +112,7 @@ struct StaticPlaylistPage: View {
             // TODO: alert user?
             print("[Musubi::StaticPlaylistPage] unable to load tracklist")
             print(error)
+            hasLoadedContents = false
         }
     }
 }
