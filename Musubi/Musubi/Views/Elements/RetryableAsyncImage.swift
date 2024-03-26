@@ -4,6 +4,8 @@ import SwiftUI
 
 struct RetryableAsyncImage: View {
     let url: URL
+    let width: CGFloat
+    let height: CGFloat
     
     @State private var image: UIImage?
     
@@ -13,6 +15,7 @@ struct RetryableAsyncImage: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .frame(width: width, height: height)
                     .clipped()
             } else {
                 ProgressView()

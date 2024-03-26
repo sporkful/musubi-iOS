@@ -136,9 +136,9 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                 if let image = coverImage {
                     Image(uiImage: image)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(height: coverImageDimension)
-//                        .clipped()
+                        .scaledToFill()
+                        .frame(width: coverImageDimension, height: coverImageDimension)
+                        .clipped()
                         .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
                         .opacity(coverImageOpacity)
                 }

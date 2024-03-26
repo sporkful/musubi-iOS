@@ -33,8 +33,11 @@ struct ListCell: View {
                let firstImage = images.first,
                let url = URL(string: firstImage.url)
             {
-                RetryableAsyncImage(url: url)
-                    .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                RetryableAsyncImage(
+                    url: url,
+                    width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
+                    height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
+                )
             }
             VStack(alignment: .leading) {
                 Text(item.name)
