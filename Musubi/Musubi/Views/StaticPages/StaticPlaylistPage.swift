@@ -31,6 +31,12 @@ struct StaticPlaylistPage: View {
             date: "",
             toolbarBuilder: {
                 HStack {
+                    if playlist.owner.id == userManager.currentUser?.id,
+                       let localClones = userManager.currentUser?.localClones,
+                       !localClones.contains(where: { $0.playlistID == playlist.id })
+                    {
+                        
+                    }
                     Menu {
                         Button {
                             // TODO: impl

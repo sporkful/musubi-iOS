@@ -2,6 +2,11 @@
 
 ## Inspirations and design considerations
 
+### Note on centralized version control systems
+
+I'm not familiar enough with centralized version control systems yet to draw specific connections, but I suspect the system that resulted from the following discussion strongly resembles a centralized VCS (even though the "starting point" of the discussion was Git).
+
+
 ### Git + GitHub
 
 #### Git
@@ -38,9 +43,10 @@ Git(+GitHub/IMW) is an extremely flexible/powerful model that many successful la
 
 A couple of specific preliminary ways in which Musubi deviates from the core Git model:
 - Every change in Musubi is automatically staged, i.e. there is no Musubi equivalent to a manual "git add".
-- "Commit + push" is a single operation in Musubi. When disconnected from the Internet (or if the Musubi service goes down), users can still make local edits but cannot create commits.
+- "Commit + push" is a single operation in Musubi. When disconnected from the Internet (or if the Musubi service goes down), users can still make local edits but cannot create commits. This also implies that the only way the local clone and Musubi-hosted clone can "diverge" is if the Musubi-hosted clone is ahead of the local clone and the local clone wants to make a new commit.
     - Note that all Musubi-based history can be persisted locally on user's devices, so even if the Musubi service goes down forever, users don't lose their logs and may be able to continue building on top of them using alternative services that can ingest the Musubi data format.
 - Musubi does not support multiple *logical* branches within any repository. In other words, every Musubi repository clone only has a "main" branch and associated "\[remote\]/main" branch(es), no user-made "feature" branches.
+- (For simplicity of implementation / efficient serialization in particular) History can never be rewritten. Users can choose to "hide" chosen commits on the UI level, but they don't actually get deleted.
 
 To allow users to collaborate on and subscribe to different specific playlists, Musubi version-controls each playlist separately, i.e. Musubi treats each playlist as a separate logical repository.
 
@@ -58,15 +64,16 @@ We arrive at the following IMW-based architecture:
 
 The Musubi backend is analogous to the GitHub backend, with key differences being:
 
-- Each Musubi-backend-hosted clone is associated with exactly one Musubi account with direct push access. (OTOH a GitHub-hosted clone may have multiple GitHub accounts with direct push access.) Collaborating through Musubi is all done through [GitHub-like "forking"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks).
+- Each Musubi-backend-hosted clone is associated with exactly one Musubi account with direct clone+push access. (OTOH a GitHub-hosted clone may have multiple GitHub accounts with direct clone+push access.) Collaborating through Musubi is all done through [GitHub-like "forking"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks).
     - Note that a Musubi account can be associated with multiple devices. This is analogous to a GitHub user having multiple local Git clones of the same repo.
     - Note that a Musubi account is also associated with an account on Spotify itself. Interactions between Musubi and Spotify are described in the next bullet point.
 
-- "Pushing" to a Musubi-hosted clone also interacts with Spotify in the following way:
+- "Pushing" to the Musubi-hosted clone of a repo also interacts with Spotify in the following way:
     1. Check if any changes were made on Spotify (i.e. through official Spotify clients) since the last successful push (which marks the last successful sync between Musubi and Spotify).
         - If such changes are detected, the Musubi client must first pull (fetch+merge) in the changes from Spotify to the Musubi local state (creating a new merge commit) before the push can proceed. This is a three-way merge between the current Musubi state, the current Spotify state, and the state at the last successful sync (note this is always an explicit Musubi commit). This makes sure that users don't lose changes they made in Spotify / outside of Musubi. Once the merge is completed locally, the Musubi client restarts the push process (doing the sync check again).
     2. A successful push will update Spotify itself to reflect the current Musubi state. As described above, a push is an atomic action (wrt Spotify) that only succeeds if there is no merge needed when it starts. This ensures that no changes in Spotify are lost without user review.
         - Note that *in theory* there is a race condition: in the context of a single push action, the user might make a change in Spotify in the window between Musubi's successful check (a read from Spotify) and subsequent write to Spotify. *In practice*, this window is so small (10s of milliseconds) that the race condition never occurs under normal human-controlled usage. In other words, it's impossible for users to accidentally trigger it. If a user does manage to trigger it (e.g. by having multiple devices open under the same account and consciously trying to simultaneously make a Spotify edit and a Musubi push on the same playlist), we consider them to be "malicious", but we can safely ignore them since exploiting this race condition only harms their own Musubi-Spotify integration experience.
+    - Note that the above is **in addition to** the canonical interaction between a local Git clone and a remote. In particular, "pushing" also checks if the local clone and the remote (in this case the Musubi-hosted clone) have diverged and forces the local clone to resolve conflicts. This check is done before the check against Spotify, and both checks must pass atomically for the push to succeed.
 
 The following table summarizes how IMW concepts map to Musubi. This table is defined wrt a single logical Musubi repository / Spotify playlist.
 

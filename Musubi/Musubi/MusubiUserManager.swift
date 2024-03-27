@@ -47,6 +47,15 @@ extension Musubi {
                 return nil
             }
         }
+        
+        func cloneRepository(playlistID: Spotify.ID) {
+            
+        }
+        
+        // TODO: impl
+//        func forkRepository(userID: Spotify.ID, playlistID: Spotify.ID) throws -> RepositoryHandle {
+//
+//        }
     }
 }
 
@@ -107,6 +116,25 @@ extension Musubi {
             guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
                 // TODO: auto log out on error code 401?
                 throw Spotify.RequestError.response(detail: "failed - \(httpResponse.statusCode)")
+            }
+            return data
+        }
+        
+        func makeAuthdMusubiCloudRequest(request: inout URLRequest) async throws -> Data {
+            try await refreshOAuthToken()
+            request.setValue(
+                retrieveOAuthToken(),
+                forHTTPHeaderField: "X-Musubi-SpotifyAuth"
+            )
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw Musubi.CloudRequestError.any(detail: "unable to parse response as HTTP")
+            }
+            // TODO: check this
+            guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
+                throw Musubi.CloudRequestError.any(detail: "failed - \(httpResponse.statusCode)")
             }
             return data
         }

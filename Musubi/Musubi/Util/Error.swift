@@ -41,6 +41,17 @@ extension Musubi {
             return "[Musubi::UI] \(description)"
         }
     }
+    
+    enum CloudRequestError: LocalizedError {
+        case any(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .any(detail): "\(detail)"
+            }
+            return "[Musubi::CloudRequests] \(description)"
+        }
+    }
 }
 
 extension Spotify {

@@ -23,6 +23,8 @@ extension Musubi.Model {
         let parentCommits: [HashPointer]
         
         let rootTree: HashPointer
+        
+        let isVisible: Bool
     }
     
     struct Tree {

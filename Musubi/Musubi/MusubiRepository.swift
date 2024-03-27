@@ -5,7 +5,7 @@ import Foundation
 // Storage hierarchy:
 //      appDir/userID/repoID/
 //          objects/
-//          refs/remotes/
+//          (refs/remotes/)origin
 //          HEAD
 //          index
 

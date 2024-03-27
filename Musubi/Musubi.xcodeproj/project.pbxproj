@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
 		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
@@ -60,6 +61,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloudRequests.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
 		794733382B464333001C3FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
+				7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */,
 				7947336C2B46566F001C3FEB /* SpotifyViewModel.swift */,
 				7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */,
 				7961DA1F2B59B15000650775 /* SpotifyConstants.swift */,
@@ -396,6 +399,7 @@
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,
 				7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */,
+				7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchTabRoot.swift in Sources */,
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,
