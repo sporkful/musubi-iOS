@@ -13,10 +13,14 @@ extension Musubi {
 extension Musubi.Cryptography {
     typealias HashPointer = String
     
-    static func hash<T: Encodable>(content: T) throws -> HashPointer {
-        return SHA256.hash(data: try JSONEncoder().encode(content))
+    static func hash(data: Data) -> HashPointer {
+        return SHA256.hash(data: data)
             .compactMap { String(format: "%02x", $0) }
             .joined()
+    }
+    
+    static func hash<T: Encodable>(jsonCodable: T) throws -> HashPointer {
+        return hash(data: try JSONEncoder().encode(jsonCodable))
     }
     
     private static let pkcePossibleChars = Array(

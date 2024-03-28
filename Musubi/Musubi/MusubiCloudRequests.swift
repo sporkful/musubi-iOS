@@ -81,7 +81,7 @@ extension MusubiCloudRequests {
     enum Push_Response: Codable {
         case success
         case remoteUpdates(commits: [Musubi.Model.Commit])
-        case spotifyUpdates(audioTrackIDList: Musubi.Model.AudioTrackList)
+        case spotifyUpdates(audioTrackIDList: Musubi.Model.SerializedAudioTrackList)
     }
     
     static func push(

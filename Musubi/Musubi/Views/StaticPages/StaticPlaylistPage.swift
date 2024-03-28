@@ -19,6 +19,9 @@ struct StaticPlaylistPage: View {
     
     @State private var hasLoadedContents = false
     
+    @State private var isViewDisabled = false
+    @State private var showAlertCloneError = false
+    
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
@@ -31,11 +34,22 @@ struct StaticPlaylistPage: View {
             date: "",
             toolbarBuilder: {
                 HStack {
-                    if playlist.owner.id == userManager.currentUser?.id,
-                       let localClones = userManager.currentUser?.localClones,
+                    if let localClones = userManager.currentUser?.localClones,
                        !localClones.contains(where: { $0.playlistID == playlist.id })
                     {
-                        
+                        if playlist.owner.id == userManager.currentUser?.id {
+                            Button {
+                                initOrClone()
+                            } label: {
+                                Image(systemName: "square.and.arrow.down.on.square")
+                            }
+                        } else {
+                            Button {
+                                // TODO: forkOrClone
+                            } label: {
+                                Image(systemName: "arrow.triangle.branch")
+                            }
+                        }
                     }
                     Menu {
                         Button {
@@ -69,6 +83,8 @@ struct StaticPlaylistPage: View {
                 }
             }
         )
+        .disabled(isViewDisabled)
+        .alert("Musubi - failed to clone repo", isPresented: $showAlertCloneError, actions: {})
         .task {
             await loadContents()
         }
@@ -119,6 +135,29 @@ struct StaticPlaylistPage: View {
             print("[Musubi::StaticPlaylistPage] unable to load tracklist")
             print(error)
             hasLoadedContents = false
+        }
+    }
+    
+    private func initOrClone() {
+        isViewDisabled = true
+        Task {
+            do {
+                let cloneMetadata = try await MusubiCloudRequests.initOrClone(
+                    requestBody: MusubiCloudRequests.InitOrClone_RequestBody(playlistID: playlist.id),
+                    userManager: userManager
+                )
+                // TODO: finish
+                print("response HeadHash: \(cloneMetadata.HeadHash)")
+                
+                let testHash = try Musubi.Cryptography.hash(
+                    data: Data(Musubi.Model.SerializedAudioTrackList.from(audioTrackList: audioTrackList))
+                )
+                print("test local playlist content hash: \(testHash)")
+            } catch {
+                print("[Musubi::StaticPlaylistPage] initOrClone error")
+                print(error)
+            }
+            isViewDisabled = false
         }
     }
 }

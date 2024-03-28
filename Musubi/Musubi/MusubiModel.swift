@@ -31,5 +31,14 @@ extension Musubi.Model {
         let audioTrackListBlob: HashPointer
     }
     
-    typealias AudioTrackList = [Spotify.ID]
+    typealias SerializedAudioTrackList = [UInt8]
+}
+
+extension Musubi.Model.SerializedAudioTrackList {
+    static func from(audioTrackList: Musubi.ViewModel.AudioTrackList) -> Self {
+        let str = audioTrackList
+            .map({ item in item.audioTrack.id })
+            .joined(separator: ",")
+        return Array(str.utf8)
+    }
 }
