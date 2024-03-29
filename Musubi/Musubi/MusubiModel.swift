@@ -22,14 +22,14 @@ extension Musubi.Model {
         
         let parentCommits: [HashPointer]
         
-        let rootTree: HashPointer
+        let audioTrackListBlob: HashPointer
         
         let isVisible: Bool
     }
     
-    struct Tree {
-        let audioTrackListBlob: HashPointer
-    }
+//    struct Tree {
+//        let audioTrackListBlob: HashPointer
+//    }
     
     typealias SerializedAudioTrackList = [UInt8]
 }
@@ -40,5 +40,20 @@ extension Musubi.Model.SerializedAudioTrackList {
             .map({ item in item.audioTrack.id })
             .joined(separator: ",")
         return Array(str.utf8)
+    }
+}
+
+// TODO: is there a better way to do this (enforce date en/decoding as iso8601)
+extension Musubi {
+    static func jsonEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+    
+    static func jsonDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
     }
 }

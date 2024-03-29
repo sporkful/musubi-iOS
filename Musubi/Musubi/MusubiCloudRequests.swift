@@ -61,10 +61,10 @@ extension MusubiCloudRequests {
     ) async throws -> CloneMetadata_Response {
         var request = try MusubiCloudRequests.createRequest(
             cmdPath: .InitOrClone,
-            bodyData: try JSONEncoder().encode(requestBody)
+            bodyData: try Musubi.jsonEncoder().encode(requestBody)
         )
         let data = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
-        return try JSONDecoder().decode(CloneMetadata_Response.self, from: data)
+        return try Musubi.jsonDecoder().decode(CloneMetadata_Response.self, from: data)
     }
     
     // TODO: forkOrClone
@@ -90,9 +90,9 @@ extension MusubiCloudRequests {
     ) async throws -> Push_Response {
         var request = try MusubiCloudRequests.createRequest(
             cmdPath: .Push,
-            bodyData: try JSONEncoder().encode(requestBody)
+            bodyData: try Musubi.jsonEncoder().encode(requestBody)
         )
         let data = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
-        return try JSONDecoder().decode(Push_Response.self, from: data)
+        return try Musubi.jsonDecoder().decode(Push_Response.self, from: data)
     }
 }

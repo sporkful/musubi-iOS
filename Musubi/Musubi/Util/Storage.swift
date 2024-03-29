@@ -134,18 +134,6 @@ extension Musubi.Storage.LocalFS {
         return (try? fileURL.checkResourceIsReachable()) ?? false
             && (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true
     }
-    
-    static func createNewFile(at fileURL: URL) throws {
-        try Data().write(to: fileURL, options: .atomic)
-    }
-    
-    static func save<T: Encodable>(content: T, toFileURL fileURL: URL) throws {
-        try (try JSONEncoder().encode(content)).write(to: fileURL, options: .atomic)
-    }
-    
-    static func load<T: Decodable>(fromFileURL fileURL: URL) throws -> T {
-        return try JSONDecoder().decode(T.self, from: Data(contentsOf: fileURL))
-    }
 }
 
 extension Musubi.Storage.Cloud {
