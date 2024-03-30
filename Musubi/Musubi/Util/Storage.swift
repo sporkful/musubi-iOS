@@ -117,6 +117,28 @@ extension Musubi.Storage.Keychain {
 }
 
 extension Musubi.Storage.LocalFS {
+    static var BASE_DIR: URL {
+        URL.libraryDirectory.appending(path: "MusubiLocal", directoryHint: .isDirectory)
+    }
+    
+    static var SHARED_BLOBS_DIR: URL {
+        BASE_DIR.appending(path: "SharedBlobs", directoryHint: .isDirectory)
+    }
+    
+    static func USER_CLONES_DIR(userID: Spotify.ID) -> URL {
+        BASE_DIR
+            .appending(path: "Users", directoryHint: .isDirectory)
+            .appending(path: userID, directoryHint: .isDirectory)
+            .appending(path: "Clones", directoryHint: .isDirectory)
+    }
+    
+    static func CLONE_DIR(userID: Spotify.ID, playlistID: Spotify.ID) -> URL {
+        USER_CLONES_DIR(userID: userID)
+            .appending(path: playlistID, directoryHint: .isDirectory)
+    }
+}
+
+extension Musubi.Storage.LocalFS {
     static func doesDirExist(at dirURL: URL) -> Bool {
         return (try? dirURL.checkResourceIsReachable()) ?? false
             && (try? dirURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true

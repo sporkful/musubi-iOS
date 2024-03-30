@@ -142,17 +142,11 @@ struct StaticPlaylistPage: View {
         isViewDisabled = true
         Task {
             do {
-                let cloneMetadata = try await MusubiCloudRequests.initOrClone(
-                    requestBody: MusubiCloudRequests.InitOrClone_RequestBody(playlistID: playlist.id),
+                // TODO: clean up reference-spaghetti between User and UserManager
+                try await userManager.currentUser?.initOrClone(
+                    playlistID: playlist.id,
                     userManager: userManager
                 )
-                // TODO: finish
-                print("response HeadHash: \(cloneMetadata.HeadHash)")
-                
-                let testHash = try Musubi.Cryptography.hash(
-                    data: Data(Musubi.Model.SerializedAudioTrackList.from(audioTrackList: audioTrackList))
-                )
-                print("test local playlist content hash: \(testHash)")
             } catch {
                 print("[Musubi::StaticPlaylistPage] initOrClone error")
                 print(error)

@@ -11,21 +11,14 @@ extension Musubi {
         
         var id: Spotify.ID { spotifyInfo.id }
         
-        private var localBaseDir: URL {
-            URL.libraryDirectory
-                .appending(path: "MusubiLocal", directoryHint: .isDirectory)
-                .appending(path: "Users", directoryHint: .isDirectory)
-                .appending(path: self.id, directoryHint: .isDirectory)
-                .appending(path: "LocalClones", directoryHint: .isDirectory)
-        }
-        
         init?(spotifyInfo: Spotify.LoggedInUser) {
             self.spotifyInfo = spotifyInfo
             self.localClones = []
             
             do {
-                if Musubi.Storage.LocalFS.doesDirExist(at: self.localBaseDir) {
-                    self.localClones = try Musubi.Storage.LocalFS.contentsOf(dirURL: self.localBaseDir)
+                let userClonesDir = Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id)
+                if Musubi.Storage.LocalFS.doesDirExist(at: userClonesDir) {
+                    self.localClones = try Musubi.Storage.LocalFS.contentsOf(dirURL: userClonesDir)
                         .map { url in url.lastPathComponent }
                         .map { playlistID in
                             Musubi.RepositoryHandle(
@@ -35,27 +28,51 @@ extension Musubi {
                         }
                 } else {
                     try Musubi.Storage.LocalFS.createNewDir(
-                        at: self.localBaseDir,
+                        at: userClonesDir,
                         withIntermediateDirectories: true
                     )
                 }
-                
-                // TODO: create Musubi cloud account for this Spotify user if doesn't exist
-                // TODO: start playback controller if this is a premium user
             } catch {
                 print("[Musubi::User] failed to init user for \(spotifyInfo.display_name)")
                 return nil
             }
+            
+            // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
         }
         
-        func cloneRepository(playlistID: Spotify.ID) {
+        // TODO: clean up reference-spaghetti between User and UserManager
+        func initOrClone(playlistID: Spotify.ID, userManager: Musubi.UserManager) async throws {
+            let requestBody = InitOrClone_RequestBody(playlistID: playlistID)
+            var request = try MusubiCloudRequests.createRequest(
+                command: .INIT_OR_CLONE,
+                bodyData: try Musubi.jsonEncoder().encode(requestBody)
+            )
+            let responseData = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
+            let response =  try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             
+            print("response HeadHash: \(response.headHash)")
         }
         
         // TODO: impl
-//        func forkRepository(userID: Spotify.ID, playlistID: Spotify.ID) throws -> RepositoryHandle {
+//        func forkOrClone(ownerID: Spotify.ID, playlistID: Spotify.ID, userManager: Musubi.UserManager) async throws {
 //
 //        }
+        
+        private struct InitOrClone_RequestBody: Codable {
+            let playlistID: String
+        }
+        
+        private struct Clone_ResponseBody: Codable {
+            let commits: [Musubi.Model.Commit]
+            let headHash: String
+            let forkParent: RelatedRepo?
+            
+            struct RelatedRepo: Codable {
+                let ownerID: String
+                let playlistID: String
+                // note omission of the remotely-mutable `LatestSyncCommitHash`
+            }
+        }
     }
 }
 
