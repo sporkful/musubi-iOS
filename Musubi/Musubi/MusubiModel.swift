@@ -18,28 +18,22 @@ extension Musubi.Model {
         let authorID: Spotify.ID
         let date: Date
         let message: String
-        let nonce: UInt64
         
         let parentCommits: [HashPointer]
         
-        let audioTrackListBlob: HashPointer
+        let blobHash: HashPointer
         
-        let isVisible: Bool
+//        var isVisible: Bool
     }
     
-//    struct Tree {
-//        let audioTrackListBlob: HashPointer
-//    }
-    
-    typealias SerializedAudioTrackList = [UInt8]
+    typealias Blob = String  // instead of [UInt8] for easier JSON ser/de.
 }
 
-extension Musubi.Model.SerializedAudioTrackList {
+extension Musubi.Model.Blob {
     static func from(audioTrackList: Musubi.ViewModel.AudioTrackList) -> Self {
-        let str = audioTrackList
+        return audioTrackList
             .map({ item in item.audioTrack.id })
             .joined(separator: ",")
-        return Array(str.utf8)
     }
 }
 
@@ -55,5 +49,18 @@ extension Musubi {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
+    }
+}
+
+extension Musubi.Model.Commit: CustomStringConvertible {
+    var description: String {
+        """
+        Musubi.Model.Commit
+            authorID: \(self.authorID)
+            date: \(self.date.formatted())
+            message: \(self.message)
+            parentCommits: \(self.parentCommits.joined(separator: ", "))
+            blobHash: \(self.blobHash)
+        """
     }
 }

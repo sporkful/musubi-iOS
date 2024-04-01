@@ -45,8 +45,8 @@ extension Musubi.ViewModel.AudioTrackList {
     }
   
     // TODO: THIS (CMD-F THIS)
-//    static func from(serializedAudioTrackList: Musubi.Model.SerializedAudioTrackList) -> Self {
-//        return String(bytes: serializedAudioTrackList, encoding: .utf8).split(",")
+//    static func from(blob: Musubi.Model.Blob) -> Self {
+//        return String(bytes: blob, encoding: .utf8).split(",")
 //    }
 }
 

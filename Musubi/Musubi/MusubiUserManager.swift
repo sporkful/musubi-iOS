@@ -50,7 +50,10 @@ extension Musubi {
             let responseData = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
             let response =  try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             
-            print("response HeadHash: \(response.headHash)")
+            print("Commits:")
+            print(response.commits.map({ item in "\(item.key)\n\(item.value)\n" }).joined(separator: "\n"))
+            print("Blobs:")
+            print(response.blobs.map({ item in "\(item.key)\n\(item.value)\n" }).joined(separator: "\n"))
         }
         
         // TODO: impl
@@ -63,7 +66,9 @@ extension Musubi {
         }
         
         private struct Clone_ResponseBody: Codable {
-            let commits: [Musubi.Model.Commit]
+            let commits: [Musubi.Model.HashPointer: Musubi.Model.Commit]
+            let blobs: [Musubi.Model.HashPointer: Musubi.Model.Blob]
+            
             let headHash: String
             let forkParent: RelatedRepo?
             

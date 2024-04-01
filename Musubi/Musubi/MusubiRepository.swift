@@ -46,15 +46,23 @@ extension Musubi {
         
         private struct Push_RequestBody: Codable {
             let playlistID: String
-            let proposedCommitHash: String
-            let proposedCommit: Musubi.Model.Commit
-            let latestSyncCommitHash: String
+            let latestSyncCommitHash: Musubi.Model.HashPointer
+            let proposedCommitArgs: ProposedCommitArgs
+            
+            struct ProposedCommitArgs: Codable {
+                let blob: Musubi.Model.Blob
+                let parentCommits: [Musubi.Model.HashPointer]
+                let message: String
+            }
         }
         
         private enum Push_Response: Codable {
             case success
-            case remoteUpdates(commits: [Musubi.Model.Commit])
-            case spotifyUpdates(audioTrackIDList: Musubi.Model.SerializedAudioTrackList)
+            case remoteUpdates(
+                commits: [Musubi.Model.HashPointer: Musubi.Model.Commit],
+                blobs: [Musubi.Model.HashPointer: Musubi.Model.Blob]
+            )
+            case spotifyUpdates(blob: Musubi.Model.Blob)
         }
     }
 }
