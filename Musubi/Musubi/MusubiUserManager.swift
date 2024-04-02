@@ -50,14 +50,14 @@ extension Musubi {
             let responseData = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
             let response =  try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             
+            for (blobID, blob) in response.blobs {
+                try Musubi.Storage.LocalFS.saveGlobalObject(object: blob, objectID: blobID)
+            }
             for (commitID, commit) in response.commits {
-                
+                try Musubi.Storage.LocalFS.saveGlobalObject(object: commit, objectID: commitID)
             }
             
-            print("Commits:")
-            print(response.commits.map({ item in "\(item.key)\n\(item.value)\n" }).joined(separator: "\n"))
-            print("Blobs:")
-            print(response.blobs.map({ item in "\(item.key)\n\(item.value)\n" }).joined(separator: "\n"))
+            
         }
         
         // TODO: impl
@@ -65,21 +65,21 @@ extension Musubi {
 //
 //        }
         
-        private struct InitOrClone_RequestBody: Codable {
+        private struct InitOrClone_RequestBody: Encodable {
             let playlistID: String
         }
         
-        private struct Clone_ResponseBody: Codable {
+        private struct Clone_ResponseBody: Decodable {
             let commits: [String: Musubi.Model.Commit]
             let blobs: [String: Musubi.Model.Blob]
             
             let headCommitID: String
-            let forkParent: RelatedRepo?
+            let forkParent: RelatedRepository?
             
-            struct RelatedRepo: Codable {
-                let ownerID: String
+            struct RelatedRepository: Decodable {
+                let userID: String
                 let playlistID: String
-                // note omission of the remotely-mutable `LatestSyncCommitID`
+                // Note omission of remotely-mutable `LatestSyncCommitID`, which is handled by backend.
             }
         }
     }

@@ -132,9 +132,24 @@ extension Musubi.Storage.LocalFS {
             .appending(path: "Clones", directoryHint: .isDirectory)
     }
     
-    static func CLONE_DIR(userID: Spotify.ID, playlistID: Spotify.ID) -> URL {
-        USER_CLONES_DIR(userID: userID)
-            .appending(path: playlistID, directoryHint: .isDirectory)
+    static func CLONE_DIR(repositoryHandle: Musubi.RepositoryHandle) -> URL {
+        USER_CLONES_DIR(userID: repositoryHandle.userID)
+            .appending(path: repositoryHandle.playlistID, directoryHint: .isDirectory)
+    }
+    
+    static func CLONE_STAGING_AREA_FILE(repositoryHandle: Musubi.RepositoryHandle) -> URL {
+        CLONE_DIR(repositoryHandle: repositoryHandle)
+            .appending(path: "index", directoryHint: .notDirectory)
+    }
+    
+    static func CLONE_HEAD_FILE(repositoryHandle: Musubi.RepositoryHandle) -> URL {
+        CLONE_DIR(repositoryHandle: repositoryHandle)
+            .appending(path: "HEAD", directoryHint: .notDirectory)
+    }
+    
+    static func CLONE_FORK_PARENT_FILE(repositoryHandle: Musubi.RepositoryHandle) -> URL {
+        CLONE_DIR(repositoryHandle: repositoryHandle)
+            .appending(path: "FORK_PARENT", directoryHint: .notDirectory)
     }
 }
 
@@ -160,6 +175,18 @@ extension Musubi.Storage.LocalFS {
 
 extension Musubi.Storage.LocalFS {
     static func saveGlobalObject<T: MusubiGlobalObject>(object: T, objectID: String) throws {
-        // TODO: 
+        let dirURL = GLOBAL_OBJECTS_DIR.appending(path: objectID.prefix(2), directoryHint: .isDirectory)
+        if !doesDirExist(at: dirURL) {
+            try createNewDir(at: dirURL, withIntermediateDirectories: true)
+        }
+        let fileURL = dirURL.appending(path: objectID, directoryHint: .notDirectory)
+        try JSONEncoder().encode(object).write(to: fileURL, options: .atomic)
+    }
+    
+    static func loadGlobalObject<T: MusubiGlobalObject>(objectID: String) throws -> T {
+        let fileURL = GLOBAL_OBJECTS_DIR
+            .appending(path: objectID.prefix(2), directoryHint: .isDirectory)
+            .appending(path: objectID, directoryHint: .notDirectory)
+        return try JSONDecoder().decode(T.self, from: Data(contentsOf: fileURL))
     }
 }

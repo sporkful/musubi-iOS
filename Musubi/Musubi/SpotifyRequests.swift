@@ -117,15 +117,23 @@ extension SpotifyRequests.Read {
         let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
         return try JSONDecoder().decode(Spotify.AudioTrack.self, from: data)
     }
+    
+    private struct AudioTracks: Codable {
+        let tracks: [Spotify.AudioTrack]
+    }
   
-    // TODO: THIS (CMD-F THIS)
-//    static func audioTracks(
-//        audioTrackIDs: [Spotify.ID],
-//        userManager: Musubi.UserManager
-//    ) async throws -> [Spotify.AudioTrack] {
-//        // TODO: https://developer.spotify.com/documentation/web-api/reference/get-several-tracks
-//        // (note limit of 50 tracks per call to ^)
-//    }
+    static func audioTracks(
+        audioTrackIDs: String,  // comma-separated with no spaces - TODO: better way to enforce this?
+        userManager: Musubi.UserManager
+    ) async throws -> [Spotify.AudioTrack] {
+        var request = try SpotifyRequests.createRequest(
+            type: HTTPMethod.GET,
+            path: "/tracks",
+            queryItems: [URLQueryItem(name: "ids", value: audioTrackIDs)]
+        )
+        let data = try await userManager.makeAuthdSpotifyRequest(request: &request)
+        return try JSONDecoder().decode(AudioTracks.self, from: data).tracks
+    }
 
     static func artist(
         artistID: Spotify.ID,
