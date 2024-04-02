@@ -31,10 +31,6 @@ extension Musubi {
         // TODO: impl
 //        func push(userManager: Musubi.UserManager) async throws {
 //            let requestBody = Push_RequestBody(
-//                playlistID: <#T##String#>,
-//                proposedCommitHash: <#T##String#>,
-//                proposedCommit: <#T##Musubi.Model.Commit#>,
-//                latestSyncCommitHash: <#T##String#>
 //            )
 //            var request = try MusubiCloudRequests.createRequest(
 //                command: .PUSH,
@@ -46,12 +42,12 @@ extension Musubi {
         
         private struct Push_RequestBody: Codable {
             let playlistID: String
-            let latestSyncCommitHash: Musubi.Model.HashPointer
-            let proposedCommitArgs: ProposedCommitArgs
+            let latestSyncCommitID: String
+            let proposedCommitInfo: ProposedCommitInfo
             
-            struct ProposedCommitArgs: Codable {
+            struct ProposedCommitInfo: Codable {
                 let blob: Musubi.Model.Blob
-                let parentCommits: [Musubi.Model.HashPointer]
+                let parentCommitIDs: [String]
                 let message: String
             }
         }
@@ -59,8 +55,8 @@ extension Musubi {
         private enum Push_Response: Codable {
             case success
             case remoteUpdates(
-                commits: [Musubi.Model.HashPointer: Musubi.Model.Commit],
-                blobs: [Musubi.Model.HashPointer: Musubi.Model.Blob]
+                commits: [String: Musubi.Model.Commit],
+                blobs: [String: Musubi.Model.Blob]
             )
             case spotifyUpdates(blob: Musubi.Model.Blob)
         }

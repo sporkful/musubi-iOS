@@ -9,19 +9,21 @@ extension Musubi {
     }
 }
 
+protocol MusubiGlobalObject: Codable { }
+extension Musubi.Model.Commit: MusubiGlobalObject { }
+extension Musubi.Model.Blob: MusubiGlobalObject { }
+
 extension Musubi.Model {
-    typealias HashPointer = Musubi.Cryptography.HashPointer
-    
     // Hashable conformance here is only for SwiftUI List materialization,
     // NOT FOR STABLE ID ACROSS APP RUNS - for that, use `Musubi::Cryptography::hash`.
-    struct Commit: Codable, Hashable {
+    struct Commit: Hashable {
         let authorID: Spotify.ID
         let date: Date
         let message: String
         
-        let parentCommits: [HashPointer]
+        let parentCommitIDs: [String]
         
-        let blobHash: HashPointer
+        let blobID: String
         
 //        var isVisible: Bool
     }
@@ -59,8 +61,8 @@ extension Musubi.Model.Commit: CustomStringConvertible {
             authorID: \(self.authorID)
             date: \(self.date.formatted())
             message: \(self.message)
-            parentCommits: \(self.parentCommits.joined(separator: ", "))
-            blobHash: \(self.blobHash)
+            parentCommitIDs: \(self.parentCommitIDs.joined(separator: ", "))
+            blobID: \(self.blobID)
         """
     }
 }

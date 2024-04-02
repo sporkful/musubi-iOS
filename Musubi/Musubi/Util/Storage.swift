@@ -121,8 +121,8 @@ extension Musubi.Storage.LocalFS {
         URL.libraryDirectory.appending(path: "MusubiLocal", directoryHint: .isDirectory)
     }
     
-    static var SHARED_BLOBS_DIR: URL {
-        BASE_DIR.appending(path: "SharedBlobs", directoryHint: .isDirectory)
+    static var GLOBAL_OBJECTS_DIR: URL {
+        BASE_DIR.appending(path: "GlobalObjects", directoryHint: .isDirectory)
     }
     
     static func USER_CLONES_DIR(userID: Spotify.ID) -> URL {
@@ -158,6 +158,8 @@ extension Musubi.Storage.LocalFS {
     }
 }
 
-extension Musubi.Storage.Cloud {
-    
+extension Musubi.Storage.LocalFS {
+    static func saveGlobalObject<T: MusubiGlobalObject>(object: T, objectID: String) throws {
+        // TODO: 
+    }
 }
