@@ -52,6 +52,17 @@ extension Musubi {
             return "[Musubi::CloudRequests] \(description)"
         }
     }
+    
+    enum RepositoryError: LocalizedError {
+        case cloning(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
+            }
+            return "[Musubi::Repository] \(description)"
+        }
+    }
 }
 
 extension Spotify {

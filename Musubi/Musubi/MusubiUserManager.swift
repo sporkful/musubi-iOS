@@ -41,29 +41,74 @@ extension Musubi {
         }
         
         // TODO: clean up reference-spaghetti between User and UserManager
-        func initOrClone(playlistID: Spotify.ID, userManager: Musubi.UserManager) async throws {
-            let requestBody = InitOrClone_RequestBody(playlistID: playlistID)
+        func initOrClone(
+            repositoryHandle: Musubi.RepositoryHandle,
+            userManager: Musubi.UserManager
+        ) async throws {
+            if repositoryHandle.userID != self.id {
+                throw Musubi.RepositoryError.cloning(detail: "called initOrClone on unowned playlist")
+            }
+            
+            let requestBody = InitOrClone_RequestBody(playlistID: repositoryHandle.playlistID)
             var request = try MusubiCloudRequests.createRequest(
                 command: .INIT_OR_CLONE,
                 bodyData: try Musubi.jsonEncoder().encode(requestBody)
             )
             let responseData = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
-            let response =  try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             
-            for (blobID, blob) in response.blobs {
-                try Musubi.Storage.LocalFS.saveGlobalObject(object: blob, objectID: blobID)
-            }
-            for (commitID, commit) in response.commits {
-                try Musubi.Storage.LocalFS.saveGlobalObject(object: commit, objectID: commitID)
-            }
-            
-            
+            try saveClone(
+                repositoryHandle: repositoryHandle,
+                response: try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
+            )
+            self.localClones.insert(repositoryHandle, at: 0)
         }
         
         // TODO: impl
 //        func forkOrClone(ownerID: Spotify.ID, playlistID: Spotify.ID, userManager: Musubi.UserManager) async throws {
 //
 //        }
+        
+        private func saveClone(repositoryHandle: Musubi.RepositoryHandle, response: Clone_ResponseBody) throws {
+            typealias LocalFS = Musubi.Storage.LocalFS
+            
+            guard let headCommit = response.commits[response.headCommitID],
+                  let headBlob = response.blobs[headCommit.blobID]
+            else {
+                throw Musubi.RepositoryError.cloning(detail: "clone response does not have valid head blob")
+            }
+            
+            let cloneMetadataDir = LocalFS.CLONE_DIR(repositoryHandle: repositoryHandle)
+            if LocalFS.doesDirExist(at: cloneMetadataDir) {
+                throw Musubi.RepositoryError.cloning(detail: "tried to clone repo that was already cloned")
+            }
+            try LocalFS.createNewDir(at: cloneMetadataDir, withIntermediateDirectories: true)
+            
+            for (blobID, blob) in response.blobs {
+                try LocalFS.saveGlobalObject(object: blob, objectID: blobID)
+            }
+            for (commitID, commit) in response.commits {
+                try LocalFS.saveGlobalObject(object: commit, objectID: commitID)
+            }
+            
+            try Data(response.headCommitID.utf8).write(
+                to: LocalFS.CLONE_HEAD_FILE(repositoryHandle: repositoryHandle),
+                options: .atomic
+            )
+            try Data(headBlob.utf8).write(
+                to: LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: repositoryHandle),
+                options: .atomic
+            )
+            if let forkParent = response.forkParent {
+                let forkParentHandle = Musubi.RepositoryHandle(
+                    userID: forkParent.userID,
+                    playlistID: forkParent.playlistID
+                )
+                try JSONEncoder().encode(forkParentHandle).write(
+                    to: LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: repositoryHandle),
+                    options: .atomic
+                )
+            }
+        }
         
         private struct InitOrClone_RequestBody: Encodable {
             let playlistID: String
@@ -85,6 +130,7 @@ extension Musubi {
     }
 }
 
+// TODO: make this a global singleton (Musubi.UserManager.shared)
 extension Musubi {
     @Observable
     class UserManager {
