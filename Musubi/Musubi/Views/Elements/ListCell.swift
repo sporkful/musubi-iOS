@@ -3,11 +3,18 @@
 import SwiftUI
 
 struct ListCell: View {
-    let item: SpotifyModelCardable
-    let caption: String
+    private let title: String
+    private let caption: String
+    private let imageURL: URL?
+    
+    init(title: String, caption: String, imageURL: URL?) {
+        self.title = title
+        self.caption = caption
+        self.imageURL = imageURL
+    }
     
     init(item: SpotifyModelCardable) {
-        self.item = item
+        self.title = item.name
         self.caption = {
             switch item.self {
             case is Spotify.AudioTrack:
@@ -25,22 +32,25 @@ struct ListCell: View {
                 return ""
             }
         }()
+        
+        if let image = item.images?.first {
+            self.imageURL = URL(string: image.url)
+        } else {
+            self.imageURL = nil
+        }
     }
     
     var body: some View {
         HStack {
-            if let images = item.images,
-               let firstImage = images.first,
-               let url = URL(string: firstImage.url)
-            {
+            if let imageURL = imageURL {
                 RetryableAsyncImage(
-                    url: url,
+                    url: imageURL,
                     width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
                     height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
                 )
             }
             VStack(alignment: .leading) {
-                Text(item.name)
+                Text(title)
                     .lineLimit(1)
                 if caption != "" {
                     Text(caption)
