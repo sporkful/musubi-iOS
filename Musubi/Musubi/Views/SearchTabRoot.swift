@@ -74,10 +74,21 @@ struct SearchTabRoot: View {
                     StaticArtistPage(artist: artist)
                 }
                 .navigationDestination(for: Spotify.Album.self) { album in
-                    StaticAlbumPage(navigationPath: $navigationPath, album: album, name: album.name)
+                    StaticAlbumPage(
+                        navigationPath: $navigationPath,
+                        album: album,
+                        name: album.name,
+                        coverImageURLString: album.images?.first?.url
+                    )
                 }
                 .navigationDestination(for: Spotify.Playlist.self) { playlist in
-                    StaticPlaylistPage(navigationPath: $navigationPath, playlist: playlist, name: playlist.name)
+                    StaticPlaylistPage(
+                        navigationPath: $navigationPath,
+                        playlist: playlist,
+                        name: playlist.name,
+                        description: playlist.description,
+                        coverImageURLString: playlist.images?.first?.url
+                    )
                 }
                 .navigationDestination(for: Spotify.OtherUser.self) { user in
                     StaticUserPage(user: user)

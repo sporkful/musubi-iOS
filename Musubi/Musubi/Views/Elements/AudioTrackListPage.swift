@@ -16,7 +16,8 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     
     @Binding var name: String
     @Binding var description: String?
-    @Binding var coverImage: UIImage?
+    @Binding var coverImageURLString: String?
+    
     @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     enum AssociatedPeople {
@@ -28,6 +29,8 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     
     let toolbarBuilder: () -> CustomToolbar
     
+    
+    @State private var coverImage: UIImage?
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
     private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
@@ -247,6 +250,27 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
+        .onChange(of: coverImageURLString, initial: true) {
+            loadCoverImage()
+        }
+    }
+    
+    // TODO: share logic with RetryableAsyncImage?
+    private func loadCoverImage() {
+        guard let coverImageURLString = coverImageURLString,
+              let coverImageURL = URL(string: coverImageURLString)
+        else {
+            return
+        }
+        
+        Task { @MainActor in
+            if let (data, response) = try? await URLSession.shared.data(from: coverImageURL),
+               let httpResponse = response as? HTTPURLResponse,
+               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode)
+            {
+                coverImage = UIImage(data: data)
+            }
+        }
     }
 }
 

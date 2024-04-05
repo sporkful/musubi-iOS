@@ -12,12 +12,10 @@ struct StaticPlaylistPage: View {
     let playlist: Spotify.Playlist
     
     @State var name: String
+    @State var description: String?
+    @State var coverImageURLString: String?
     
-    @State private var description: String? = nil
-    @State private var coverImage: UIImage?
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
-    
-    @State private var hasLoadedContents = false
     
     @State private var isViewDisabled = false
     @State private var showAlertCloneError = false
@@ -28,7 +26,7 @@ struct StaticPlaylistPage: View {
             contentType: .playlist,
             name: $name,
             description: $description,
-            coverImage: $coverImage,
+            coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
             associatedPeople: .users([playlist.owner]),
             date: "",
@@ -88,26 +86,13 @@ struct StaticPlaylistPage: View {
         }
     }
     
+    @State private var hasLoadedContents = false
+    
     private func loadContents() async {
         if hasLoadedContents {
             return
         }
         hasLoadedContents = true
-        
-        do {
-            guard let coverImageURLStr = self.playlist.images?.first?.url,
-                  let coverImageURL = URL(string: coverImageURLStr)
-            else {
-                throw Musubi.UIError.any(detail: "StaticAlbumPage no image url found")
-            }
-            let (imageData, _) = try await URLSession.shared.data(from: coverImageURL)
-            self.coverImage = UIImage(data: imageData)
-        } catch {
-            // TODO: try again?
-            print("[Musubi::StaticAlbumPage] unable to load cover image")
-            print(error)
-            hasLoadedContents = false
-        }
         
         do {
             let playlistTrackListFirstPage = try await SpotifyRequests.Read.playlistTrackListFirstPage(
@@ -142,7 +127,10 @@ struct StaticPlaylistPage: View {
             do {
                 // TODO: clean up reference-spaghetti between User and UserManager
                 try await userManager.currentUser?.initOrClone(
-                    playlistID: playlist.id,
+                    repositoryHandle: Musubi.RepositoryHandle(
+                        userID: userManager.currentUser?.id ?? "",
+                        playlistID: playlist.id
+                    ),
                     userManager: userManager
                 )
             } catch {

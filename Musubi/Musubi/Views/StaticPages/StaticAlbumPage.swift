@@ -9,15 +9,14 @@ struct StaticAlbumPage: View {
     
     let album: Spotify.Album
     
-    // TODO: find way to automatically init this based on album.name
+    // TODO: find way to automatically init this based on album.*
     // note the obvious sol seems invalid https://forums.swift.org/t/state-messing-with-initializer-flow/25276/3
     @State var name: String
+    @State var coverImageURLString: String?
     
-    @State private var description: String? = nil
-    @State private var coverImage: UIImage?
+    @State private var description: String? = nil // dummy to satisfy generality of AudioTrackListPage
+    
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
-    
-    @State private var hasLoadedContents = false
     
     var body: some View {
         AudioTrackListPage(
@@ -25,7 +24,7 @@ struct StaticAlbumPage: View {
             contentType: .album,
             name: $name,
             description: $description,
-            coverImage: $coverImage,
+            coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
             associatedPeople: .artists(album.artists),
             date: album.release_date,
@@ -68,26 +67,13 @@ struct StaticAlbumPage: View {
         }
     }
     
+    @State private var hasLoadedContents = false
+    
     private func loadContents() async {
         if hasLoadedContents {
             return
         }
         hasLoadedContents = true
-        
-        do {
-            guard let coverImageURLStr = self.album.images?.first?.url,
-                  let coverImageURL = URL(string: coverImageURLStr)
-            else {
-                throw Musubi.UIError.any(detail: "StaticAlbumPage no image url found")
-            }
-            let (imageData, _) = try await URLSession.shared.data(from: coverImageURL)
-            self.coverImage = UIImage(data: imageData)
-        } catch {
-            // TODO: try again?
-            print("[Musubi::StaticAlbumPage] unable to load cover image")
-            print(error)
-            hasLoadedContents = false
-        }
         
         do {
             let albumTrackListFirstPage = try await SpotifyRequests.Read.albumTrackListFirstPage(
