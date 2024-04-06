@@ -9,13 +9,14 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     
     enum ContentType: String {
         case album = "Album"
-        case playlist = "Playlist"
+        case spotifyPlaylist = "Spotify Playlist"
+        case musubiLocalClone = "Musubi Local Clone"
     }
     
     let contentType: ContentType
     
     @Binding var name: String
-    @Binding var description: String?
+    @Binding var description: String
     @Binding var coverImageURLString: String?
     
     @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
@@ -158,7 +159,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                     Text(name)
                         .font(.title)
                         .fontWeight(.bold)
-                    if let description = description {
+                    if !description.isEmpty {
                         Text(description)
                             .font(.caption)
                     }
@@ -193,8 +194,19 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             }
                         }
                     }
-                    Text("\(contentType.rawValue) • \(date)")
+                    Text(contentType.rawValue)
                         .font(.caption)
+                    switch contentType {
+                    case .album:
+                        if !date.isEmpty {
+                            Text("Release Date: \(date)")
+                                .font(.caption)
+                        }
+                    case .musubiLocalClone:
+                        VStack {}  // TODO: last updated date?
+                    case .spotifyPlaylist:
+                        VStack {}
+                    }
                     toolbarBuilder()
                     ForEach($audioTrackList) { $item in
                         Divider()

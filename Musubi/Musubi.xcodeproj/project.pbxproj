@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
+		7930D46D2B6AC7C200E8C426 /* LocalCloneListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */; };
+		7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
 		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
@@ -62,6 +64,8 @@
 
 /* Begin PBXFileReference section */
 		7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloudRequests.swift; sourceTree = "<group>"; };
+		7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCloneListCell.swift; sourceTree = "<group>"; };
+		7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
 		794733382B464333001C3FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -226,6 +230,7 @@
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				794733AB2B4E01E3001C3FEB /* ListCell.swift */,
 				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
+				7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -233,6 +238,7 @@
 		7961DA1C2B599A9600650775 /* RepositoryPages */ = {
 			isa = PBXGroup;
 			children = (
+				7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */,
 			);
 			path = RepositoryPages;
 			sourceTree = "<group>";
@@ -385,6 +391,7 @@
 				7947338C2B4B7955001C3FEB /* SpotifyRequests.swift in Sources */,
 				7961DA132B55ADE200650775 /* UIImage+.swift in Sources */,
 				794733982B4CE1AE001C3FEB /* AccountTabRoot.swift in Sources */,
+				7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */,
 				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733AC2B4E01E3001C3FEB /* ListCell.swift in Sources */,
@@ -405,6 +412,7 @@
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,
 				794733A72B4D15BD001C3FEB /* AudioTrackListCell.swift in Sources */,
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
+				7930D46D2B6AC7C200E8C426 /* LocalCloneListCell.swift in Sources */,
 				7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 			);
@@ -576,8 +584,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -606,8 +613,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

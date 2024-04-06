@@ -12,7 +12,7 @@ struct StaticPlaylistPage: View {
     let playlist: Spotify.Playlist
     
     @State var name: String
-    @State var description: String?
+    @State var description: String
     @State var coverImageURLString: String?
     
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
@@ -23,7 +23,7 @@ struct StaticPlaylistPage: View {
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
-            contentType: .playlist,
+            contentType: .spotifyPlaylist,
             name: $name,
             description: $description,
             coverImageURLString: $coverImageURLString,

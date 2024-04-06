@@ -24,6 +24,7 @@ struct LocalCloneListCell: View {
         }
     }
     
+    // TODO: better error handling (e.g. alert and pop navstack on error)
     private func loadSpotifyPlaylistMetadata() async {
         do {
             self.spotifyPlaylistMetadata = try await SpotifyRequests.Read.playlist(

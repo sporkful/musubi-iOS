@@ -14,9 +14,9 @@ struct StaticAlbumPage: View {
     @State var name: String
     @State var coverImageURLString: String?
     
-    @State private var description: String? = nil // dummy to satisfy generality of AudioTrackListPage
-    
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
+    
+    @State private var description: String = "" // dummy to satisfy generality of AudioTrackListPage
     
     var body: some View {
         AudioTrackListPage(

@@ -147,6 +147,7 @@ extension SpotifyRequests.Read {
         return try JSONDecoder().decode(Spotify.Artist.self, from: data)
     }
     
+    // TODO: rename to "albumMetadata" and specify query to not pull in tracklist
     static func album(
         albumID: Spotify.ID,
         userManager: Musubi.UserManager
@@ -159,6 +160,7 @@ extension SpotifyRequests.Read {
         return try JSONDecoder().decode(Spotify.Album.self, from: data)
     }
     
+    // TODO: rename to "playlistMetadata" and specify query to not pull in tracklist
     static func playlist(
         playlistID: Spotify.ID,
         userManager: Musubi.UserManager
