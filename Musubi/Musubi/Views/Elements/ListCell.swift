@@ -13,6 +13,16 @@ struct ListCell: View {
         self.imageURL = imageURL
     }
     
+    init(item: Musubi.RepositoryExternalMetadata) {
+        self.title = item.name
+        self.caption = item.description
+        if let coverImageURLString = item.coverImageURLString {
+            self.imageURL = URL(string: coverImageURLString)
+        } else {
+            self.imageURL = nil
+        }
+    }
+    
     init(item: SpotifyModelCardable) {
         self.title = item.name
         self.caption = {

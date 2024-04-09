@@ -132,6 +132,11 @@ extension Musubi.Storage.LocalFS {
             .appending(path: "Clones", directoryHint: .isDirectory)
     }
     
+    static func USER_CLONES_INDEX_FILE(userID: Spotify.ID) -> URL {
+        USER_CLONES_DIR(userID: userID)
+            .appending(path: "Index", directoryHint: .notDirectory)
+    }
+    
     static func CLONE_DIR(repositoryHandle: Musubi.RepositoryHandle) -> URL {
         USER_CLONES_DIR(userID: repositoryHandle.userID)
             .appending(path: repositoryHandle.playlistID, directoryHint: .isDirectory)

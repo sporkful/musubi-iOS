@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
-		7930D46D2B6AC7C200E8C426 /* LocalCloneListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */; };
 		7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */; };
+		7930D4742B6B6F8C00E8C426 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7930D4732B6B6F8C00E8C426 /* OrderedCollections */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
 		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
@@ -64,7 +64,6 @@
 
 /* Begin PBXFileReference section */
 		7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloudRequests.swift; sourceTree = "<group>"; };
-		7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCloneListCell.swift; sourceTree = "<group>"; };
 		7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
@@ -109,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7930D4742B6B6F8C00E8C426 /* OrderedCollections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,7 +230,6 @@
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				794733AB2B4E01E3001C3FEB /* ListCell.swift */,
 				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
-				7930D46C2B6AC7C200E8C426 /* LocalCloneListCell.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -270,6 +269,9 @@
 			dependencies = (
 			);
 			name = Musubi;
+			packageProductDependencies = (
+				7930D4732B6B6F8C00E8C426 /* OrderedCollections */,
+			);
 			productName = Musubi;
 			productReference = 794733312B464331001C3FEB /* Musubi.app */;
 			productType = "com.apple.product-type.application";
@@ -342,6 +344,9 @@
 				Base,
 			);
 			mainGroup = 794733282B464331001C3FEB;
+			packageReferences = (
+				7930D4722B6B6F8C00E8C426 /* XCRemoteSwiftPackageReference "swift-collections" */,
+			);
 			productRefGroup = 794733322B464331001C3FEB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -412,7 +417,6 @@
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,
 				794733A72B4D15BD001C3FEB /* AudioTrackListCell.swift in Sources */,
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
-				7930D46D2B6AC7C200E8C426 /* LocalCloneListCell.swift in Sources */,
 				7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 			);
@@ -744,6 +748,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7930D4722B6B6F8C00E8C426 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7930D4732B6B6F8C00E8C426 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7930D4722B6B6F8C00E8C426 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 794733292B464331001C3FEB /* Project object */;
 }

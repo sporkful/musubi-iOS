@@ -4,6 +4,7 @@ import SwiftUI
 
 // TODO: categorize clones as owned vs forks
 struct LocalClonesTabRoot: View {
+    @Environment(Musubi.UserManager.self) private var userManager
     @Environment(Musubi.User.self) private var currentUser
     
     @State private var navigationPath = NavigationPath()
@@ -13,7 +14,7 @@ struct LocalClonesTabRoot: View {
             List {
                 ForEach(currentUser.localClones, id: \.self) { repositoryHandle in
                     NavigationLink(value: repositoryHandle) {
-                        LocalCloneListCell(repositoryHandle: repositoryHandle)
+                        ListCell(item: currentUser.localClonesIndex[repositoryHandle]!)
                     }
                 }
             }
@@ -21,6 +22,10 @@ struct LocalClonesTabRoot: View {
                 LocalClonePage(navigationPath: $navigationPath, repositoryHandle: repositoryHandle)
             }
             .navigationTitle("My Local Repositories")
+            .task {
+                // TODO: better error handling?
+                try? await currentUser.refreshClonesExternalMetadata(userManager: userManager)
+            }
         }
     }
 }

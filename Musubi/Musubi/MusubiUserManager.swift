@@ -1,36 +1,42 @@
 // MusubiUserManager.swift
 
 import Foundation
+import OrderedCollections
 
 extension Musubi {
     @Observable
     class User: Identifiable {
         let spotifyInfo: Spotify.LoggedInUser
         
-        private(set) var localClones: [RepositoryHandle]
+        typealias LocalClonesIndex = OrderedDictionary<Musubi.RepositoryHandle, Musubi.RepositoryExternalMetadata>
+        private(set) var localClonesIndex: LocalClonesIndex
+        var localClones: [Musubi.RepositoryHandle] { self.localClonesIndex.keys.elements }
         
         var id: Spotify.ID { spotifyInfo.id }
         
-        init?(spotifyInfo: Spotify.LoggedInUser) {
+        init?(spotifyInfo: Spotify.LoggedInUser, userManager: Musubi.UserManager) {
             self.spotifyInfo = spotifyInfo
-            self.localClones = []
+            self.localClonesIndex = [:]
             
             do {
                 let userClonesDir = Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id)
-                if Musubi.Storage.LocalFS.doesDirExist(at: userClonesDir) {
-                    self.localClones = try Musubi.Storage.LocalFS.contentsOf(dirURL: userClonesDir)
-                        .map { url in url.lastPathComponent }
-                        .map { playlistID in
-                            Musubi.RepositoryHandle(
-                                userID: self.spotifyInfo.id,
-                                playlistID: playlistID
-                            )
-                        }
+                let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
+                
+                if Musubi.Storage.LocalFS.doesFileExist(at: userClonesIndexFile) {
+                    self.localClonesIndex = try JSONDecoder().decode(
+                        LocalClonesIndex.self,
+                        from: Data(contentsOf: userClonesIndexFile)
+                    )
+                    // TODO: does this need to be on MainActor?
+                    Task {
+                        try await refreshClonesExternalMetadata(userManager: userManager)
+                    }
                 } else {
                     try Musubi.Storage.LocalFS.createNewDir(
                         at: userClonesDir,
                         withIntermediateDirectories: true
                     )
+                    try JSONEncoder().encode(self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
                 }
             } catch {
                 print("[Musubi::User] failed to init user for \(spotifyInfo.display_name)")
@@ -38,6 +44,17 @@ extension Musubi {
             }
             
             // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
+        }
+        
+        func refreshClonesExternalMetadata(userManager: Musubi.UserManager) async throws {
+            for repositoryHandle in self.localClonesIndex.keys {
+                self.localClonesIndex[repositoryHandle] = Musubi.RepositoryExternalMetadata(
+                    spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
+                        playlistID: repositoryHandle.playlistID,
+                        userManager: userManager
+                    )
+                )
+            }
         }
         
         // TODO: clean up reference-spaghetti between User and UserManager
@@ -60,7 +77,13 @@ extension Musubi {
                 repositoryHandle: repositoryHandle,
                 response: try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             )
-            self.localClones.insert(repositoryHandle, at: 0)
+            
+            self.localClonesIndex[repositoryHandle] = Musubi.RepositoryExternalMetadata(
+                spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
+                    playlistID: repositoryHandle.playlistID,
+                    userManager: userManager
+                )
+            )
         }
         
         // TODO: impl
@@ -77,11 +100,11 @@ extension Musubi {
                 throw Musubi.RepositoryError.cloning(detail: "clone response does not have valid head blob")
             }
             
-            let cloneMetadataDir = LocalFS.CLONE_DIR(repositoryHandle: repositoryHandle)
-            if LocalFS.doesDirExist(at: cloneMetadataDir) {
+            let cloneDir = LocalFS.CLONE_DIR(repositoryHandle: repositoryHandle)
+            if LocalFS.doesDirExist(at: cloneDir) {
                 throw Musubi.RepositoryError.cloning(detail: "tried to clone repo that was already cloned")
             }
-            try LocalFS.createNewDir(at: cloneMetadataDir, withIntermediateDirectories: true)
+            try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             
             for (blobID, blob) in response.blobs {
                 try LocalFS.saveGlobalObject(object: blob, objectID: blobID)
@@ -127,6 +150,11 @@ extension Musubi {
                 // Note omission of remotely-mutable `LatestSyncCommitID`, which is handled by backend.
             }
         }
+  
+        // TODO: impl
+//        func deleteClone(repositoryHandle: Musubi.RepositoryHandle) {
+//
+//        }
     }
 }
 
@@ -169,7 +197,8 @@ extension Musubi {
             let data = try await makeAuthdSpotifyRequest(request: &currentUserRequest)
             
             self.currentUser = User(
-                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
+                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data),
+                userManager: self
             )
         }
         

@@ -16,6 +16,24 @@ extension Musubi {
         let playlistID: Spotify.ID
     }
     
+    struct RepositoryExternalMetadata: Codable, Hashable {
+        var name: String
+        var description: String
+        var coverImageURLString: String?
+        
+        init(name: String, description: String, coverImageURLString: String? = nil) {
+            self.name = name
+            self.description = description
+            self.coverImageURLString = coverImageURLString
+        }
+        
+        init(spotifyPlaylistMetadata: Spotify.Playlist) {
+            self.name = spotifyPlaylistMetadata.name
+            self.description = spotifyPlaylistMetadata.description
+            self.coverImageURLString = spotifyPlaylistMetadata.images?.first?.url
+        }
+    }
+    
     @Observable
     class RepositoryClone {
         let handle: RepositoryHandle
