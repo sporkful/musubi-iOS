@@ -13,10 +13,10 @@ struct ListCell: View {
         self.imageURL = imageURL
     }
     
-    init(item: Musubi.RepositoryExternalMetadata) {
-        self.title = item.name
-        self.caption = item.description
-        if let coverImageURLString = item.coverImageURLString {
+    init(repositoryReference: Musubi.RepositoryReference) {
+        self.title = repositoryReference.externalMetadata.name
+        self.caption = repositoryReference.externalMetadata.description
+        if let coverImageURLString = repositoryReference.externalMetadata.coverImageURLString {
             self.imageURL = URL(string: coverImageURLString)
         } else {
             self.imageURL = nil

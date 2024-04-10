@@ -10,21 +10,26 @@ struct LocalClonesTabRoot: View {
     @State private var navigationPath = NavigationPath()
     
     var body: some View {
+        @Bindable var currentUser = currentUser
         NavigationStack(path: $navigationPath) {
             List {
-                ForEach(currentUser.localClones, id: \.self) { repositoryHandle in
-                    NavigationLink(value: repositoryHandle) {
-                        ListCell(item: currentUser.localClonesIndex[repositoryHandle]!)
+                ForEach($currentUser.localClonesIndex, id: \.self) { $repositoryReference in
+                    NavigationLink(value: repositoryReference.handle) {
+                        // TODO: change this to binding? (probably won't get significant perf boost)
+                        ListCell(repositoryReference: repositoryReference)
                     }
                 }
             }
             .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
-                LocalClonePage(navigationPath: $navigationPath, repositoryHandle: repositoryHandle)
+                LocalClonePage(
+                    navigationPath: $navigationPath,
+                    repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!
+                )
             }
             .navigationTitle("My Local Repositories")
             .task {
-                // TODO: better error handling?
-                try? await currentUser.refreshClonesExternalMetadata(userManager: userManager)
+                // TODO: periodic background refresh?
+                await currentUser.refreshClonesExternalMetadata(userManager: userManager)
             }
         }
     }

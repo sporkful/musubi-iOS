@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
 		7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */; };
-		7930D4742B6B6F8C00E8C426 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7930D4732B6B6F8C00E8C426 /* OrderedCollections */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
 		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
@@ -108,7 +107,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7930D4742B6B6F8C00E8C426 /* OrderedCollections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,7 +268,6 @@
 			);
 			name = Musubi;
 			packageProductDependencies = (
-				7930D4732B6B6F8C00E8C426 /* OrderedCollections */,
 			);
 			productName = Musubi;
 			productReference = 794733312B464331001C3FEB /* Musubi.app */;
@@ -759,14 +756,6 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		7930D4732B6B6F8C00E8C426 /* OrderedCollections */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7930D4722B6B6F8C00E8C426 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = OrderedCollections;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 794733292B464331001C3FEB /* Project object */;
 }

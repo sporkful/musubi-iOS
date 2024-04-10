@@ -1,22 +1,20 @@
 // MusubiUserManager.swift
 
 import Foundation
-import OrderedCollections
 
 extension Musubi {
     @Observable
     class User: Identifiable {
         let spotifyInfo: Spotify.LoggedInUser
         
-        typealias LocalClonesIndex = OrderedDictionary<Musubi.RepositoryHandle, Musubi.RepositoryExternalMetadata>
-        private(set) var localClonesIndex: LocalClonesIndex
-        var localClones: [Musubi.RepositoryHandle] { self.localClonesIndex.keys.elements }
+        typealias LocalClonesIndex = [Musubi.RepositoryReference]
+        var localClonesIndex: LocalClonesIndex
         
         var id: Spotify.ID { spotifyInfo.id }
         
         init?(spotifyInfo: Spotify.LoggedInUser, userManager: Musubi.UserManager) {
             self.spotifyInfo = spotifyInfo
-            self.localClonesIndex = [:]
+            self.localClonesIndex = []
             
             do {
                 let userClonesDir = Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id)
@@ -29,7 +27,7 @@ extension Musubi {
                     )
                     // TODO: does this need to be on MainActor?
                     Task {
-                        try await refreshClonesExternalMetadata(userManager: userManager)
+                        await refreshClonesExternalMetadata(userManager: userManager)
                     }
                 } else {
                     try Musubi.Storage.LocalFS.createNewDir(
@@ -46,15 +44,21 @@ extension Musubi {
             // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
         }
         
-        func refreshClonesExternalMetadata(userManager: Musubi.UserManager) async throws {
-            for repositoryHandle in self.localClonesIndex.keys {
-                self.localClonesIndex[repositoryHandle] = Musubi.RepositoryExternalMetadata(
-                    spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
-                        playlistID: repositoryHandle.playlistID,
-                        userManager: userManager
-                    )
-                )
+        deinit {
+            try? saveClonesIndex()
+        }
+        
+        // TODO: better error handling / retries
+        func refreshClonesExternalMetadata(userManager: Musubi.UserManager) async {
+            for i in self.localClonesIndex.indices {
+                try? await self.localClonesIndex[i].refreshExternalMetadata(userManager: userManager)
             }
+        }
+        
+        // TODO: better error handling / retries (see callers)
+        func saveClonesIndex() throws {
+            let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
+            try JSONEncoder().encode(self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
         }
         
         // TODO: clean up reference-spaghetti between User and UserManager
@@ -62,6 +66,9 @@ extension Musubi {
             repositoryHandle: Musubi.RepositoryHandle,
             userManager: Musubi.UserManager
         ) async throws {
+            if localClonesIndex.contains(where: { $0.handle == repositoryHandle }) {
+                throw Musubi.RepositoryError.cloning(detail: "called initOrClone on already cloned repo")
+            }
             if repositoryHandle.userID != self.id {
                 throw Musubi.RepositoryError.cloning(detail: "called initOrClone on unowned playlist")
             }
@@ -78,12 +85,18 @@ extension Musubi {
                 response: try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             )
             
-            self.localClonesIndex[repositoryHandle] = Musubi.RepositoryExternalMetadata(
-                spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
-                    playlistID: repositoryHandle.playlistID,
-                    userManager: userManager
+            self.localClonesIndex.append(
+                Musubi.RepositoryReference(
+                    handle: repositoryHandle,
+                    externalMetadata: Musubi.RepositoryExternalMetadata(
+                        spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
+                            playlistID: repositoryHandle.playlistID,
+                            userManager: userManager
+                        )
+                    )
                 )
             )
+            try? saveClonesIndex()
         }
         
         // TODO: impl

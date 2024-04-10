@@ -7,13 +7,9 @@ struct LocalClonePage: View {
     
     @Binding var navigationPath: NavigationPath
     
-    let repositoryHandle: Musubi.RepositoryHandle
+    @Binding var repositoryReference: Musubi.RepositoryReference
     
     @State private var repositoryClone: Musubi.RepositoryClone?
-    
-    @State private var name: String = ""
-    @State private var description: String = ""
-    @State private var coverImageURLString: String?
     
     var body: some View {
         VStack {
@@ -22,9 +18,9 @@ struct LocalClonePage: View {
                 AudioTrackListPage(
                     navigationPath: $navigationPath,
                     contentType: .musubiLocalClone,
-                    name: $name,
-                    description: $description,
-                    coverImageURLString: $coverImageURLString,
+                    name: $repositoryReference.externalMetadata.name,
+                    description: $repositoryReference.externalMetadata.description,
+                    coverImageURLString: $repositoryReference.externalMetadata.coverImageURLString,
                     audioTrackList: $repositoryClone.stagedAudioTrackList,
                     associatedPeople: .users([]),
                     date: "",
@@ -72,16 +68,8 @@ struct LocalClonePage: View {
     // TODO: better error handling (e.g. alert and pop navstack on error)
     private func loadContents() async {
         do {
-            let spotifyPlaylistMetadata = try await SpotifyRequests.Read.playlist(
-                playlistID: repositoryHandle.playlistID,
-                userManager: userManager
-            )
-            self.coverImageURLString = spotifyPlaylistMetadata.images?.first?.url
-            self.name = spotifyPlaylistMetadata.name
-            self.description = spotifyPlaylistMetadata.description
-            
             self.repositoryClone = try await Musubi.RepositoryClone(
-                handle: repositoryHandle,
+                handle: repositoryReference.handle,
                 userManager: userManager
             )
         } catch {
