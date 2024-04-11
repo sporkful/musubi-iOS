@@ -21,10 +21,31 @@ struct LocalClonesTabRoot: View {
                 }
             }
             .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
-                LocalClonePage(
-                    navigationPath: $navigationPath,
-                    repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!
-                )
+                // TODO: better error handling?
+                if let repositoryClone = try? Musubi.RepositoryClone(handle: repositoryHandle, userManager: userManager) {
+                    LocalClonePage(
+                        navigationPath: $navigationPath,
+                        repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!,
+                        repositoryClone: repositoryClone
+                    )
+                } else {
+                    VStack(alignment: .center) {
+                        Spacer()
+                        Text("Error when loading local clone.\nPlease try again.")
+                            .multilineTextAlignment(.center)
+                        Button(
+                            action: {
+                                navigationPath.removeLast()
+                            },
+                            label: {
+                                Text("OK")
+                                    .foregroundStyle(.blue)
+                            }
+                        )
+                        .padding()
+                        Spacer()
+                    }
+                }
             }
             .navigationTitle("My Local Repositories")
             .task {

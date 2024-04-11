@@ -70,19 +70,32 @@ extension Musubi {
         private let HEAD_FILE: URL
         private let FORK_PARENT_FILE: URL
         
-        init(handle: RepositoryHandle, userManager: Musubi.UserManager) async throws {
+        // TODO: better way to do this?
+        var stagingAreaHydrationError = false // use to trigger alerts on ClonePage view
+        
+        init(handle: RepositoryHandle, userManager: Musubi.UserManager) throws {
             self.handle = handle
             
             self.STAGING_AREA_FILE = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: self.handle)
             self.HEAD_FILE = Musubi.Storage.LocalFS.CLONE_HEAD_FILE(repositoryHandle: self.handle)
             self.FORK_PARENT_FILE = Musubi.Storage.LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: self.handle)
             
-            self.stagedAudioTrackList = try await Musubi.ViewModel.AudioTrackList.from(
-                blob: String(contentsOf: STAGING_AREA_FILE, encoding: .utf8),
-                userManager: userManager
-            )
+            self.stagedAudioTrackList = []
             self.headCommitID = try String(contentsOf: HEAD_FILE, encoding: .utf8)
             self.forkParent = try? JSONDecoder().decode(RepositoryHandle.self, from: Data(contentsOf: FORK_PARENT_FILE))
+            
+            Task {
+                do {
+                    self.stagedAudioTrackList = try await Musubi.ViewModel.AudioTrackList.from(
+                        blob: String(contentsOf: STAGING_AREA_FILE, encoding: .utf8),
+                        userManager: userManager
+                    )
+                } catch {
+                    print("[Musubi::RepositoryClone] failed to hydrate stagedAudioTrackList")
+                    print(error)
+                    stagingAreaHydrationError = true
+                }
+            }
         }
         
         func saveStagingArea() throws {
