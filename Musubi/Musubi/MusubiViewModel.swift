@@ -43,35 +43,6 @@ extension Musubi.ViewModel.AudioTrackList {
             Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset)
         }
     }
-
-    static func from(blob: Musubi.Model.Blob, userManager: Musubi.UserManager) async throws -> Self {
-        var audioTrackList: [Spotify.AudioTrack] = []
-        var numCommasSeen = 0
-        var currentRangeStartIndex = blob.startIndex
-        for index in blob.indices {
-            if blob[index] == "," {
-                numCommasSeen += 1
-                if numCommasSeen % 50 == 0 {
-                    audioTrackList.append(
-                        contentsOf: try await SpotifyRequests.Read.audioTracks(
-                            audioTrackIDs: String(blob[currentRangeStartIndex..<index]),
-                            userManager: userManager
-                        )
-                    )
-                    currentRangeStartIndex = blob.index(after: index)
-                }
-            }
-        }
-        if !(blob.last == "," && numCommasSeen % 50 == 0) {
-            audioTrackList.append(
-                contentsOf: try await SpotifyRequests.Read.audioTracks(
-                    audioTrackIDs: String(blob[currentRangeStartIndex...]),
-                    userManager: userManager
-                )
-            )
-        }
-        return Self.from(audioTrackList: audioTrackList)
-    }
 }
 
 extension Array where Element == Spotify.AudioTrack {

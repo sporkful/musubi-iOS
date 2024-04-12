@@ -84,12 +84,35 @@ extension Musubi {
             self.headCommitID = try String(contentsOf: HEAD_FILE, encoding: .utf8)
             self.forkParent = try? JSONDecoder().decode(RepositoryHandle.self, from: Data(contentsOf: FORK_PARENT_FILE))
             
-            Task {
+            let blob = try String(contentsOf: STAGING_AREA_FILE, encoding: .utf8)
+            
+            // hydrate stagedAudioTrackList asynchronously
+            Task { @MainActor in
                 do {
-                    self.stagedAudioTrackList = try await Musubi.ViewModel.AudioTrackList.from(
-                        blob: String(contentsOf: STAGING_AREA_FILE, encoding: .utf8),
-                        userManager: userManager
-                    )
+                    var numCommasSeen = 0
+                    var currentRangeStartIndex = blob.startIndex
+                    for index in blob.indices {
+                        if blob[index] == "," {
+                            numCommasSeen += 1
+                            if numCommasSeen % 50 == 0 {
+                                self.stagedAudioTrackList.append(
+                                    audioTrackList: try await SpotifyRequests.Read.audioTracks(
+                                        audioTrackIDs: String(blob[currentRangeStartIndex..<index]),
+                                        userManager: userManager
+                                    )
+                                )
+                                currentRangeStartIndex = blob.index(after: index)
+                            }
+                        }
+                    }
+                    if !(blob.last == "," && numCommasSeen % 50 == 0) {
+                        self.stagedAudioTrackList.append(
+                            audioTrackList: try await SpotifyRequests.Read.audioTracks(
+                                audioTrackIDs: String(blob[currentRangeStartIndex...]),
+                                userManager: userManager
+                            )
+                        )
+                    }
                 } catch {
                     print("[Musubi::RepositoryClone] failed to hydrate stagedAudioTrackList")
                     print(error)
@@ -97,7 +120,7 @@ extension Musubi {
                 }
             }
         }
-        
+
         func saveStagingArea() throws {
             try Data(Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList).utf8)
                 .write(to: STAGING_AREA_FILE, options: .atomic)
