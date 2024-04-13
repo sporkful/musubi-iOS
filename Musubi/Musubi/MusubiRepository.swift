@@ -29,7 +29,7 @@ extension Musubi {
         
         init(spotifyPlaylistMetadata: Spotify.Playlist) {
             self.name = spotifyPlaylistMetadata.name
-            self.description = spotifyPlaylistMetadata.description
+            self.description = spotifyPlaylistMetadata.descriptionDecodedHTML
             self.coverImageURLString = spotifyPlaylistMetadata.images?.first?.url
         }
     }
@@ -37,24 +37,6 @@ extension Musubi {
     struct RepositoryReference: Codable, Hashable {
         let handle: RepositoryHandle
         var externalMetadata: RepositoryExternalMetadata
-        
-        init(handle: RepositoryHandle, externalMetadata: RepositoryExternalMetadata) {
-            self.handle = handle
-            self.externalMetadata = externalMetadata
-        }
-        
-        // Avoids triggering unnecessary SwiftUI updates.
-        mutating func refreshExternalMetadata(userManager: Musubi.UserManager) async throws {
-            let newMetadata = RepositoryExternalMetadata(
-                spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(
-                    playlistID: handle.playlistID,
-                    userManager: userManager
-                )
-            )
-            if newMetadata != self.externalMetadata {
-                self.externalMetadata = newMetadata
-            }
-        }
     }
 
     @Observable

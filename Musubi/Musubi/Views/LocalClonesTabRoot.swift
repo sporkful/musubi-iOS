@@ -9,6 +9,8 @@ struct LocalClonesTabRoot: View {
     
     @State private var navigationPath = NavigationPath()
     
+    @State private var periodicBackgroundTimer: Timer?
+    
     var body: some View {
         @Bindable var currentUser = currentUser
         NavigationStack(path: $navigationPath) {
@@ -49,8 +51,12 @@ struct LocalClonesTabRoot: View {
             }
             .navigationTitle("My Local Repositories")
             .task {
-                // TODO: periodic background refresh?
-                await currentUser.refreshClonesExternalMetadata(userManager: userManager)
+                periodicBackgroundTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) {
+                    [weak currentUser] (_) in
+                    Task { [weak currentUser] in
+                        await currentUser?.refreshClonesExternalMetadata(userManager: userManager)
+                    }
+                }
             }
         }
     }

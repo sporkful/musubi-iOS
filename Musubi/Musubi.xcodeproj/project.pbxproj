@@ -42,6 +42,7 @@
 		7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */; };
 		7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */; };
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
+		79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8D5B82B6C2FC4006A8359 /* String+.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +101,7 @@
 		7978F85B2B51253C005D3880 /* StaticAlbumPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticAlbumPage.swift; sourceTree = "<group>"; };
 		7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		7978F85F2B51254C005D3880 /* StaticArtistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticArtistPage.swift; sourceTree = "<group>"; };
+		79C8D5B82B6C2FC4006A8359 /* String+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +219,7 @@
 				794733992B4CE922001C3FEB /* UI.swift */,
 				7961DA102B55ADDB00650775 /* UIColor+.swift */,
 				7961DA122B55ADE200650775 /* UIImage+.swift */,
+				79C8D5B82B6C2FC4006A8359 /* String+.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -410,6 +413,7 @@
 				7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */,
 				7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
+				79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchTabRoot.swift in Sources */,
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,
 				794733A72B4D15BD001C3FEB /* AudioTrackListCell.swift in Sources */,

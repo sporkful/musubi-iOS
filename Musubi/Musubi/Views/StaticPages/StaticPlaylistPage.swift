@@ -24,6 +24,7 @@ struct StaticPlaylistPage: View {
         Musubi.RepositoryHandle(userID: playlist.owner.id, playlistID: playlist.id)
     }
     
+    @MainActor
     private var isAlreadyLocalClone: Bool {
         if let currentUser = userManager.currentUser {
             return currentUser.localClonesIndex.contains(where: { $0.handle == self.repositoryHandle })

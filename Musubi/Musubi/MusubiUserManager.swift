@@ -4,13 +4,14 @@ import Foundation
 
 extension Musubi {
     @Observable
+    @MainActor
     class User: Identifiable {
         let spotifyInfo: Spotify.LoggedInUser
         
         typealias LocalClonesIndex = [Musubi.RepositoryReference]
         var localClonesIndex: LocalClonesIndex
         
-        var id: Spotify.ID { spotifyInfo.id }
+        nonisolated var id: Spotify.ID { spotifyInfo.id }
         
         init?(spotifyInfo: Spotify.LoggedInUser, userManager: Musubi.UserManager) {
             self.spotifyInfo = spotifyInfo
@@ -25,7 +26,6 @@ extension Musubi {
                         LocalClonesIndex.self,
                         from: Data(contentsOf: userClonesIndexFile)
                     )
-                    // TODO: does this need to be on MainActor?
                     Task {
                         await refreshClonesExternalMetadata(userManager: userManager)
                     }
@@ -44,21 +44,48 @@ extension Musubi {
             // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
         }
         
-        deinit {
-            try? saveClonesIndex()
-        }
-        
         // TODO: better error handling / retries
         func refreshClonesExternalMetadata(userManager: Musubi.UserManager) async {
+            // Note that indices into `self.localClonesIndex` are not guaranteed to be stable for
+            // the full execution of the for-loop due to the `await`ing of the Spotify request on
+            // every iteration. Since this function is meant to be called periodically in the
+            // background and we don't need particularly strong consistency guarantees
+            // (it deals with Spotify-controlled metadata that we explicitly don't version control),
+            // we choose to `break` as soon as we detect that the underlying index has changed from
+            // when the function was invoked.
             for i in self.localClonesIndex.indices {
-                try? await self.localClonesIndex[i].refreshExternalMetadata(userManager: userManager)
+                guard self.localClonesIndex.indices.contains(i) else {
+                    break
+                }
+                let playlistID = self.localClonesIndex[i].handle.playlistID
+                guard let spotifyPlaylistMetadata = try? await SpotifyRequests.Read.playlist(
+                    playlistID: playlistID,
+                    userManager: userManager
+                ) else {
+                    // The erroring of the Spotify request itself implies nothing about the index.
+                    continue
+                }
+                guard self.localClonesIndex.indices.contains(i),
+                      spotifyPlaylistMetadata.id == self.localClonesIndex[i].handle.playlistID
+                else {
+                    break
+                }
+                // Avoid triggering unnecessary SwiftUI updates.
+                let newExternalMetadata = Musubi.RepositoryExternalMetadata(
+                    spotifyPlaylistMetadata: spotifyPlaylistMetadata
+                )
+                if newExternalMetadata != self.localClonesIndex[i].externalMetadata {
+                    self.localClonesIndex[i].externalMetadata = newExternalMetadata
+                }
+            }
+            Task {
+                try? await saveClonesIndex()
             }
         }
         
-        // TODO: better error handling / retries (see callers)
-        func saveClonesIndex() throws {
+        nonisolated func saveClonesIndex() async throws {
             let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
-            try JSONEncoder().encode(self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
+            try JSONEncoder().encode(await self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
         }
         
         // TODO: clean up reference-spaghetti between User and UserManager
@@ -96,7 +123,8 @@ extension Musubi {
                     )
                 )
             )
-            try? saveClonesIndex()
+            // TODO: better error handling here?
+            try? await saveClonesIndex()
         }
         
         // TODO: impl

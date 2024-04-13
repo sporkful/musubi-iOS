@@ -109,13 +109,17 @@ extension Spotify {
     
     struct Playlist: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
-        let description: String
+        private let description: String
         let external_urls: [String: String]
         let images: [Spotify.Image]?
         let name: String
         let owner: OtherUser
         let snapshot_id: String
         let uri: String
+        
+        var descriptionDecodedHTML: String {
+            String(htmlEncodedString: description) ?? ""
+        }
         
         struct AudioTrackListPage: SpotifyListPage {
             let items: [AudioTrackItem]

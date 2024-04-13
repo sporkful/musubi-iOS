@@ -86,7 +86,7 @@ struct SearchTabRoot: View {
                         navigationPath: $navigationPath,
                         playlist: playlist,
                         name: playlist.name,
-                        description: playlist.description,
+                        description: playlist.descriptionDecodedHTML,
                         coverImageURLString: playlist.images?.first?.url
                     )
                 }
