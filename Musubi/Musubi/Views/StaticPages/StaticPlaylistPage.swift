@@ -24,15 +24,6 @@ struct StaticPlaylistPage: View {
         Musubi.RepositoryHandle(userID: playlist.owner.id, playlistID: playlist.id)
     }
     
-    @MainActor
-    private var isAlreadyLocalClone: Bool {
-        if let currentUser = userManager.currentUser {
-            return currentUser.localClonesIndex.contains(where: { $0.handle == self.repositoryHandle })
-        } else {
-            return true
-        }
-    }
-    
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
@@ -45,8 +36,10 @@ struct StaticPlaylistPage: View {
             date: "",
             toolbarBuilder: {
                 HStack {
-                    if !isAlreadyLocalClone {
-                        if playlist.owner.id == userManager.currentUser?.id {
+                    if let currentUser = userManager.currentUser,
+                       !currentUser.localClonesIndex.contains(where: { $0.handle == self.repositoryHandle })
+                    {
+                        if playlist.owner.id == currentUser.id {
                             Button {
                                 initOrClone()
                             } label: {

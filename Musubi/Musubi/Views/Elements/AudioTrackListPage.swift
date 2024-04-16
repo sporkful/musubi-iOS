@@ -278,9 +278,10 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
         Task { @MainActor in
             if let (data, response) = try? await URLSession.shared.data(from: coverImageURL),
                let httpResponse = response as? HTTPURLResponse,
-               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode)
+               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode),
+               let image = UIImage(data: data)
             {
-                coverImage = UIImage(data: data)
+                coverImage = image
             }
         }
     }

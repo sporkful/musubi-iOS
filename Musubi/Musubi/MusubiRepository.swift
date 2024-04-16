@@ -29,7 +29,7 @@ extension Musubi {
         
         init(spotifyPlaylistMetadata: Spotify.Playlist) {
             self.name = spotifyPlaylistMetadata.name
-            self.description = spotifyPlaylistMetadata.descriptionDecodedHTML
+            self.description = spotifyPlaylistMetadata.descriptionTextFromHTML
             self.coverImageURLString = spotifyPlaylistMetadata.images?.first?.url
         }
     }

@@ -117,8 +117,8 @@ extension Spotify {
         let snapshot_id: String
         let uri: String
         
-        var descriptionDecodedHTML: String {
-            String(htmlEncodedString: description) ?? ""
+        var descriptionTextFromHTML: String {
+            description.decodingHTMLEntities()
         }
         
         struct AudioTrackListPage: SpotifyListPage {

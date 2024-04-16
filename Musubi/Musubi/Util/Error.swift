@@ -55,12 +55,10 @@ extension Musubi {
     
     enum RepositoryError: LocalizedError {
         case cloning(detail: String)
-        case externalMetadata(detail: String)
 
         var errorDescription: String? {
             let description = switch self {
                 case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
-                case let .externalMetadata(detail): "(external metadata) \(detail)"
             }
             return "[Musubi::Repository] \(description)"
         }
