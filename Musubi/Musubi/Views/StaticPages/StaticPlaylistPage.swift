@@ -122,7 +122,7 @@ struct StaticPlaylistPage: View {
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticPlaylistPage] unable to load tracklist")
-            print(error)
+            print(error.localizedDescription)
             hasLoadedContents = false
         }
     }
@@ -141,7 +141,7 @@ struct StaticPlaylistPage: View {
                 )
             } catch {
                 print("[Musubi::StaticPlaylistPage] initOrClone error")
-                print(error)
+                print(error.localizedDescription)
             }
             isViewDisabled = false
         }

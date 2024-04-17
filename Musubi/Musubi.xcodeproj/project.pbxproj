@@ -43,6 +43,7 @@
 		7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */; };
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
 		79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8D5B82B6C2FC4006A8359 /* String+.swift */; };
+		79D4DF7F2B6CC1B2009AB97A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +110,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79D4DF7F2B6CC1B2009AB97A /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +273,7 @@
 			);
 			name = Musubi;
 			packageProductDependencies = (
+				79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */,
 			);
 			productName = Musubi;
 			productReference = 794733312B464331001C3FEB /* Musubi.app */;
@@ -346,6 +349,7 @@
 			mainGroup = 794733282B464331001C3FEB;
 			packageReferences = (
 				7930D4722B6B6F8C00E8C426 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				79D4DF7D2B6CC1B2009AB97A /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = 794733322B464331001C3FEB /* Products */;
 			projectDirPath = "";
@@ -759,7 +763,23 @@
 				minimumVersion = 1.0.6;
 			};
 		};
+		79D4DF7D2B6CC1B2009AB97A /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 79D4DF7D2B6CC1B2009AB97A /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 794733292B464331001C3FEB /* Project object */;
 }

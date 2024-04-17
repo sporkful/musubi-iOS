@@ -51,12 +51,13 @@ struct LocalClonesTabRoot: View {
             }
             .navigationTitle("My Local Repositories")
             .task {
-                periodicBackgroundTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) {
-                    [weak currentUser] (_) in
-                    Task { [weak currentUser] in
-                        await currentUser?.refreshClonesExternalMetadata(userManager: userManager)
-                    }
-                }
+                // TODO: uncomment this when rate limit timeout is over
+//                periodicBackgroundTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
+//                    [weak currentUser] (_) in
+//                    Task { [weak currentUser] in
+//                        await currentUser?.refreshClonesExternalMetadata(userManager: userManager)
+//                    }
+//                }
             }
         }
     }

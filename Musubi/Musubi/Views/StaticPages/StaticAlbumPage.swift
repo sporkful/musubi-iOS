@@ -95,7 +95,7 @@ struct StaticAlbumPage: View {
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticAlbumPage] unable to load tracklist")
-            print(error)
+            print(error.localizedDescription)
             hasLoadedContents = false
         }
     }

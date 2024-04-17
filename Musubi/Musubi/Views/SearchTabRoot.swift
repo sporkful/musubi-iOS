@@ -1,6 +1,7 @@
 // SearchTabRoot.swift
 
 import SwiftUI
+import AsyncAlgorithms
 
 struct SearchTabRoot: View {
     @Environment(Musubi.UserManager.self) private var userManager
@@ -9,6 +10,9 @@ struct SearchTabRoot: View {
     
     @State private var searchText = ""
     @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank()
+    
+    let searchQueue = AsyncChannel<String>()
+    @State private var searchQueueSize = 0
     
     @State private var showAudioTrackResults = true
     @State private var showArtistResults = true
@@ -97,19 +101,42 @@ struct SearchTabRoot: View {
             .searchable(text: $searchText, placement: .navigationBarDrawer)
             .onChange(of: searchText) { oldValue, newValue in
                 Task {
-                    do {
-                        searchResults = try await SpotifyRequests.Read.search(
-                            query: newValue,
-                            userManager: userManager
-                        )
-                    } catch {
-                        print("[Musubi::SearchView] (likely nonfatal) search spotify error")
-                        print(error)
-                        searchResults = Spotify.SearchResults.blank()
-                    }
+                    self.searchQueueSize += 1
+                    await self.searchQueue.send(newValue)
                 }
             }
+            .task {
+                await processSearchQueue()
+            }
             .navigationTitle("Search Spotify")
+        }
+    }
+    
+    private func processSearchQueue() async {
+        var iter = searchQueue.makeAsyncIterator()
+        while true {
+            // Avoid dispatching / waiting for Spotify requests for intermediate queries generated
+            // by the user's typing process.
+            var query: String
+            repeat {
+                query = await iter.next()!
+                self.searchQueueSize -= 1
+            } while self.searchQueueSize > 0
+            
+            if !query.isEmpty {
+                do {
+                    self.searchResults = try await SpotifyRequests.Read.search(
+                        query: query,
+                        userManager: userManager
+                    )
+                } catch {
+                    print("[Musubi::SearchView] search spotify error")
+                    print(error.localizedDescription)
+                    self.searchResults = Spotify.SearchResults.blank()
+                }
+            } else {
+                self.searchResults = Spotify.SearchResults.blank()
+            }
         }
     }
 }

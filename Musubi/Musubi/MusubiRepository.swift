@@ -97,7 +97,7 @@ extension Musubi {
                     }
                 } catch {
                     print("[Musubi::RepositoryClone] failed to hydrate stagedAudioTrackList")
-                    print(error)
+                    print(error.localizedDescription)
                     stagingAreaHydrationError = true
                 }
             }
