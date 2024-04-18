@@ -44,6 +44,7 @@
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
 		79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8D5B82B6C2FC4006A8359 /* String+.swift */; };
 		79D4DF7F2B6CC1B2009AB97A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */; };
+		79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +104,7 @@
 		7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		7978F85F2B51254C005D3880 /* StaticArtistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticArtistPage.swift; sourceTree = "<group>"; };
 		79C8D5B82B6C2FC4006A8359 /* String+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+.swift"; sourceTree = "<group>"; };
+		79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +162,7 @@
 				7961DA162B56510B00650775 /* MusubiRepository.swift */,
 				7947336E2B46758F001C3FEB /* MusubiViewModel.swift */,
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
+				79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
 				7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */,
 				7947336C2B46566F001C3FEB /* SpotifyViewModel.swift */,
@@ -424,6 +427,7 @@
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
 				7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
+				79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
