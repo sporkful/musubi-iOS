@@ -119,7 +119,10 @@ struct SearchTabRoot: View {
             // by the user's typing process.
             var query: String
             repeat {
-                query = await iter.next()!
+                guard let next = await iter.next() else {
+                    return
+                }
+                query = next
                 self.searchQueueSize -= 1
             } while self.searchQueueSize > 0
             
