@@ -3,8 +3,6 @@
 import SwiftUI
 
 struct LocalClonePage: View {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
     @Binding var navigationPath: NavigationPath
     
     @Binding var repositoryReference: Musubi.RepositoryReference

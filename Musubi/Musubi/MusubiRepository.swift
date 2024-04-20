@@ -55,7 +55,7 @@ extension Musubi {
         // TODO: better way to do this?
         var stagingAreaHydrationError = false // use to trigger alerts on ClonePage view
         
-        init(handle: RepositoryHandle, userManager: Musubi.UserManager) throws {
+        init(handle: RepositoryHandle) throws {
             self.handle = handle
             
             self.STAGING_AREA_FILE = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: self.handle)
@@ -79,8 +79,7 @@ extension Musubi {
                             if numCommasSeen % 50 == 0 {
                                 self.stagedAudioTrackList.append(
                                     audioTrackList: try await SpotifyRequests.Read.audioTracks(
-                                        audioTrackIDs: String(blob[currentRangeStartIndex..<index]),
-                                        userManager: userManager
+                                        audioTrackIDs: String(blob[currentRangeStartIndex..<index])
                                     )
                                 )
                                 currentRangeStartIndex = blob.index(after: index)
@@ -90,8 +89,7 @@ extension Musubi {
                     if !(blob.last == "," && numCommasSeen % 50 == 0) {
                         self.stagedAudioTrackList.append(
                             audioTrackList: try await SpotifyRequests.Read.audioTracks(
-                                audioTrackIDs: String(blob[currentRangeStartIndex...]),
-                                userManager: userManager
+                                audioTrackIDs: String(blob[currentRangeStartIndex...])
                             )
                         )
                     }
@@ -114,14 +112,14 @@ extension Musubi {
         }
         
         // TODO: impl
-//        func push(userManager: Musubi.UserManager) async throws {
+//        func push() async throws {
 //            let requestBody = Push_RequestBody(
 //            )
 //            var request = try MusubiCloudRequests.createRequest(
 //                command: .PUSH,
 //                bodyData: try Musubi.jsonEncoder().encode(requestBody)
 //            )
-//            let responseData = try await userManager.makeAuthdMusubiCloudRequest(request: &request)
+//            let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
 //            let response = try Musubi.jsonDecoder().decode(Push_Response.self, from: responseData)
 //        }
         

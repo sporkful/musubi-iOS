@@ -4,7 +4,7 @@ import SwiftUI
 import WebKit
 
 struct LoginView: View {
-    @Environment(Musubi.UserManager.self) private var userManager
+    @State private var userManager = Musubi.UserManager.shared
     
     @State var showSheetWebLogin = false
     @State var showAlertLoginError = false
@@ -63,8 +63,6 @@ struct LoginView: View {
 }
 
 struct SpotifyLoginWebView: UIViewRepresentable {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
     @Binding var showSheetWebLogin: Bool
     @Binding var showAlertLoginError: Bool
     
@@ -80,7 +78,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         }
         
         self.webView.navigationDelegate = context.coordinator
-        self.webView.load(userManager.createWebLoginRequest(pkceChallenge: pkceChallenge))
+        self.webView.load(Musubi.UserManager.shared.createWebLoginRequest(pkceChallenge: pkceChallenge))
         return self.webView
     }
 
@@ -90,7 +88,6 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     
     func makeCoordinator() -> SpotifyLoginWebView.Coordinator {
         Coordinator(
-            userManager: userManager,
             showSheetWebLogin: $showSheetWebLogin,
             showAlertLoginError: $showAlertLoginError,
             pkceVerifier: pkceVerifier
@@ -98,20 +95,16 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
-        private var userManager: Musubi.UserManager
-        
         @Binding private var showSheetWebLogin: Bool
         @Binding private var showAlertLoginError: Bool
         
         private let pkceVerifier: String
         
         init(
-            userManager: Musubi.UserManager,
             showSheetWebLogin: Binding<Bool>,
             showAlertLoginError: Binding<Bool>,
             pkceVerifier: String
         ) {
-            self.userManager = userManager
             _showSheetWebLogin = showSheetWebLogin
             _showAlertLoginError = showAlertLoginError
             self.pkceVerifier = pkceVerifier
@@ -131,7 +124,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             
             Task {
                 do {
-                    try await userManager.handleNewLogin(
+                    try await Musubi.UserManager.shared.handleNewLogin(
                         authCode: authCode,
                         pkceVerifier: pkceVerifier
                     )

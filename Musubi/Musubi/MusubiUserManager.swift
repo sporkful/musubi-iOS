@@ -2,10 +2,12 @@
 
 import Foundation
 
-// TODO: make this a global singleton (Musubi.UserManager.shared)
 extension Musubi {
     @Observable
     class UserManager {
+        private init() { }
+        static let shared = UserManager()
+        
         private(set) var currentUser: Musubi.User? = nil
         
         @MainActor
@@ -41,8 +43,7 @@ extension Musubi {
             let data = try await makeAuthdSpotifyRequest(request: &currentUserRequest)
             
             self.currentUser = User(
-                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data),
-                userManager: self
+                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
             )
         }
         

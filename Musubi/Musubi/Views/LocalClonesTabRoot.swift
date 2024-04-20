@@ -4,7 +4,6 @@ import SwiftUI
 
 // TODO: categorize clones as owned vs forks
 struct LocalClonesTabRoot: View {
-    @Environment(Musubi.UserManager.self) private var userManager
     @Environment(Musubi.User.self) private var currentUser
     
     @State private var navigationPath = NavigationPath()
@@ -24,7 +23,7 @@ struct LocalClonesTabRoot: View {
             }
             .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
                 // TODO: better error handling?
-                if let repositoryClone = try? Musubi.RepositoryClone(handle: repositoryHandle, userManager: userManager) {
+                if let repositoryClone = try? Musubi.RepositoryClone(handle: repositoryHandle) {
                     LocalClonePage(
                         navigationPath: $navigationPath,
                         repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!,

@@ -4,8 +4,6 @@ import SwiftUI
 import AsyncAlgorithms
 
 struct SearchTabRoot: View {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
     @State private var navigationPath = NavigationPath()
     
     @State private var searchText = ""
@@ -128,10 +126,7 @@ struct SearchTabRoot: View {
             
             if !query.isEmpty {
                 do {
-                    self.searchResults = try await SpotifyRequests.Read.search(
-                        query: query,
-                        userManager: userManager
-                    )
+                    self.searchResults = try await SpotifyRequests.Read.search(query: query)
                 } catch {
                     print("[Musubi::SearchView] search spotify error")
                     print(error.localizedDescription)

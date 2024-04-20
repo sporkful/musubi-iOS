@@ -5,8 +5,6 @@ import SwiftUI
 // TODO: further deduplicate code wrt StaticAlbumPage?
 
 struct StaticPlaylistPage: View {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
     @Binding var navigationPath: NavigationPath
     
     let playlist: Spotify.Playlist
@@ -36,7 +34,7 @@ struct StaticPlaylistPage: View {
             date: "",
             toolbarBuilder: {
                 HStack {
-                    if let currentUser = userManager.currentUser,
+                    if let currentUser = Musubi.UserManager.shared.currentUser,
                        !currentUser.localClonesIndex.contains(where: { $0.handle == self.repositoryHandle })
                     {
                         if playlist.owner.id == currentUser.id {
@@ -88,42 +86,36 @@ struct StaticPlaylistPage: View {
         .disabled(isViewDisabled)
         .alert("Musubi - failed to clone repo", isPresented: $showAlertCloneError, actions: {})
         .task {
-            await loadContents()
+            await loadAudioTrackList()
         }
     }
     
-    @State private var hasLoadedContents = false
+    @State private var hasLoadedTrackList = false
     
-    private func loadContents() async {
-        if hasLoadedContents {
+    private func loadAudioTrackList() async {
+        if hasLoadedTrackList {
             return
         }
-        hasLoadedContents = true
+        hasLoadedTrackList = true
         
         do {
-            let playlistTrackListFirstPage = try await SpotifyRequests.Read.playlistTrackListFirstPage(
-                playlistID: playlist.id,
-                userManager: userManager
-            )
+            let firstPage = try await SpotifyRequests.Read.playlistTrackListFirstPage(playlistID: playlist.id)
             self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
-                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: playlistTrackListFirstPage.items)
+                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: firstPage.items)
             )
             
-            let restOfTrackList = try await SpotifyRequests.Read.restOfList(
-                firstPage: playlistTrackListFirstPage,
-                userManager: userManager
-            )
-            guard let restOfTrackList = restOfTrackList as? [Spotify.Playlist.AudioTrackItem] else {
+            let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
+            guard let restOfList = restOfList as? [Spotify.Playlist.AudioTrackItem] else {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
             }
             self.audioTrackList.append(
-                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfTrackList)
+                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
             )
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticPlaylistPage] unable to load tracklist")
             print(error.localizedDescription)
-            hasLoadedContents = false
+            hasLoadedTrackList = false
         }
     }
     
@@ -131,13 +123,14 @@ struct StaticPlaylistPage: View {
         isViewDisabled = true
         Task {
             do {
-                // TODO: clean up reference-spaghetti between User and UserManager
-                try await userManager.currentUser?.initOrClone(
+                guard let currentUser = Musubi.UserManager.shared.currentUser else {
+                    throw Musubi.RepositoryError.cloning(detail: "(StaticPlaylistPage) no current user")
+                }
+                try await currentUser.initOrClone(
                     repositoryHandle: Musubi.RepositoryHandle(
-                        userID: userManager.currentUser?.id ?? "",
+                        userID: currentUser.id,
                         playlistID: playlist.id
-                    ),
-                    userManager: userManager
+                    )
                 )
             } catch {
                 print("[Musubi::StaticPlaylistPage] initOrClone error")

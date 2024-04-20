@@ -3,8 +3,6 @@
 import SwiftUI
 
 struct StaticAlbumPage: View {
-    @Environment(Musubi.UserManager.self) private var userManager
-    
     @Binding var navigationPath: NavigationPath
     
     let album: Spotify.Album
@@ -63,40 +61,32 @@ struct StaticAlbumPage: View {
             }
         )
         .task {
-            await loadContents()
+            await loadAudioTrackList()
         }
     }
     
-    @State private var hasLoadedContents = false
+    @State private var hasLoadedTrackList = false
     
-    private func loadContents() async {
-        if hasLoadedContents {
+    private func loadAudioTrackList() async {
+        if hasLoadedTrackList {
             return
         }
-        hasLoadedContents = true
+        hasLoadedTrackList = true
         
         do {
-            let albumTrackListFirstPage = try await SpotifyRequests.Read.albumTrackListFirstPage(
-                albumID: album.id,
-                userManager: userManager
-            )
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
-                audioTrackList: albumTrackListFirstPage.items
-            )
+            let firstPage = try await SpotifyRequests.Read.albumTrackListFirstPage(albumID: album.id)
+            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: firstPage.items)
             
-            let restOfTrackList = try await SpotifyRequests.Read.restOfList(
-                firstPage: albumTrackListFirstPage,
-                userManager: userManager
-            )
-            guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
+            let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
+            guard let restOfList = restOfList as? [Spotify.AudioTrack] else {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
             }
-            self.audioTrackList.append(audioTrackList: restOfTrackList)
+            self.audioTrackList.append(audioTrackList: restOfList)
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticAlbumPage] unable to load tracklist")
             print(error.localizedDescription)
-            hasLoadedContents = false
+            hasLoadedTrackList = false
         }
     }
 }
