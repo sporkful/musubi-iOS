@@ -127,47 +127,49 @@ extension SpotifyRequests.Read {
         return try JSONDecoder().decode(AudioTracks.self, from: data).tracks
     }
 
-    static func artist(artistID: Spotify.ID) async throws -> Spotify.Artist {
+    static func artistMetadata(artistID: Spotify.ID) async throws -> Spotify.ArtistMetadata {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.Artist.self, from: data)
+        return try JSONDecoder().decode(Spotify.ArtistMetadata.self, from: data)
     }
     
-    // TODO: rename to "albumMetadata" and specify query to not pull in tracklist
-    static func album(albumID: Spotify.ID) async throws -> Spotify.Album {
+    static func albumMetadata(albumID: Spotify.ID) async throws -> Spotify.AlbumMetadata {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
-            path: "/albums/" + albumID
+            path: "/albums/" + albumID,
+            queryItems: [URLQueryItem(name: "fields", value: "!tracks")]
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.Album.self, from: data)
+        print("album metadata retrieved: \(String(data: data, encoding: .utf8))") // TODO: delete this
+        return try JSONDecoder().decode(Spotify.AlbumMetadata.self, from: data)
     }
     
-    // TODO: rename to "playlistMetadata" and specify query to not pull in tracklist
-    static func playlist(playlistID: Spotify.ID) async throws -> Spotify.Playlist {
+    static func playlistMetadata(playlistID: Spotify.ID) async throws -> Spotify.PlaylistMetadata {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
-            path: "/playlists/" + playlistID
+            path: "/playlists/" + playlistID,
+            queryItems: [URLQueryItem(name: "fields", value: "!tracks")]
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.Playlist.self, from: data)
+        print("playlist metadata retrieved: \(String(data: data, encoding: .utf8))") // TODO: delete this
+        return try JSONDecoder().decode(Spotify.PlaylistMetadata.self, from: data)
     }
     
-    static func albumTrackListFirstPage(albumID: Spotify.ID) async throws -> Spotify.Album.AudioTrackListPage {
+    static func albumFirstAudioTrackPage(albumID: Spotify.ID) async throws -> Spotify.AlbumAudioTrackPage {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/albums/" + albumID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.Album.AudioTrackListPage.self, from: data)
+        return try JSONDecoder().decode(Spotify.AlbumAudioTrackPage.self, from: data)
     }
     
     static func albumTrackListFull(albumID: Spotify.ID) async throws -> [Spotify.AudioTrack] {
-        let firstPage = try await albumTrackListFirstPage(albumID: albumID)
+        let firstPage = try await albumFirstAudioTrackPage(albumID: albumID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
         guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
@@ -175,36 +177,36 @@ extension SpotifyRequests.Read {
         return firstPage.items + restOfTrackList
     }
     
-    static func playlistTrackListFirstPage(playlistID: Spotify.ID) async throws -> Spotify.Playlist.AudioTrackListPage {
+    static func playlistFirstAudioTrackPage(playlistID: Spotify.ID) async throws -> Spotify.PlaylistAudioTrackPage {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.Playlist.AudioTrackListPage.self, from: data)
+        return try JSONDecoder().decode(Spotify.PlaylistAudioTrackPage.self, from: data)
     }
     
-    static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.Playlist.AudioTrackItem] {
-        let firstPage = try await playlistTrackListFirstPage(playlistID: playlistID)
+    static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.PlaylistAudioTrackItem] {
+        let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
-        guard let restOfTrackList = restOfTrackList as? [Spotify.Playlist.AudioTrackItem] else {
+        guard let restOfTrackList = restOfTrackList as? [Spotify.PlaylistAudioTrackItem] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
         }
         return firstPage.items + restOfTrackList
     }
     
-    static func artistAlbums(artistID: Spotify.ID) async throws -> [Spotify.Album] {
+    static func artistAlbums(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID + "/albums",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.Artist.AlbumListPage
+        let firstPage: Spotify.ArtistAlbumPage
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        firstPage = try JSONDecoder().decode(Spotify.Artist.AlbumListPage.self, from: data)
+        firstPage = try JSONDecoder().decode(Spotify.ArtistAlbumPage.self, from: data)
         let restOfAlbumList = try await restOfList(firstPage: firstPage)
-        guard let restOfAlbumList = restOfAlbumList as? [Spotify.Album] else {
+        guard let restOfAlbumList = restOfAlbumList as? [Spotify.AlbumMetadata] else {
             throw Spotify.RequestError.other(detail: "DEVERROR(?) artistAlbums multipage types")
         }
         return firstPage.items + restOfAlbumList
@@ -217,9 +219,9 @@ extension SpotifyRequests.Read {
             path: "/artists/" + artistID + "/top-tracks",
             queryItems: [URLQueryItem(name: "market", value: "US")]
         )
-        let topTracks: Spotify.Artist.TopTracks
+        let topTracks: Spotify.ArtistTopTracks
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        topTracks = try JSONDecoder().decode(Spotify.Artist.TopTracks.self, from: data)
+        topTracks = try JSONDecoder().decode(Spotify.ArtistTopTracks.self, from: data)
         return topTracks.tracks.map({ $0.id })
     }
     

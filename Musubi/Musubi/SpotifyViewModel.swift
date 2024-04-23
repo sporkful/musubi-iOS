@@ -63,8 +63,8 @@ extension Spotify {
     
     struct AudioTrack: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
-        let album: Album?
-        let artists: [Artist]
+        let album: AlbumMetadata?
+        let artists: [ArtistMetadata]
         let available_markets: [String]?
         let disc_number: Int
         let duration_ms: Int
@@ -77,37 +77,43 @@ extension Spotify {
         var images: [Spotify.Image]? { album?.images }
     }
     
-    struct Artist: SpotifyIdentifiable, SpotifyNameable, SpotifyModelCardable, Hashable {
+    // MARK: Artist info
+    
+    struct ArtistMetadata: SpotifyIdentifiable, SpotifyNameable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
         let name: String
         let images: [Spotify.Image]?
-        
-        struct TopTracks: SpotifyViewModel {
-            let tracks: [AudioTrack]
-        }
-        
-        struct AlbumListPage: SpotifyListPage {
-            let items: [Album]
-            let next: String?
-        }
     }
     
-    struct Album: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
+    struct ArtistTopTracks: SpotifyViewModel {
+        let tracks: [AudioTrack]
+    }
+    
+    struct ArtistAlbumPage: SpotifyListPage {
+        let items: [AlbumMetadata]
+        let next: String?
+    }
+    
+    // MARK: Album info
+    
+    struct AlbumMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
         let name: String
         let album_type: String
         let images: [Spotify.Image]?
         let release_date: String
         let uri: String
-        let artists: [Artist]
-        
-        struct AudioTrackListPage: SpotifyListPage {
-            let items: [AudioTrack]
-            let next: String?
-        }
+        let artists: [ArtistMetadata]
     }
     
-    struct Playlist: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
+    struct AlbumAudioTrackPage: SpotifyListPage {
+        let items: [AudioTrack]
+        let next: String?
+    }
+    
+    // MARK: Playlist info
+    
+    struct PlaylistMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
         private let description: String
         let external_urls: [String: String]
@@ -120,23 +126,23 @@ extension Spotify {
         var descriptionTextFromHTML: String {
             description.decodingHTMLEntities()
         }
+    }
+    
+    struct PlaylistAudioTrackPage: SpotifyListPage {
+        let items: [PlaylistAudioTrackItem]
+        let next: String?
+    }
+    
+    struct PlaylistAudioTrackItem: SpotifyIdentifiable {
+        let track: AudioTrack
         
-        struct AudioTrackListPage: SpotifyListPage {
-            let items: [AudioTrackItem]
-            let next: String?
-        }
-        
-        struct AudioTrackItem: SpotifyIdentifiable {
-            let track: AudioTrack
-            
-            // TODO: make sure this computed property doesn't mess up JSON decoding
-            var id: Spotify.ID { track.id }
-        }
+        // TODO: make sure this computed property doesn't mess up JSON decoding
+        var id: Spotify.ID { track.id }
     }
 }
 
 extension Array where Element == Spotify.AudioTrack {
-    static func from(playlistTrackItems: [Spotify.Playlist.AudioTrackItem]) -> Self {
+    static func from(playlistTrackItems: [Spotify.PlaylistAudioTrackItem]) -> Self {
         return playlistTrackItems.map { item in item.track }
     }
 }
@@ -149,11 +155,11 @@ extension Spotify {
         var playlists: Playlists
         
         struct Albums: SpotifyViewModel {
-            let items: [Album]
+            let items: [AlbumMetadata]
         }
         
         struct Artists: SpotifyViewModel {
-            let items: [Artist]
+            let items: [ArtistMetadata]
         }
         
         struct AudioTracks: SpotifyViewModel {
@@ -161,16 +167,14 @@ extension Spotify {
         }
         
         struct Playlists: SpotifyViewModel {
-            let items: [Playlist]
+            let items: [PlaylistMetadata]
         }
         
-        static func blank() -> Self {
-            return Self(
-                albums: Albums(items: []),
-                artists: Artists(items: []),
-                tracks: AudioTracks(items: []),
-                playlists: Playlists(items: [])
-            )
-        }
+        static let blank = Self(
+            albums: Albums(items: []),
+            artists: Artists(items: []),
+            tracks: AudioTracks(items: []),
+            playlists: Playlists(items: [])
+        )
     }
 }

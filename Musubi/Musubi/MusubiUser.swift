@@ -57,22 +57,20 @@ extension Musubi {
                 guard self.localClonesIndex.indices.contains(i) else {
                     break
                 }
-                let playlistID = self.localClonesIndex[i].handle.playlistID
-                guard let playlistMetadata = try? await SpotifyRequests.Read.playlist(playlistID: playlistID) else {
-                    // The erroring of the Spotify request itself implies nothing about the index.
+                let handle = self.localClonesIndex[i].handle
+                guard let newMetadata = try? await Musubi.RepositoryExternalMetadata.fromSpotify(handle: handle) else {
+                    // The erroring of the external request itself implies nothing about the index.
                     continue
                 }
+                
                 guard self.localClonesIndex.indices.contains(i),
-                      playlistMetadata.id == self.localClonesIndex[i].handle.playlistID
+                      self.localClonesIndex[i].handle == handle
                 else {
                     break
                 }
                 // Avoid triggering unnecessary SwiftUI updates.
-                let newExternalMetadata = Musubi.RepositoryExternalMetadata(
-                    spotifyPlaylistMetadata: playlistMetadata
-                )
-                if newExternalMetadata != self.localClonesIndex[i].externalMetadata {
-                    self.localClonesIndex[i].externalMetadata = newExternalMetadata
+                if newMetadata != self.localClonesIndex[i].externalMetadata {
+                    self.localClonesIndex[i].externalMetadata = newMetadata
                 }
             }
             Task {
@@ -109,9 +107,7 @@ extension Musubi {
             self.localClonesIndex.append(
                 Musubi.RepositoryReference(
                     handle: repositoryHandle,
-                    externalMetadata: Musubi.RepositoryExternalMetadata(
-                        spotifyPlaylistMetadata: try await SpotifyRequests.Read.playlist(playlistID: repositoryHandle.playlistID)
-                    )
+                    externalMetadata: try await Musubi.RepositoryExternalMetadata.fromSpotify(handle: repositoryHandle)
                 )
             )
             // TODO: better error handling here?

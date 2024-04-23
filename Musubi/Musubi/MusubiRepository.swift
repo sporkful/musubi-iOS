@@ -27,10 +27,13 @@ extension Musubi {
             self.coverImageURLString = coverImageURLString
         }
         
-        init(spotifyPlaylistMetadata: Spotify.Playlist) {
-            self.name = spotifyPlaylistMetadata.name
-            self.description = spotifyPlaylistMetadata.descriptionTextFromHTML
-            self.coverImageURLString = spotifyPlaylistMetadata.images?.first?.url
+        static func fromSpotify(handle: RepositoryHandle) async throws -> Self {
+            let metadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: handle.playlistID)
+            return Self(
+                name: metadata.name,
+                description: metadata.descriptionTextFromHTML,
+                coverImageURLString: metadata.images?.first?.url
+            )
         }
     }
     

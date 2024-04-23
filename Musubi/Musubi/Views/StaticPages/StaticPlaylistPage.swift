@@ -7,7 +7,7 @@ import SwiftUI
 struct StaticPlaylistPage: View {
     @Binding var navigationPath: NavigationPath
     
-    let playlist: Spotify.Playlist
+    let playlistMetadata: Spotify.PlaylistMetadata
     
     @State var name: String
     @State var description: String
@@ -19,7 +19,7 @@ struct StaticPlaylistPage: View {
     @State private var showAlertCloneError = false
     
     private var repositoryHandle: Musubi.RepositoryHandle {
-        Musubi.RepositoryHandle(userID: playlist.owner.id, playlistID: playlist.id)
+        Musubi.RepositoryHandle(userID: playlistMetadata.owner.id, playlistID: playlistMetadata.id)
     }
     
     var body: some View {
@@ -30,14 +30,14 @@ struct StaticPlaylistPage: View {
             description: $description,
             coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
-            associatedPeople: .users([playlist.owner]),
-            date: "",
+            associatedPeople: .users([playlistMetadata.owner]),
+            miscCaption: nil,
             toolbarBuilder: {
                 HStack {
                     if let currentUser = Musubi.UserManager.shared.currentUser,
                        !currentUser.localClonesIndex.contains(where: { $0.handle == self.repositoryHandle })
                     {
-                        if playlist.owner.id == currentUser.id {
+                        if playlistMetadata.owner.id == currentUser.id {
                             Button {
                                 initOrClone()
                             } label: {
@@ -99,13 +99,13 @@ struct StaticPlaylistPage: View {
         hasLoadedTrackList = true
         
         do {
-            let firstPage = try await SpotifyRequests.Read.playlistTrackListFirstPage(playlistID: playlist.id)
+            let firstPage = try await SpotifyRequests.Read.playlistFirstAudioTrackPage(playlistID: playlistMetadata.id)
             self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
                 audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: firstPage.items)
             )
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-            guard let restOfList = restOfList as? [Spotify.Playlist.AudioTrackItem] else {
+            guard let restOfList = restOfList as? [Spotify.PlaylistAudioTrackItem] else {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
             }
             self.audioTrackList.append(
@@ -129,7 +129,7 @@ struct StaticPlaylistPage: View {
                 try await currentUser.initOrClone(
                     repositoryHandle: Musubi.RepositoryHandle(
                         userID: currentUser.id,
-                        playlistID: playlist.id
+                        playlistID: playlistMetadata.id
                     )
                 )
             } catch {

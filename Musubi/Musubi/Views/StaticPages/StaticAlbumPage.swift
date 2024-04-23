@@ -5,7 +5,7 @@ import SwiftUI
 struct StaticAlbumPage: View {
     @Binding var navigationPath: NavigationPath
     
-    let album: Spotify.Album
+    let albumMetadata: Spotify.AlbumMetadata
     
     // TODO: find way to automatically init this based on album.*
     // note the obvious sol seems invalid https://forums.swift.org/t/state-messing-with-initializer-flow/25276/3
@@ -24,8 +24,8 @@ struct StaticAlbumPage: View {
             description: $description,
             coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
-            associatedPeople: .artists(album.artists),
-            date: album.release_date,
+            associatedPeople: .artists(albumMetadata.artists),
+            miscCaption: "Release Date: \(albumMetadata.release_date)",
             toolbarBuilder: {
                 HStack {
                     Menu {
@@ -74,7 +74,7 @@ struct StaticAlbumPage: View {
         hasLoadedTrackList = true
         
         do {
-            let firstPage = try await SpotifyRequests.Read.albumTrackListFirstPage(albumID: album.id)
+            let firstPage = try await SpotifyRequests.Read.albumFirstAudioTrackPage(albumID: albumMetadata.id)
             self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: firstPage.items)
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)

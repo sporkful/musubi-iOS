@@ -22,11 +22,11 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     enum AssociatedPeople {
-        case artists([Spotify.Artist])
+        case artists([Spotify.ArtistMetadata])
         case users([Spotify.OtherUser])
     }
     let associatedPeople: AssociatedPeople
-    let date: String
+    let miscCaption: String?
     
     let toolbarBuilder: () -> CustomToolbar
     
@@ -196,16 +196,9 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                     }
                     Text(contentType.rawValue)
                         .font(.caption)
-                    switch contentType {
-                    case .album:
-                        if !date.isEmpty {
-                            Text("Release Date: \(date)")
-                                .font(.caption)
-                        }
-                    case .musubiLocalClone:
-                        VStack {}  // TODO: last updated date?
-                    case .spotifyPlaylist:
-                        VStack {}
+                    if let miscCaption = miscCaption {
+                        Text(miscCaption)
+                            .font(.caption)
                     }
                     toolbarBuilder()
                     ForEach($audioTrackList) { $item in

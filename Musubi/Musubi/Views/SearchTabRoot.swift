@@ -7,7 +7,7 @@ struct SearchTabRoot: View {
     @State private var navigationPath = NavigationPath()
     
     @State private var searchText = ""
-    @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank()
+    @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank
     
     let searchQueue = AsyncChannel<String>()
     @State private var searchQueueSize = 0
@@ -46,50 +46,50 @@ struct SearchTabRoot: View {
                     }
                     if showArtistResults {
                         Section("Artists") {
-                            ForEach(searchResults.artists.items) { artist in
-                                NavigationLink(value: artist) {
-                                    ListCell(item: artist)
+                            ForEach(searchResults.artists.items) { artistMetadata in
+                                NavigationLink(value: artistMetadata) {
+                                    ListCell(item: artistMetadata)
                                 }
                             }
                         }
                     }
                     if showAlbumResults {
                         Section("Albums") {
-                            ForEach(searchResults.albums.items) { album in
-                                NavigationLink(value: album) {
-                                    ListCell(item: album)
+                            ForEach(searchResults.albums.items) { albumMetadata in
+                                NavigationLink(value: albumMetadata) {
+                                    ListCell(item: albumMetadata)
                                 }
                             }
                         }
                     }
                     if showPlaylistResults {
                         Section("Playlists") {
-                            ForEach(searchResults.playlists.items) { playlist in
-                                NavigationLink(value: playlist) {
-                                    ListCell(item: playlist)
+                            ForEach(searchResults.playlists.items) { playlistMetadata in
+                                NavigationLink(value: playlistMetadata) {
+                                    ListCell(item: playlistMetadata)
                                 }
                             }
                         }
                     }
                 }
-                .navigationDestination(for: Spotify.Artist.self) { artist in
-                    StaticArtistPage(artist: artist)
+                .navigationDestination(for: Spotify.ArtistMetadata.self) { artistMetadata in
+                    StaticArtistPage(artistMetadata: artistMetadata)
                 }
-                .navigationDestination(for: Spotify.Album.self) { album in
+                .navigationDestination(for: Spotify.AlbumMetadata.self) { albumMetadata in
                     StaticAlbumPage(
                         navigationPath: $navigationPath,
-                        album: album,
-                        name: album.name,
-                        coverImageURLString: album.images?.first?.url
+                        albumMetadata: albumMetadata,
+                        name: albumMetadata.name,
+                        coverImageURLString: albumMetadata.images?.first?.url
                     )
                 }
-                .navigationDestination(for: Spotify.Playlist.self) { playlist in
+                .navigationDestination(for: Spotify.PlaylistMetadata.self) { playlistMetadata in
                     StaticPlaylistPage(
                         navigationPath: $navigationPath,
-                        playlist: playlist,
-                        name: playlist.name,
-                        description: playlist.descriptionTextFromHTML,
-                        coverImageURLString: playlist.images?.first?.url
+                        playlistMetadata: playlistMetadata,
+                        name: playlistMetadata.name,
+                        description: playlistMetadata.descriptionTextFromHTML,
+                        coverImageURLString: playlistMetadata.images?.first?.url
                     )
                 }
                 .navigationDestination(for: Spotify.OtherUser.self) { user in
@@ -130,10 +130,10 @@ struct SearchTabRoot: View {
                 } catch {
                     print("[Musubi::SearchView] search spotify error")
                     print(error.localizedDescription)
-                    self.searchResults = Spotify.SearchResults.blank()
+                    self.searchResults = Spotify.SearchResults.blank
                 }
             } else {
-                self.searchResults = Spotify.SearchResults.blank()
+                self.searchResults = Spotify.SearchResults.blank
             }
         }
     }

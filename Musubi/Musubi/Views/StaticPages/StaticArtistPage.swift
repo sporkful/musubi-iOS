@@ -3,10 +3,10 @@
 import SwiftUI
 
 struct StaticArtistPage: View {
-    let artist: Spotify.Artist
+    let artistMetadata: Spotify.ArtistMetadata
     
     var body: some View {
-        Text("Artist \(artist.name)")
+        Text("Artist \(artistMetadata.name)")
     }
 }
 

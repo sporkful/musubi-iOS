@@ -35,8 +35,8 @@ struct ListCell: View {
                     ""
                 }
                 return audioTrack.artists.map { $0.name }.joined(separator: ", ") + albumString
-            case is Spotify.Album:
-                let album = item as! Spotify.Album
+            case is Spotify.AlbumMetadata:
+                let album = item as! Spotify.AlbumMetadata
                 return album.artists.map { $0.name }.joined(separator: ", ")
             default:
                 return ""

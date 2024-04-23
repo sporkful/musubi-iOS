@@ -20,7 +20,7 @@ struct LocalClonePage: View {
             coverImageURLString: $repositoryReference.externalMetadata.coverImageURLString,
             audioTrackList: $repositoryClone.stagedAudioTrackList,
             associatedPeople: .users([]),
-            date: "",
+            miscCaption: nil,  // TODO: last modified?
             toolbarBuilder: {
                 HStack {
                     Menu {
