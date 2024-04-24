@@ -5,25 +5,21 @@ import SwiftUI
 struct ListCell: View {
     private let title: String
     private let caption: String
-    private let imageURL: URL?
+    private let thumbnailURL: URL?
+    private let showThumbnail: Bool
     
-    init(title: String, caption: String, imageURL: URL?) {
-        self.title = title
-        self.caption = caption
-        self.imageURL = imageURL
-    }
-    
-    init(repositoryReference: Musubi.RepositoryReference) {
+    init(repositoryReference: Musubi.RepositoryReference, showThumbnail: Bool = true) {
         self.title = repositoryReference.externalMetadata.name
         self.caption = repositoryReference.externalMetadata.description
         if let coverImageURLString = repositoryReference.externalMetadata.coverImageURLString {
-            self.imageURL = URL(string: coverImageURLString)
+            self.thumbnailURL = URL(string: coverImageURLString)
         } else {
-            self.imageURL = nil
+            self.thumbnailURL = nil
         }
+        self.showThumbnail = showThumbnail
     }
     
-    init(item: SpotifyModelCardable) {
+    init(item: SpotifyModelCardable, showThumbnail: Bool = true) {
         self.title = item.name
         self.caption = {
             switch item.self {
@@ -43,21 +39,35 @@ struct ListCell: View {
             }
         }()
         
-        if let image = item.images?.first {
-            self.imageURL = URL(string: image.url)
+        if let coverImageURLString = item.images?.first?.url {
+            self.thumbnailURL = URL(string: coverImageURLString)
         } else {
-            self.imageURL = nil
+            self.thumbnailURL = nil
         }
+        self.showThumbnail = showThumbnail
     }
     
     var body: some View {
         HStack {
-            if let imageURL = imageURL {
-                RetryableAsyncImage(
-                    url: imageURL,
-                    width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
-                    height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
-                )
+            if showThumbnail {
+                if let thumbnailURL = thumbnailURL {
+                    RetryableAsyncImage(
+                        url: thumbnailURL,
+                        width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
+                        height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
+                    )
+                } else {
+                    ZStack {
+                        Rectangle()
+                            .fill(.gray)
+                        Image(systemName: "music.note")
+                    }
+                    .frame(
+                        width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
+                        height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
+                    )
+                    .opacity(0.5)
+                }
             }
             VStack(alignment: .leading) {
                 Text(title)

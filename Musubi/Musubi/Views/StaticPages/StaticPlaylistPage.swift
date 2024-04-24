@@ -30,6 +30,7 @@ struct StaticPlaylistPage: View {
             description: $description,
             coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
+            showAudioTrackThumbnails: true,
             associatedPeople: .users([playlistMetadata.owner]),
             miscCaption: nil,
             toolbarBuilder: {

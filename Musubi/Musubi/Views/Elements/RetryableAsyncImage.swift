@@ -19,6 +19,7 @@ struct RetryableAsyncImage: View {
                     .clipped()
             } else {
                 ProgressView()
+                    .frame(width: width, height: height)
             }
         }
         .task { await loadImage() }

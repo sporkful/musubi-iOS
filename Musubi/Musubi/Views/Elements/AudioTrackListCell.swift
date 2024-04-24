@@ -5,17 +5,18 @@ import SwiftUI
 // TODO: playback ability
 
 struct AudioTrackListCell: View {
-    let audioTrack: Spotify.AudioTrack
-    
     @Binding var navigationPath: NavigationPath
     
-    @State var showAlertUnsupportedAction = false
+    let audioTrack: Spotify.AudioTrack
+    let showThumbnail: Bool
+    
+    @State private var showAlertUnsupportedAction = false
     
     private let MENU_SYMBOL_SIZE = Musubi.UI.MENU_SYMBOL_SIZE
     
     var body: some View {
         HStack {
-            ListCell(item: audioTrack)
+            ListCell(item: audioTrack, showThumbnail: showThumbnail)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     // TODO: implement playback

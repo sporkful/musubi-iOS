@@ -24,6 +24,7 @@ struct StaticAlbumPage: View {
             description: $description,
             coverImageURLString: $coverImageURLString,
             audioTrackList: $audioTrackList,
+            showAudioTrackThumbnails: false,
             associatedPeople: .artists(albumMetadata.artists),
             miscCaption: "Release Date: \(albumMetadata.release_date)",
             toolbarBuilder: {

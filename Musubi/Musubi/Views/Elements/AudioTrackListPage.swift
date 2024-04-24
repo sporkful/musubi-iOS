@@ -20,6 +20,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     @Binding var coverImageURLString: String?
     
     @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
+    let showAudioTrackThumbnails: Bool
     
     enum AssociatedPeople {
         case artists([Spotify.ArtistMetadata])
@@ -157,7 +158,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             .hidden()
                     }
                     Text(name)
-                        .font(.title)
+                        .font(.title.leading(.tight))
                         .fontWeight(.bold)
                     if !description.isEmpty {
                         Text(description)
@@ -203,7 +204,11 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                     toolbarBuilder()
                     ForEach($audioTrackList) { $item in
                         Divider()
-                        AudioTrackListCell(audioTrack: item.audioTrack, navigationPath: $navigationPath)
+                        AudioTrackListCell(
+                            navigationPath: $navigationPath,
+                            audioTrack: item.audioTrack,
+                            showThumbnail: showAudioTrackThumbnails
+                        )
                     }
                 }
                 .padding([.horizontal, .bottom])
@@ -213,7 +218,6 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             scrollPosition = -proxy
                                 .frame(in: .named("\(viewID.uuidString)::ScrollView"))
                                 .origin.y
-//                            print("scroll position \(scrollPosition)")
                         }
                         return Color.clear
                     }
@@ -271,10 +275,9 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
         Task { @MainActor in
             if let (data, response) = try? await URLSession.shared.data(from: coverImageURL),
                let httpResponse = response as? HTTPURLResponse,
-               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode),
-               let image = UIImage(data: data)
+               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode)
             {
-                coverImage = image
+                coverImage = UIImage(data: data)
             }
         }
     }

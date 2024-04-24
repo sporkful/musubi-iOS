@@ -19,6 +19,7 @@ struct LocalClonePage: View {
             description: $repositoryReference.externalMetadata.description,
             coverImageURLString: $repositoryReference.externalMetadata.coverImageURLString,
             audioTrackList: $repositoryClone.stagedAudioTrackList,
+            showAudioTrackThumbnails: true,
             associatedPeople: .users([]),
             miscCaption: nil,  // TODO: last modified?
             toolbarBuilder: {

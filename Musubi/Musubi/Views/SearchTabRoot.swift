@@ -40,7 +40,11 @@ struct SearchTabRoot: View {
                     if showAudioTrackResults {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
-                                AudioTrackListCell(audioTrack: audioTrack, navigationPath: $navigationPath)
+                                AudioTrackListCell(
+                                    navigationPath: $navigationPath,
+                                    audioTrack: audioTrack,
+                                    showThumbnail: true
+                                )
                             }
                         }
                     }
