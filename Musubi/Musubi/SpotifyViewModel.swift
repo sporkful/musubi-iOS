@@ -103,8 +103,8 @@ extension Spotify {
         let name: String
         let release_date: String
         let artists: [ArtistMetadata]
-        let copyrights: Copyrights
-        let label: String
+//        let copyrights: Copyrights
+//        let label: String
         
         struct Copyrights: Codable, Hashable {
             let text: String
@@ -122,7 +122,7 @@ extension Spotify {
     struct PlaylistMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
         private let description: String
-        let followers: Followers
+//        let followers: Followers
         let images: [Spotify.Image]?
         let name: String
         let owner: OtherUser
@@ -156,6 +156,7 @@ extension Array where Element == Spotify.AudioTrack {
     }
 }
 
+// TODO: metadata returned from search query is stripped, so just pull bare display info then expand when user clicks
 extension Spotify {
     struct SearchResults: SpotifyViewModel {
         var albums: Albums
