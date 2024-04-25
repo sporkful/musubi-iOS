@@ -98,12 +98,18 @@ extension Spotify {
     
     struct AlbumMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
-        let name: String
         let album_type: String
         let images: [Spotify.Image]?
+        let name: String
         let release_date: String
-        let uri: String
         let artists: [ArtistMetadata]
+        let copyrights: Copyrights
+        let label: String
+        
+        struct Copyrights: Codable, Hashable {
+            let text: String
+            let type: String
+        }
     }
     
     struct AlbumAudioTrackPage: SpotifyListPage {
@@ -116,15 +122,18 @@ extension Spotify {
     struct PlaylistMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
         let id: Spotify.ID
         private let description: String
-        let external_urls: [String: String]
+        let followers: Followers
         let images: [Spotify.Image]?
         let name: String
         let owner: OtherUser
         let snapshot_id: String
-        let uri: String
         
         var descriptionTextFromHTML: String {
             description.decodingHTMLEntities()
+        }
+        
+        struct Followers: Codable, Hashable {
+            let total: Int
         }
     }
     

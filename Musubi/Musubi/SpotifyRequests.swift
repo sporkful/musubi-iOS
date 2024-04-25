@@ -139,11 +139,9 @@ extension SpotifyRequests.Read {
     static func albumMetadata(albumID: Spotify.ID) async throws -> Spotify.AlbumMetadata {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
-            path: "/albums/" + albumID,
-            queryItems: [URLQueryItem(name: "fields", value: "!tracks")]
+            path: "/albums/" + albumID
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        print("album metadata retrieved: \(String(data: data, encoding: .utf8))") // TODO: delete this
         return try JSONDecoder().decode(Spotify.AlbumMetadata.self, from: data)
     }
     
@@ -151,10 +149,9 @@ extension SpotifyRequests.Read {
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID,
-            queryItems: [URLQueryItem(name: "fields", value: "!tracks")]
+            queryItems: [URLQueryItem(name: "fields", value: "id,description,followers,images,name,owner,snapshot_id")]
         )
         let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        print("playlist metadata retrieved: \(String(data: data, encoding: .utf8))") // TODO: delete this
         return try JSONDecoder().decode(Spotify.PlaylistMetadata.self, from: data)
     }
     
