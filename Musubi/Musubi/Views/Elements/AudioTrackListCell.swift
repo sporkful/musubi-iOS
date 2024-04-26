@@ -5,6 +5,7 @@ import SwiftUI
 // TODO: playback ability
 
 struct AudioTrackListCell: View {
+    let isNavigable: Bool
     @Binding var navigationPath: NavigationPath
     
     let audioTrack: Spotify.AudioTrack
@@ -22,6 +23,7 @@ struct AudioTrackListCell: View {
                     // TODO: implement playback
                     print("playing \(audioTrack.name)")
                 }
+            if isNavigable {
             Menu {
                 Button {
                     // TODO: impl
@@ -93,6 +95,7 @@ struct AudioTrackListCell: View {
                     .font(.system(size: MENU_SYMBOL_SIZE))
                     .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                     .contentShape(Rectangle())
+            }
             }
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})

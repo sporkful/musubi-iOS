@@ -46,4 +46,18 @@ extension MusubiCloudRequests {
         request.timeoutInterval = 30
         return request
     }
+    
+    // TODO: is there a better way to do this (enforce date en/decoding as iso8601)
+    // TODO: wrap this in a single function that encodes the body, creates the request, sends it, and returns the decoded response
+    static func jsonEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+    
+    static func jsonDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
 }

@@ -23,7 +23,7 @@ struct LocalClonesTabRoot: View {
             }
             .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
                 // TODO: better error handling?
-                if let repositoryClone = try? Musubi.RepositoryClone(handle: repositoryHandle) {
+                if let repositoryClone = currentUser.openLocalClone(repositoryHandle: repositoryHandle) {
                     LocalClonePage(
                         navigationPath: $navigationPath,
                         repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!,

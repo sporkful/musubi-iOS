@@ -43,6 +43,7 @@
 		7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */; };
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
 		79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8D5B82B6C2FC4006A8359 /* String+.swift */; };
+		79CC004C2B6ED363007E56A2 /* LocalCloneEditorPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */; };
 		79D4DF7F2B6CC1B2009AB97A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */; };
 		79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */; };
 /* End PBXBuildFile section */
@@ -104,6 +105,7 @@
 		7978F85D2B512543005D3880 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		7978F85F2B51254C005D3880 /* StaticArtistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticArtistPage.swift; sourceTree = "<group>"; };
 		79C8D5B82B6C2FC4006A8359 /* String+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+.swift"; sourceTree = "<group>"; };
+		79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCloneEditorPage.swift; sourceTree = "<group>"; };
 		79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -244,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */,
+				79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */,
 			);
 			path = RepositoryPages;
 			sourceTree = "<group>";
@@ -402,6 +405,7 @@
 				7978F85E2B512543005D3880 /* StaticPlaylistPage.swift in Sources */,
 				7947338C2B4B7955001C3FEB /* SpotifyRequests.swift in Sources */,
 				7961DA132B55ADE200650775 /* UIImage+.swift in Sources */,
+				79CC004C2B6ED363007E56A2 /* LocalCloneEditorPage.swift in Sources */,
 				794733982B4CE1AE001C3FEB /* AccountTabRoot.swift in Sources */,
 				7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */,
 				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,

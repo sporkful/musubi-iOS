@@ -2,13 +2,6 @@
 
 import Foundation
 
-// Storage hierarchy:
-//      appDir/userID/repoID/
-//          objects/
-//          (refs/remotes/)origin
-//          HEAD
-//          index
-
 extension Musubi {
     // Note Hashable conformance here is only for SwiftUI List materialization.
     struct RepositoryHandle: Codable, Hashable {
@@ -20,12 +13,6 @@ extension Musubi {
         var name: String
         var description: String
         var coverImageURLString: String?
-        
-        init(name: String, description: String, coverImageURLString: String? = nil) {
-            self.name = name
-            self.description = description
-            self.coverImageURLString = coverImageURLString
-        }
         
         static func fromSpotify(handle: RepositoryHandle) async throws -> Self {
             let metadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: handle.playlistID)
@@ -43,9 +30,11 @@ extension Musubi {
     }
 
     @Observable
+    @MainActor
     class RepositoryClone {
         let handle: RepositoryHandle
         
+        // TODO: make private(set)?
         var stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
         
         var headCommitID: String
@@ -58,6 +47,7 @@ extension Musubi {
         // TODO: better way to do this?
         var stagingAreaHydrationError = false // use to trigger alerts on ClonePage view
         
+        // TODO: enforce that only MusubiUser can call this constructor
         init(handle: RepositoryHandle) throws {
             self.handle = handle
             
@@ -102,6 +92,23 @@ extension Musubi {
                     stagingAreaHydrationError = true
                 }
             }
+        }
+        
+        // TODO: synchronization to self.stagedAudioTrackList?
+        // TODO: integrate Musubi.Storage.USER_STAGED_AUDIO_TRACK_INDEX_FILE
+        func stagedAudioTrackListRemove(atOffsets: IndexSet) {
+            self.stagedAudioTrackList.remove(atOffsets: atOffsets)
+            try! saveStagingArea() // intentional fail-fast
+        }
+        
+        func stagedAudioTracklistMove(fromOffsets: IndexSet, toOffset: Int) {
+            self.stagedAudioTrackList.move(fromOffsets: fromOffsets, toOffset: toOffset)
+            try! saveStagingArea() // intentional fail-fast
+        }
+        
+        func stagedAudioTrackListAppend(audioTrack: Spotify.AudioTrack) {
+            self.stagedAudioTrackList.append(audioTrack: audioTrack)
+            try! saveStagingArea() // intentional fail-fast
         }
 
         func saveStagingArea() throws {

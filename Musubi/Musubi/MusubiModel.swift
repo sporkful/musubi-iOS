@@ -39,21 +39,6 @@ extension Musubi.Model.Blob {
     }
 }
 
-// TODO: is there a better way to do this (enforce date en/decoding as iso8601)
-extension Musubi {
-    static func jsonEncoder() -> JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        return encoder
-    }
-    
-    static func jsonDecoder() -> JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }
-}
-
 extension Musubi.Model.Commit: CustomStringConvertible {
     var description: String {
         """

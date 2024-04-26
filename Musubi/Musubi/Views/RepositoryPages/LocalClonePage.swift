@@ -9,8 +9,10 @@ struct LocalClonePage: View {
     
     @State var repositoryClone: Musubi.RepositoryClone
     
+    @State private var showSheetEditor = false
+    
     var body: some View {
-        @Bindable var repositoryClone = repositoryClone // TODO: check this
+        @Bindable var repositoryClone = repositoryClone
         
         AudioTrackListPage(
             navigationPath: $navigationPath,
@@ -24,6 +26,11 @@ struct LocalClonePage: View {
             miscCaption: nil,  // TODO: last modified?
             toolbarBuilder: {
                 HStack {
+                    Button {
+                        showSheetEditor = true
+                    } label: {
+                        Image(systemName: "pencil")
+                    }
                     Menu {
                         Button {
                             // TODO: impl
@@ -56,6 +63,12 @@ struct LocalClonePage: View {
                 }
             }
         )
+        .sheet(isPresented: $showSheetEditor) {
+            LocalCloneEditorPage(
+                repositoryReference: $repositoryReference,
+                repositoryClone: repositoryClone
+            )
+        }
         .alert(
             "Failed to open local clone: \(repositoryReference.externalMetadata.name)",
             isPresented: $repositoryClone.stagingAreaHydrationError,

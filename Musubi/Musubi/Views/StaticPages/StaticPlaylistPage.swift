@@ -44,12 +44,12 @@ struct StaticPlaylistPage: View {
                             } label: {
                                 Image(systemName: "square.and.arrow.down.on.square")
                             }
-                        } else {
-                            Button {
-                                // TODO: forkOrClone
-                            } label: {
-                                Image(systemName: "arrow.triangle.branch")
-                            }
+//                        } else {
+//                            Button {
+//                                // TODO: forkOrClone
+//                            } label: {
+//                                Image(systemName: "arrow.triangle.branch")
+//                            }
                         }
                     }
                     Menu {

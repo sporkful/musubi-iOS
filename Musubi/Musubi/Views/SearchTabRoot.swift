@@ -41,6 +41,7 @@ struct SearchTabRoot: View {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
                                 AudioTrackListCell(
+                                    isNavigable: true,
                                     navigationPath: $navigationPath,
                                     audioTrack: audioTrack,
                                     showThumbnail: true

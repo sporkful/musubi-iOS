@@ -121,16 +121,67 @@ extension Musubi.Storage.LocalFS {
         URL.libraryDirectory.appending(path: "MusubiLocal", directoryHint: .isDirectory)
     }
     
-    static var GLOBAL_OBJECTS_DIR: URL {
-        BASE_DIR.appending(path: "GlobalObjects", directoryHint: .isDirectory)
+    // Essentially a filesystem-backed cache for Musubi's CAS3, which stores all commits and blobs
+    // across all users.
+    // **MARK: Note an object's local cache representation is not guaranteed to match the representation on CAS3.**
+    static func GLOBAL_OBJECT_FILE(objectID: String) throws -> URL {
+        // Since Musubi object IDs are SHA-256 hex digests (16 possibilities for each character, well-distributed),
+        // this local cache hierarchically "buckets" objects by pairs of characters in the object's ID.
+        // Using pairs of characters ensures that all non-leaf directories have size <= 16^2=256.
+        // Using a hierarchy of buckets lets us get away with not doing compaction (like Git) for now...
+        // TODO: implement compaction.
+        
+        // TODO: better way to do this?
+        let idIndex2 = objectID.index(objectID.startIndex, offsetBy: 2)
+        let idIndex4 = objectID.index(objectID.startIndex, offsetBy: 4)
+        let firstBucket = objectID[objectID.startIndex..<idIndex2]
+        let secondBucket = objectID[idIndex2..<idIndex4]
+        
+        let dirURL = BASE_DIR
+            .appending(path: "MusubiGlobalObjects", directoryHint: .isDirectory)
+            .appending(path: firstBucket, directoryHint: .isDirectory)
+            .appending(path: secondBucket, directoryHint: .isDirectory)
+        if !doesDirExist(at: dirURL) {
+            try createNewDir(at: dirURL, withIntermediateDirectories: true)
+        }
+        return dirURL.appending(path: objectID, directoryHint: .notDirectory)
     }
     
+    // TODO: rename this and its derivatives to "LOCAL_CLONES" for clarity
     static func USER_CLONES_DIR(userID: Spotify.ID) -> URL {
         BASE_DIR
             .appending(path: "Users", directoryHint: .isDirectory)
             .appending(path: userID, directoryHint: .isDirectory)
             .appending(path: "Clones", directoryHint: .isDirectory)
     }
+    
+    /*
+     // TODO: finish integrating this later. will need to check:
+     //     - successful new clones in MusubiUser
+     //     - modifications to stagedAudioTrackList in MusubiRepository
+    // Essentially an embedded key-value store mapping (userID, audioTrackID) to
+    // Multiset { repositoryHandle of local clone whose stage includes audioTrackID (multiplicity=numOccurrences) }
+    static func USER_STAGED_AUDIO_TRACK_INDEX_FILE(userID: Spotify.ID, audioTrackID: Spotify.ID) throws -> URL {
+        // Similar implementation as MUSUBI_GLOBAL_OBJECT_FILE above, but bucketing by single characters
+        // instead of pairs, since Spotify audio track IDs are not constrained to hex characters.
+        // **MARK: This assumes that the local iOS filesystem can handle Spotify IDs, including case-sensitivity.**
+        
+        // TODO: better way to do this?
+        let idIndex1 = audioTrackID.index(after: audioTrackID.startIndex)
+        let idIndex2 = audioTrackID.index(after: idIndex1)
+        let firstBucket = audioTrackID[audioTrackID.startIndex..<idIndex1]
+        let secondBucket = audioTrackID[idIndex1..<idIndex2]
+        
+        let dirURL = USER_CLONES_DIR(userID: userID)
+            .appending(path: "AudioTrackIndex", directoryHint: .isDirectory)
+            .appending(path: firstBucket, directoryHint: .isDirectory)
+            .appending(path: secondBucket, directoryHint: .isDirectory)
+        if !doesDirExist(at: dirURL) {
+            try createNewDir(at: dirURL, withIntermediateDirectories: true)
+        }
+        return dirURL.appending(path: audioTrackID, directoryHint: .notDirectory)
+    }
+     */
     
     static func USER_CLONES_INDEX_FILE(userID: Spotify.ID) -> URL {
         USER_CLONES_DIR(userID: userID)
@@ -175,23 +226,5 @@ extension Musubi.Storage.LocalFS {
     static func doesFileExist(at fileURL: URL) -> Bool {
         return (try? fileURL.checkResourceIsReachable()) ?? false
             && (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true
-    }
-}
-
-extension Musubi.Storage.LocalFS {
-    static func saveGlobalObject<T: MusubiGlobalObject>(object: T, objectID: String) throws {
-        let dirURL = GLOBAL_OBJECTS_DIR.appending(path: objectID.prefix(2), directoryHint: .isDirectory)
-        if !doesDirExist(at: dirURL) {
-            try createNewDir(at: dirURL, withIntermediateDirectories: true)
-        }
-        let fileURL = dirURL.appending(path: objectID, directoryHint: .notDirectory)
-        try JSONEncoder().encode(object).write(to: fileURL, options: .atomic)
-    }
-    
-    static func loadGlobalObject<T: MusubiGlobalObject>(objectID: String) throws -> T {
-        let fileURL = GLOBAL_OBJECTS_DIR
-            .appending(path: objectID.prefix(2), directoryHint: .isDirectory)
-            .appending(path: objectID, directoryHint: .notDirectory)
-        return try JSONDecoder().decode(T.self, from: Data(contentsOf: fileURL))
     }
 }

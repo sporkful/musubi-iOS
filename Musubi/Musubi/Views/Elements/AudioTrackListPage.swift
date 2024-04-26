@@ -205,6 +205,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                     ForEach($audioTrackList) { $item in
                         Divider()
                         AudioTrackListCell(
+                            isNavigable: true,
                             navigationPath: $navigationPath,
                             audioTrack: item.audioTrack,
                             showThumbnail: showAudioTrackThumbnails

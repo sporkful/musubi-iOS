@@ -7,15 +7,17 @@ extension Musubi {
     @MainActor
     class User: Identifiable {
         let spotifyInfo: Spotify.LoggedInUser
+        nonisolated var id: Spotify.ID { spotifyInfo.id }
         
         typealias LocalClonesIndex = [Musubi.RepositoryReference]
         var localClonesIndex: LocalClonesIndex
         
-        nonisolated var id: Spotify.ID { spotifyInfo.id }
+        var openedLocalClone: Musubi.RepositoryClone?
         
         init?(spotifyInfo: Spotify.LoggedInUser) {
             self.spotifyInfo = spotifyInfo
             self.localClonesIndex = []
+            self.openedLocalClone = nil
             
             do {
                 let userClonesDir = Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id)
@@ -83,6 +85,13 @@ extension Musubi {
             try JSONEncoder().encode(await self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
         }
         
+        func openLocalClone(repositoryHandle: RepositoryHandle) -> RepositoryClone? {
+            if self.openedLocalClone?.handle != repositoryHandle {
+                self.openedLocalClone = try? Musubi.RepositoryClone(handle: repositoryHandle)
+            }
+            return self.openedLocalClone
+        }
+        
         // TODO: clean up reference-spaghetti between User and UserManager?
         func initOrClone(repositoryHandle: Musubi.RepositoryHandle) async throws {
             if localClonesIndex.contains(where: { $0.handle == repositoryHandle }) {
@@ -95,13 +104,13 @@ extension Musubi {
             let requestBody = InitOrClone_RequestBody(playlistID: repositoryHandle.playlistID)
             var request = try MusubiCloudRequests.createRequest(
                 command: .INIT_OR_CLONE,
-                bodyData: try Musubi.jsonEncoder().encode(requestBody)
+                bodyData: try MusubiCloudRequests.jsonEncoder().encode(requestBody)
             )
             let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
             
             try saveClone(
                 repositoryHandle: repositoryHandle,
-                response: try Musubi.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
+                response: try MusubiCloudRequests.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
             )
             
             self.localClonesIndex.append(
@@ -119,6 +128,7 @@ extension Musubi {
 //
 //        }
         
+        // TODO: integrate Musubi.Storage.USER_STAGED_AUDIO_TRACK_INDEX_FILE
         private func saveClone(repositoryHandle: Musubi.RepositoryHandle, response: Clone_ResponseBody) throws {
             typealias LocalFS = Musubi.Storage.LocalFS
             
@@ -135,10 +145,16 @@ extension Musubi {
             try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             
             for (blobID, blob) in response.blobs {
-                try LocalFS.saveGlobalObject(object: blob, objectID: blobID)
+                try JSONEncoder().encode(blob).write(
+                    to: LocalFS.GLOBAL_OBJECT_FILE(objectID: blobID),
+                    options: .atomic
+                )
             }
             for (commitID, commit) in response.commits {
-                try LocalFS.saveGlobalObject(object: commit, objectID: commitID)
+                try JSONEncoder().encode(commit).write(
+                    to: LocalFS.GLOBAL_OBJECT_FILE(objectID: commitID),
+                    options: .atomic
+                )
             }
             
             try Data(response.headCommitID.utf8).write(
