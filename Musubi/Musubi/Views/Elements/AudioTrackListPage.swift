@@ -31,7 +31,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     
     let toolbarBuilder: () -> CustomToolbar
     
-    
+    // TODO: make this binding to share the same image across views (e.g. with AudioTrackCell or LocalCloneEditorSheet)
     @State private var coverImage: UIImage?
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue

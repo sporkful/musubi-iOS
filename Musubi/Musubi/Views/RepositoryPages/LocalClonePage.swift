@@ -65,9 +65,11 @@ struct LocalClonePage: View {
         )
         .sheet(isPresented: $showSheetEditor) {
             LocalCloneEditorPage(
+                showSheet: $showSheetEditor,
                 repositoryReference: $repositoryReference,
                 repositoryClone: repositoryClone
             )
+            .interactiveDismissDisabled(true)
         }
         .alert(
             "Failed to open local clone: \(repositoryReference.externalMetadata.name)",
