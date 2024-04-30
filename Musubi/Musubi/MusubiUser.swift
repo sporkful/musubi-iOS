@@ -14,6 +14,8 @@ extension Musubi {
         
         var openedLocalClone: Musubi.RepositoryClone?
         
+        private var refreshExternalMetadataTimer: Timer?
+        
         init?(spotifyInfo: Spotify.LoggedInUser) {
             self.spotifyInfo = spotifyInfo
             self.localClonesIndex = []
@@ -28,9 +30,6 @@ extension Musubi {
                         LocalClonesIndex.self,
                         from: Data(contentsOf: userClonesIndexFile)
                     )
-                    Task {
-                        await refreshClonesExternalMetadata()
-                    }
                 } else {
                     try Musubi.Storage.LocalFS.createNewDir(
                         at: userClonesDir,
@@ -43,11 +42,35 @@ extension Musubi {
                 return nil
             }
             
+            Task {
+                await startPeriodicRefreshExternalMetadata()
+            }
+            
             // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
         }
         
-        // TODO: better error handling / retries
-        func refreshClonesExternalMetadata() async {
+        private func startPeriodicRefreshExternalMetadata() async {
+            self.refreshExternalMetadataTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
+                [weak self] (_) in
+                Task { [weak self] in
+                    await self?.refreshClonesExternalMetadata()
+                }
+            }
+            self.refreshExternalMetadataTimer?.fire()
+        }
+        
+        func pausePeriodicRefreshExternalMetadata(forTimeInSeconds: TimeInterval) async {
+            self.refreshExternalMetadataTimer?.invalidate()
+            self.refreshExternalMetadataTimer = nil
+            
+            Task {
+                try await Task.sleep(nanoseconds: UInt64(forTimeInSeconds * 1_000_000_000))
+                await startPeriodicRefreshExternalMetadata()
+            }
+        }
+        
+        // TODO: better error handling / retries?
+        private func refreshClonesExternalMetadata() async {
             // Note that indices into `self.localClonesIndex` are not guaranteed to be stable for
             // the full execution of the for-loop due to the `await`ing of the Spotify request on
             // every iteration. Since this function is meant to be called periodically in the
@@ -80,11 +103,12 @@ extension Musubi {
             }
         }
         
-        nonisolated func saveClonesIndex() async throws {
+        private nonisolated func saveClonesIndex() async throws {
             let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
             try JSONEncoder().encode(await self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
         }
         
+        // TODO: do we need to make this async to run on MainActor only?
         func openLocalClone(repositoryHandle: RepositoryHandle) -> RepositoryClone? {
             if self.openedLocalClone?.handle != repositoryHandle {
                 self.openedLocalClone = try? Musubi.RepositoryClone(handle: repositoryHandle)

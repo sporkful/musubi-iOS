@@ -8,8 +8,6 @@ struct LocalClonesTabRoot: View {
     
     @State private var navigationPath = NavigationPath()
     
-    @State private var periodicBackgroundTimer: Timer?
-    
     var body: some View {
         @Bindable var currentUser = currentUser
         NavigationStack(path: $navigationPath) {
@@ -49,15 +47,6 @@ struct LocalClonesTabRoot: View {
                 }
             }
             .navigationTitle("My Local Repositories")
-            .task {
-                // TODO: uncomment this when rate limit timeout is over
-                periodicBackgroundTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
-                    [weak currentUser] (_) in
-                    Task { [weak currentUser] in
-                        await currentUser?.refreshClonesExternalMetadata()
-                    }
-                }
-            }
         }
     }
 }
