@@ -116,6 +116,56 @@ extension Musubi {
             return self.openedLocalClone
         }
         
+        // TODO: reason more carefully about concurrency correctness, especially wrt openedLocalClone
+        // For now, just assumes the caller disables all UI until function finishes executing.
+        func addToLocalClones(newAudioTrackIDs: [Spotify.ID], destinationHandles: Set<RepositoryHandle>) async throws {
+            // TODO: check that repositoryHandles is a subset of those in self.localClonesIndex?
+            
+            let blobifiedNewAudioTrackIDs = newAudioTrackIDs.joined(separator: ",")
+            
+            var newAudioTracks: [Spotify.AudioTrack] = []
+            if let openedLocalClone = self.openedLocalClone,
+               destinationHandles.contains(openedLocalClone.handle)
+            {
+                // TODO: deduplicate logic with MusubiRepository constructor
+                var numCommasSeen = 0
+                var currentRangeStartIndex = blobifiedNewAudioTrackIDs.startIndex
+                for index in blobifiedNewAudioTrackIDs.indices {
+                    if blobifiedNewAudioTrackIDs[index] == "," {
+                        numCommasSeen += 1
+                        if numCommasSeen % 50 == 0 {
+                            newAudioTracks.append(
+                                contentsOf: try await SpotifyRequests.Read.audioTracks(
+                                    audioTrackIDs: String(blobifiedNewAudioTrackIDs[currentRangeStartIndex..<index])
+                                )
+                            )
+                            currentRangeStartIndex = blobifiedNewAudioTrackIDs.index(after: index)
+                        }
+                    }
+                }
+                if !(blobifiedNewAudioTrackIDs.last == "," && numCommasSeen % 50 == 0) {
+                    newAudioTracks.append(
+                        contentsOf: try await SpotifyRequests.Read.audioTracks(
+                            audioTrackIDs: String(blobifiedNewAudioTrackIDs[currentRangeStartIndex...])
+                        )
+                    )
+                }
+                openedLocalClone.stagedAudioTrackList.append(audioTrackList: newAudioTracks)
+            }
+            
+            for handle in destinationHandles {
+                if handle != self.openedLocalClone?.handle {
+                    let stagingAreaFile = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: handle)
+                    var blob = try String(contentsOf: stagingAreaFile, encoding: .utf8)
+                    if !blob.isEmpty {
+                        blob.append(",")
+                    }
+                    blob.append(blobifiedNewAudioTrackIDs)
+                    try Data(blob.utf8).write(to: stagingAreaFile, options: .atomic)
+                }
+            }
+        }
+        
         // TODO: clean up reference-spaghetti between User and UserManager?
         func initOrClone(repositoryHandle: Musubi.RepositoryHandle) async throws {
             if localClonesIndex.contains(where: { $0.handle == repositoryHandle }) {
@@ -169,7 +219,7 @@ extension Musubi {
             try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             
             for (blobID, blob) in response.blobs {
-                try JSONEncoder().encode(blob).write(
+                try Data(blob.utf8).write(
                     to: LocalFS.GLOBAL_OBJECT_FILE(objectID: blobID),
                     options: .atomic
                 )

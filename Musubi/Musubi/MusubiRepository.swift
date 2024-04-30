@@ -106,8 +106,10 @@ extension Musubi {
             try! saveStagingArea() // intentional fail-fast
         }
         
-        func stagedAudioTrackListAppend(audioTrack: Spotify.AudioTrack) {
-            self.stagedAudioTrackList.append(audioTrack: audioTrack)
+        func stagedAudioTrackListAppend(audioTracks: [Spotify.AudioTrack]) {
+            for audioTrack in audioTracks {
+                self.stagedAudioTrackList.append(audioTrack: audioTrack)
+            }
             try! saveStagingArea() // intentional fail-fast
         }
 

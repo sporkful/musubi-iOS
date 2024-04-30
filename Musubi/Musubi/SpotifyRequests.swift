@@ -86,6 +86,7 @@ extension SpotifyRequests {
 extension SpotifyRequests.Read {
     private typealias HTTPMethod = SpotifyRequests.HTTPMethod
     
+    // TODO: transform into AsyncStream
     static func restOfList<T: SpotifyListPage>(firstPage: T) async throws -> [SpotifyViewModel] {
         var items: [SpotifyViewModel] = []
         var currentPage = firstPage
@@ -116,8 +117,12 @@ extension SpotifyRequests.Read {
         let tracks: [Spotify.AudioTrack]
     }
     
-    /// - Parameter audioTrackIDs: comma-separated with no spaces (TODO: better way to enforce this?)
+    // TODO: transform into AsyncStream to allow input without upper bound of 50
+    /// - Parameter audioTrackIDs: comma-separated with no spaces, max 50
     static func audioTracks(audioTrackIDs: String) async throws -> [Spotify.AudioTrack] {
+        if audioTrackIDs.isEmpty {
+            return []
+        }
         var request = try SpotifyRequests.createRequest(
             type: HTTPMethod.GET,
             path: "/tracks",
