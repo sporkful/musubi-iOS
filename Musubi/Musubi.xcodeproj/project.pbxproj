@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */; };
 		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
 		7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
@@ -66,6 +67,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToSelectableLocalClonesSheet.swift; sourceTree = "<group>"; };
 		7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloudRequests.swift; sourceTree = "<group>"; };
 		7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -247,6 +249,7 @@
 			children = (
 				7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */,
 				79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */,
+				79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */,
 			);
 			path = RepositoryPages;
 			sourceTree = "<group>";
@@ -419,6 +422,7 @@
 				7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				7947337C2B472754001C3FEB /* Error.swift in Sources */,
+				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,
 				7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */,

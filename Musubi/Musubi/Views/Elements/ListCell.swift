@@ -39,8 +39,8 @@ struct ListCell: View {
             }
         }()
         
-        if let coverImageURLString = item.images?.first?.url {
-            self.thumbnailURL = URL(string: coverImageURLString)
+        if let thumbnailURLString = item.images?.last?.url {
+            self.thumbnailURL = URL(string: thumbnailURLString)
         } else {
             self.thumbnailURL = nil
         }

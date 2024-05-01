@@ -62,12 +62,12 @@ extension Musubi {
             guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
                 // TODO: auto log out on error code 401?
                 // TODO: handle rate limiting gracefully / notify user
-                throw Spotify.RequestError.response(
-                    detail: """
-                            failed with status code \(httpResponse.statusCode) - retry after \
-                            \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
-                            """
-                )
+                let errorDescription = """
+                    failed with status code \(httpResponse.statusCode) - retry after \
+                    \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
+                    """
+                print(errorDescription)
+                throw Spotify.RequestError.response(detail: errorDescription)
             }
             
             return data

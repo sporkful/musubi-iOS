@@ -8,7 +8,6 @@ struct HomeView: View {
     var body: some View {
         TabView {
             LocalClonesTabRoot()
-                .environment(currentUser)
                 .tabItem { Label("My Local Repositories", systemImage: "books.vertical") }
             SearchTabRoot()
                 .tabItem { Label("Search Spotify", systemImage: "magnifyingglass") }
@@ -16,6 +15,7 @@ struct HomeView: View {
 //                .badge("!") // TODO: notifications
                 .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
         }
+        .environment(currentUser)
         // TODO: overlay with floating playback card
     }
 }

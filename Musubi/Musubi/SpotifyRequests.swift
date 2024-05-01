@@ -94,8 +94,6 @@ extension SpotifyRequests.Read {
         while let nextPageURLString = currentPage.next,
               let nextPageURL = URL(string: nextPageURLString)
         {
-            // TODO: remove this print
-            print("fetching page at " + nextPageURLString)
             var request = try SpotifyRequests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
             let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
             currentPage = try JSONDecoder().decode(T.self, from: data)

@@ -12,7 +12,7 @@ extension Musubi {
 extension Musubi.ViewModel {
     typealias AudioTrackList = [UIDableAudioTrack]
     
-    struct UIDableAudioTrack: Identifiable {
+    struct UIDableAudioTrack: Identifiable, Hashable {
         let audioTrack: Spotify.AudioTrack
         
         // Unique identifier to allow [UIDableAudioTrack] to be presentable as an editable SwiftUI

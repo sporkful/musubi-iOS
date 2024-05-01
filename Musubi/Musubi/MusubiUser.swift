@@ -116,42 +116,22 @@ extension Musubi {
             return self.openedLocalClone
         }
         
-        // TODO: reason more carefully about concurrency correctness, especially wrt openedLocalClone
-        // For now, just assumes the caller disables all UI until function finishes executing.
-        func addToLocalClones(newAudioTrackIDs: [Spotify.ID], destinationHandles: Set<RepositoryHandle>) async throws {
-            // TODO: check that repositoryHandles is a subset of those in self.localClonesIndex?
+        // TODO: check that repositoryHandles is a subset of those in self.localClonesIndex?
+        // TODO: better error handling (e.g. rollback for atomicity)
+        func addToLocalClones(newAudioTracks: [Spotify.AudioTrack], destinationHandles: Set<RepositoryHandle>) async throws {
+            if newAudioTracks.isEmpty {
+                return
+            }
             
-            let blobifiedNewAudioTrackIDs = newAudioTrackIDs.joined(separator: ",")
-            
-            var newAudioTracks: [Spotify.AudioTrack] = []
             if let openedLocalClone = self.openedLocalClone,
                destinationHandles.contains(openedLocalClone.handle)
             {
-                // TODO: deduplicate logic with MusubiRepository constructor
-                var numCommasSeen = 0
-                var currentRangeStartIndex = blobifiedNewAudioTrackIDs.startIndex
-                for index in blobifiedNewAudioTrackIDs.indices {
-                    if blobifiedNewAudioTrackIDs[index] == "," {
-                        numCommasSeen += 1
-                        if numCommasSeen % 50 == 0 {
-                            newAudioTracks.append(
-                                contentsOf: try await SpotifyRequests.Read.audioTracks(
-                                    audioTrackIDs: String(blobifiedNewAudioTrackIDs[currentRangeStartIndex..<index])
-                                )
-                            )
-                            currentRangeStartIndex = blobifiedNewAudioTrackIDs.index(after: index)
-                        }
-                    }
-                }
-                if !(blobifiedNewAudioTrackIDs.last == "," && numCommasSeen % 50 == 0) {
-                    newAudioTracks.append(
-                        contentsOf: try await SpotifyRequests.Read.audioTracks(
-                            audioTrackIDs: String(blobifiedNewAudioTrackIDs[currentRangeStartIndex...])
-                        )
-                    )
-                }
-                openedLocalClone.stagedAudioTrackList.append(audioTrackList: newAudioTracks)
+                openedLocalClone.stagedAudioTrackListAppend(audioTracks: newAudioTracks)
             }
+            
+            let blobifiedNewAudioTrackIDs = newAudioTracks
+                .map({ audioTrack in audioTrack.id })
+                .joined(separator: ",")
             
             for handle in destinationHandles {
                 if handle != self.openedLocalClone?.handle {

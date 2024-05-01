@@ -11,9 +11,9 @@ struct AudioTrackListCell: View {
     let audioTrack: Spotify.AudioTrack
     let showThumbnail: Bool
     
-    @State private var showAlertUnsupportedAction = false
+    @State private var showSheetAddToSelectableClones = false
     
-    private let MENU_SYMBOL_SIZE = Musubi.UI.MENU_SYMBOL_SIZE
+    @State private var showAlertUnsupportedAction = false
     
     var body: some View {
         HStack {
@@ -26,8 +26,7 @@ struct AudioTrackListCell: View {
             if isNavigable {
             Menu {
                 Button {
-                    // TODO: impl
-                    showAlertUnsupportedAction = true
+                    showSheetAddToSelectableClones = true
                 } label: {
                     HStack {
                         Image(systemName: "plus")
@@ -92,11 +91,18 @@ struct AudioTrackListCell: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: MENU_SYMBOL_SIZE))
+                    .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
                     .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                     .contentShape(Rectangle())
             }
             }
+        }
+        .sheet(isPresented: $showSheetAddToSelectableClones) {
+            AddToSelectableLocalClonesSheet(
+                audioTrackList: Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack]),
+                showSheet: $showSheetAddToSelectableClones
+            )
+            .interactiveDismissDisabled(true)
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
     }

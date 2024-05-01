@@ -29,6 +29,7 @@ extension Musubi.UI {
     static let MENU_SYMBOL_SIZE: Double = 25
     static let PLAY_SYMBOL_SIZE: Double = 50
     static let SHUFFLE_SYMBOL_SIZE: Double = 25
+    static let CHECKBOX_SYMBOL_SIZE: Double = 25
 }
 
 extension Musubi.UI {

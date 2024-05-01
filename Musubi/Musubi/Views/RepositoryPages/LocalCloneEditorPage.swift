@@ -47,6 +47,7 @@ struct LocalCloneEditorPage: View {
                         },
                         label: {
                             Text("Done")
+                                .bold()
                         }
                     )
                 }
