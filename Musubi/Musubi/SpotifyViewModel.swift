@@ -150,6 +150,23 @@ extension Spotify {
     }
 }
 
+extension Spotify.AudioTrack {
+    init(audioTrack: Spotify.AudioTrack, withAlbumMetadata: Spotify.AlbumMetadata) {
+        self.init(
+            id: audioTrack.id,
+            album: withAlbumMetadata,
+            artists: audioTrack.artists,
+            available_markets: audioTrack.available_markets,
+            disc_number: audioTrack.disc_number,
+            duration_ms: audioTrack.duration_ms,
+            explicit: audioTrack.explicit,
+            external_urls: audioTrack.external_urls,
+            name: audioTrack.name,
+            preview_url: audioTrack.preview_url
+        )
+    }
+}
+
 extension Array where Element == Spotify.AudioTrack {
     static func from(playlistTrackItems: [Spotify.PlaylistAudioTrackItem]) -> Self {
         return playlistTrackItems.map { item in item.track }

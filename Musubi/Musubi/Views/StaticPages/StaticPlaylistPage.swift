@@ -18,6 +18,8 @@ struct StaticPlaylistPage: View {
     @State private var isViewDisabled = false
     @State private var showAlertCloneError = false
     
+    @State private var showSheetAddToSelectableClones = false
+    
     private var repositoryHandle: Musubi.RepositoryHandle {
         Musubi.RepositoryHandle(userID: playlistMetadata.owner.id, playlistID: playlistMetadata.id)
     }
@@ -54,11 +56,11 @@ struct StaticPlaylistPage: View {
                     }
                     Menu {
                         Button {
-                            // TODO: impl
+                            showSheetAddToSelectableClones = true
                         } label: {
                             HStack {
                                 Image(systemName: "plus")
-                                Text("Add all tracks in this collection to playlist")
+                                Text("Add tracks from this collection to")
                             }
                         }
                     } label: {
@@ -84,6 +86,12 @@ struct StaticPlaylistPage: View {
                 }
             }
         )
+        .sheet(isPresented: $showSheetAddToSelectableClones) {
+            AddToSelectableLocalClonesSheet(
+                audioTrackList: $audioTrackList,
+                showSheet: $showSheetAddToSelectableClones
+            )
+        }
         .disabled(isViewDisabled)
         .alert("Musubi - failed to clone repo", isPresented: $showAlertCloneError, actions: {})
         .task {

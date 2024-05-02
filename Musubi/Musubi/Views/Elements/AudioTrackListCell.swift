@@ -12,6 +12,7 @@ struct AudioTrackListCell: View {
     let showThumbnail: Bool
     
     @State private var showSheetAddToSelectableClones = false
+    @State private var addableAudioTrack: Musubi.ViewModel.AudioTrackList = []
     
     @State private var showAlertUnsupportedAction = false
     
@@ -30,7 +31,7 @@ struct AudioTrackListCell: View {
                 } label: {
                     HStack {
                         Image(systemName: "plus")
-                        Text("Add to playlist")
+                        Text("Add track to")
                     }
                 }
                 Button {
@@ -99,12 +100,14 @@ struct AudioTrackListCell: View {
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack]),
+                audioTrackList: $addableAudioTrack,
                 showSheet: $showSheetAddToSelectableClones
             )
-            .interactiveDismissDisabled(true)
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
+        .task {
+            addableAudioTrack = Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack])
+        }
     }
 }
 

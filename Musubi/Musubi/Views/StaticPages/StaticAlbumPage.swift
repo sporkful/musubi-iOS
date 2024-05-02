@@ -16,6 +16,8 @@ struct StaticAlbumPage: View {
     
     @State private var description: String = "" // dummy to satisfy generality of AudioTrackListPage
     
+    @State private var showSheetAddToSelectableClones = false
+    
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
@@ -31,11 +33,11 @@ struct StaticAlbumPage: View {
                 HStack {
                     Menu {
                         Button {
-                            // TODO: impl
+                            showSheetAddToSelectableClones = true
                         } label: {
                             HStack {
                                 Image(systemName: "plus")
-                                Text("Add all tracks in this collection to playlist")
+                                Text("Add tracks from this collection to")
                             }
                         }
                     } label: {
@@ -61,6 +63,12 @@ struct StaticAlbumPage: View {
                 }
             }
         )
+        .sheet(isPresented: $showSheetAddToSelectableClones) {
+            AddToSelectableLocalClonesSheet(
+                audioTrackList: $audioTrackList,
+                showSheet: $showSheetAddToSelectableClones
+            )
+        }
         .task {
             await loadAudioTrackList()
         }
@@ -76,13 +84,21 @@ struct StaticAlbumPage: View {
         
         do {
             let firstPage = try await SpotifyRequests.Read.albumFirstAudioTrackPage(albumID: albumMetadata.id)
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(audioTrackList: firstPage.items)
+            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
+                audioTrackList: firstPage.items.map { audioTrack in
+                    Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: self.albumMetadata)
+                }
+            )
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
             guard let restOfList = restOfList as? [Spotify.AudioTrack] else {
                 throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
             }
-            self.audioTrackList.append(audioTrackList: restOfList)
+            self.audioTrackList.append(
+                audioTrackList: restOfList.map { audioTrack in
+                    Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: self.albumMetadata)
+                }
+            )
         } catch {
             // TODO: alert user?
             print("[Musubi::StaticAlbumPage] unable to load tracklist")

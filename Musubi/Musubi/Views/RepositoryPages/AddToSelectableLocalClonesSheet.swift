@@ -5,7 +5,7 @@ import SwiftUI
 struct AddToSelectableLocalClonesSheet: View {
     @Environment(Musubi.User.self) private var currentUser
     
-    let audioTrackList: Musubi.ViewModel.AudioTrackList
+    @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     @Binding var showSheet: Bool
     
@@ -111,7 +111,8 @@ struct AddToSelectableLocalClonesSheet: View {
             .environment(\.editMode, $editMode)
             .disabled(isViewDisabled)
             .alert("Musubi - failed to execute add action", isPresented: $showAlertErrorExecuteAdd, actions: {})
-            .task {
+            .interactiveDismissDisabled(true)
+            .onChange(of: audioTrackList, initial: true) { _, audioTrackList in
                 // default to all audio tracks selected
                 selectedAudioTracks = Set(audioTrackList)
             }
