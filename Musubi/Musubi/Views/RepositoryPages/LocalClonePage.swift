@@ -13,6 +13,8 @@ struct LocalClonePage: View {
     
     @State private var showSheetAddToSelectableClones = false
     
+    @State private var isViewDisabled = false
+    
     var body: some View {
         @Bindable var repositoryClone = repositoryClone
         
@@ -32,6 +34,11 @@ struct LocalClonePage: View {
                         showSheetEditor = true
                     } label: {
                         Image(systemName: "pencil")
+                    }
+                    Button {
+                        commitAndPush()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
                     }
                     Menu {
                         Button {
@@ -79,6 +86,7 @@ struct LocalClonePage: View {
                 showSheet: $showSheetAddToSelectableClones
             )
         }
+        .disabled(isViewDisabled)
         .alert(
             "Failed to open local clone: \(repositoryReference.externalMetadata.name)",
             isPresented: $repositoryClone.stagingAreaHydrationError,
@@ -99,6 +107,20 @@ struct LocalClonePage: View {
                 )
             }
         )
+    }
+    
+    private func commitAndPush() {
+        isViewDisabled = true
+        Task {
+            do {
+                try await repositoryClone.commitAndPush(message: "test \(Date.now.formatted())")
+            } catch {
+                print("[Musubi::LocalClonePage] commit and push failed")
+                print(error)
+                // TODO: trigger alert
+            }
+            isViewDisabled = false
+        }
     }
 }
 

@@ -121,28 +121,37 @@ extension Musubi {
                 .write(to: HEAD_FILE, options: .atomic)
         }
         
-        // TODO: impl
-//        func push() async throws {
-//            let requestBody = Push_RequestBody(
-//            )
-//            var request = try MusubiCloudRequests.createRequest(
-//                command: .PUSH,
-//                bodyData: try Musubi.jsonEncoder().encode(requestBody)
-//            )
-//            let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
-//            let response = try Musubi.jsonDecoder().decode(Push_Response.self, from: responseData)
-//        }
+        func commitAndPush(message: String) async throws {
+            guard let currentUser = Musubi.UserManager.shared.currentUser else {
+                throw Musubi.CloudRequestError.any(detail: "tried to commitAndPush without active user")
+            }
+            
+            let proposedCommitBlob = Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList)
+            let requestBody = Push_RequestBody(
+                playlistID: self.handle.playlistID,
+                latestSyncCommitID: self.headCommitID,
+                proposedCommit: Musubi.Model.Commit(
+                    authorID: currentUser.spotifyInfo.id,
+                    date: Date.now,
+                    message: message,
+                    parentCommitIDs: [self.headCommitID],
+                    blobID: Musubi.Cryptography.hash(data: Data(proposedCommitBlob.utf8))
+                ),
+                proposedCommitBlob: proposedCommitBlob
+            )
+            var request = try MusubiCloudRequests.createRequest(
+                command: .PUSH,
+                bodyData: try MusubiCloudRequests.jsonEncoder().encode(requestBody)
+            )
+            let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
+            let response = try MusubiCloudRequests.jsonDecoder().decode(Push_Response.self, from: responseData)
+        }
         
         private struct Push_RequestBody: Encodable {
             let playlistID: String
             let latestSyncCommitID: String
-            let proposedCommitInfo: ProposedCommitInfo
-            
-            struct ProposedCommitInfo: Encodable {
-                let blob: Musubi.Model.Blob
-                let parentCommitIDs: [String]
-                let message: String
-            }
+            let proposedCommit: Musubi.Model.Commit
+            let proposedCommitBlob: Musubi.Model.Blob
         }
         
         private enum Push_Response: Decodable {
