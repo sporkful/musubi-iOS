@@ -13,6 +13,7 @@ struct LocalClonePage: View {
     
     @State private var showSheetAddToSelectableClones = false
     
+    // TODO: ! placeholder view
     @State private var isViewDisabled = false
     
     var body: some View {
@@ -113,6 +114,7 @@ struct LocalClonePage: View {
         isViewDisabled = true
         Task {
             do {
+                // TODO: ! handle non-success variants of PushResponse
                 try await repositoryClone.commitAndPush(message: "test \(Date.now.formatted())")
             } catch {
                 print("[Musubi::LocalClonePage] commit and push failed")

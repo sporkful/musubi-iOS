@@ -121,7 +121,7 @@ extension Musubi {
                 .write(to: HEAD_FILE, options: .atomic)
         }
         
-        func commitAndPush(message: String) async throws {
+        func commitAndPush(message: String) async throws -> Push_Response {
             guard let currentUser = Musubi.UserManager.shared.currentUser else {
                 throw Musubi.CloudRequestError.any(detail: "tried to commitAndPush without active user")
             }
@@ -145,6 +145,16 @@ extension Musubi {
             )
             let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
             let response = try MusubiCloudRequests.jsonDecoder().decode(Push_Response.self, from: responseData)
+            
+            switch response {
+            case .success:
+                // TODO: diff and save to Spotify
+                break
+            default:
+                break
+            }
+            
+            return response
         }
         
         private struct Push_RequestBody: Encodable {
@@ -154,7 +164,7 @@ extension Musubi {
             let proposedCommitBlob: Musubi.Model.Blob
         }
         
-        private enum Push_Response: Decodable {
+        enum Push_Response: Decodable {
             case success
             case remoteUpdates(
                 commits: [String: Musubi.Model.Commit],

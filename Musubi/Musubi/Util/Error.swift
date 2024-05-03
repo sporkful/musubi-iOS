@@ -31,6 +31,17 @@ extension Musubi {
         }
     }
     
+    enum CollectionDiffingError: LocalizedError {
+        case any(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .any(detail): "\(detail)"
+            }
+            return "[Musubi::CollectionDiffing] \(description)"
+        }
+    }
+    
     enum UIError: LocalizedError {
         case any(detail: String)
 
