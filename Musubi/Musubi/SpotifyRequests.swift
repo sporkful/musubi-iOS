@@ -239,3 +239,113 @@ extension SpotifyRequests.Read {
         return try JSONDecoder().decode(Spotify.SearchResults.self, from: data)
     }
 }
+
+extension SpotifyRequests.Write {
+    private typealias HTTPMethod = SpotifyRequests.HTTPMethod
+    
+    // TODO: queue operations with enforced ordering
+    actor Session {
+        let playlistID: Spotify.ID
+        var lastSnapshotID: String
+        
+        init(playlistID: Spotify.ID, lastSnapshotID: String) {
+            self.playlistID = playlistID
+            self.lastSnapshotID = lastSnapshotID
+        }
+        
+        private struct ResponseBody: Decodable {
+            let snapshot_id: String
+        }
+        
+        private func uri(audioTrackID: Spotify.ID) -> String {
+            return "spotify:track:\(audioTrackID)"
+        }
+        
+        private struct InsertionRequestBody: Encodable {
+            let uris: [String]
+            let position: Int
+        }
+        
+        func insert(audioTrackID: Spotify.ID, at position: Int) async throws {
+            var request = try SpotifyRequests.createRequest(
+                type: HTTPMethod.POST,
+                path: "/playlists/" + playlistID + "/tracks",
+                bodyData: JSONEncoder().encode(
+                    InsertionRequestBody(
+                        uris: [uri(audioTrackID: audioTrackID)],
+                        position: position
+                    )
+                ),
+                setContentTypeJSON: true
+            )
+            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
+            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
+            self.lastSnapshotID = response.snapshot_id
+        }
+        
+        private struct RemovalRequestBody: Encodable {
+            let positions: [Int]
+            let snapshot_id: String
+        }
+        
+        func remove(at position: Int) async throws {
+            var request = try SpotifyRequests.createRequest(
+                type: HTTPMethod.DELETE,
+                path: "/playlists/" + playlistID + "/tracks",
+                bodyData: JSONEncoder().encode(
+                    RemovalRequestBody(
+                        positions: [position],
+                        snapshot_id: self.lastSnapshotID
+                    )
+                ),
+                setContentTypeJSON: true
+            )
+            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
+            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
+            self.lastSnapshotID = response.snapshot_id
+        }
+        
+        private struct MoveRequestBody: Encodable {
+            let range_start: Int
+            let insert_before: Int
+            let range_length: Int
+            let snapshot_id: String
+            
+            init(removalOffset: Int, insertionOffset: Int, snapshotID: String) {
+                self.snapshot_id = snapshotID
+                self.range_length = 1
+                self.range_start = removalOffset
+                
+                // Account for mismatch between Spotify APIs and Swift's CollectionDifference.
+                // https://developer.spotify.com/documentation/web-api/reference/reorder-or-replace-playlists-tracks
+                if removalOffset < insertionOffset {
+                    self.insert_before = insertionOffset + 1
+                } else {
+                    self.insert_before = insertionOffset
+                }
+            }
+        }
+        
+        func move(removalOffset: Int, insertionOffset: Int) async throws {
+            if removalOffset == insertionOffset {
+                return
+            }
+            
+            var request = try SpotifyRequests.createRequest(
+                type: HTTPMethod.PUT,
+                path: "/playlists/" + playlistID + "/tracks",
+                bodyData: JSONEncoder().encode(
+                    MoveRequestBody(
+                        removalOffset: removalOffset,
+                        insertionOffset: insertionOffset,
+                        snapshotID: self.lastSnapshotID
+                    )
+                ),
+                setContentTypeJSON: true
+            )
+            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
+            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
+            self.lastSnapshotID = response.snapshot_id
+        }
+    }
+}
