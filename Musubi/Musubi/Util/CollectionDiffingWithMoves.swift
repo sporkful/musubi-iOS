@@ -66,9 +66,6 @@ extension Musubi {
             // to calculate the correct offsets for a move when it occurs and to verify final result
             var oldListCopy = self.oldList.uniquifiedList
             
-            // mutable copy of `insertions` to dynamically adjust for unapplied removals
-            var insertions = self.canonicalDifference.insertions
-            
             for removal in self.canonicalDifference.removals.reversed() {
                 switch removal {
                 case let .remove(offset, element, associatedWith):
@@ -87,8 +84,8 @@ extension Musubi {
                 }
             }
             
-            for i in insertions.indices {
-                switch insertions[i] {
+            for insertion in self.canonicalDifference.insertions {
+                switch insertion {
                 case let .insert(originalInsertionOffset, insertionElement, associatedWith):
                     // Regardless of whether this insertion is a move, we need to adjust its offset to
                     // account for all unapplied removals at this moment in time.
@@ -120,6 +117,7 @@ extension Musubi {
                         if removalOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset -= 1
                         }
+                        unremovedElements.remove(elementToMove)
                         oldListCopy.remove(at: removalOffset)
                         oldListCopy.insert(elementToMove, at: adjustedInsertionOffset)
                         try await moveSideEffect(removalOffset, adjustedInsertionOffset)
@@ -129,15 +127,15 @@ extension Musubi {
                 }
             }
             
-            guard oldListCopy == self.newList.uniquifiedList else {
-                throw Musubi.CollectionDiffingError.any(detail: "(impl err) didn't result in newList")
+            if oldListCopy != self.newList.uniquifiedList {
+                throw Musubi.CollectionDiffingError.any(detail: "(impl err) newList != \(oldListCopy)")
             }
         }
         
         var pureInsertions: [CollectionDifference<UniquifiedElement>.Change] {
             return self.canonicalDifference.insertions.filter { change in
                 switch change {
-                case let .insert(offset, element, associatedWith):
+                case let .insert(_, _, associatedWith):
                     return associatedWith == nil
                 default:
                     return false
@@ -148,7 +146,7 @@ extension Musubi {
         var pureRemovals: [CollectionDifference<UniquifiedElement>.Change] {
             return self.canonicalDifference.removals.filter { change in
                 switch change {
-                case let .remove(offset, element, associatedWith):
+                case let .remove(_, _, associatedWith):
                     return associatedWith == nil
                 default:
                     return false
@@ -159,7 +157,7 @@ extension Musubi {
         var moveInsertions: [CollectionDifference<UniquifiedElement>.Change] {
             return self.canonicalDifference.insertions.filter { change in
                 switch change {
-                case let .insert(offset, element, associatedWith):
+                case let .insert(_, _, associatedWith):
                     return associatedWith != nil
                 default:
                     return false
