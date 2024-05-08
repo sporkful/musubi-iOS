@@ -166,3 +166,9 @@ extension Musubi {
         }
     }
 }
+
+extension Musubi.DiffableList<String>.UniquifiedElement: CustomStringConvertible {
+    var description: String {
+        "(\"\(self.item)\", \(self.occurrence))"
+    }
+}

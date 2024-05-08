@@ -22,9 +22,10 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             return self.list.remove(at: index)
         }
         
-        func move(removalOffset: Int, insertionOffset: Int) async {
+        func move(removalOffset: Int, insertionOffset: Int) async -> Element {
             let elementToMove = self.list.remove(at: removalOffset)
             self.list.insert(elementToMove, at: insertionOffset)
+            return elementToMove
         }
         
         func listCopy() async -> [Element] {
@@ -32,40 +33,80 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         }
     }
     
-    func testWithSimulatedRemote<RepeatableItem: Hashable>(oldList: [RepeatableItem], newList: [RepeatableItem]) async throws {
+    func testWithSimulatedRemote<RepeatableItem: Hashable>(
+        oldList: [RepeatableItem],
+        newList: [RepeatableItem],
+        logging: Bool
+    ) async throws {
+        var log: [String] = []
+        
+        if logging {
+            log.append("Old list of repeatable items: \(oldList)")
+            log.append("New list of repeatable items: \(newList)")
+        }
+        
         let simulatedRemote = SimulatedRemote(list: oldList)
         
         let oldDiffableList = Musubi.DiffableList(rawList: oldList)
         let newDiffableList = Musubi.DiffableList(rawList: newList)
+        
+        if logging {
+            log.append("Old list uniquified: \(oldDiffableList.uniquifiedList)")
+            log.append("New list uniquified: \(newDiffableList.uniquifiedList)")
+            log.append("=== START OPERATIONS ===")
+            log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+        }
 
         try await Musubi.DetailedListDifference(oldList: oldDiffableList, newList: newDiffableList)
             .applyWithSideEffects(
                 insertionSideEffect: { element, offset in
                     await simulatedRemote.insert(element.item, at: offset)
+                    if logging {
+                        log.append("Inserted new element \(element) at offset \(offset)")
+                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+                    }
                 },
                 removalSideEffect: { offset in
-                    let _ = await simulatedRemote.remove(at: offset)
+                    let removedElement = await simulatedRemote.remove(at: offset)
+                    if logging {
+                        log.append("Removed item \"\(removedElement)\" at offset \(offset)")
+                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+                    }
                 },
                 moveSideEffect: { removalOffset, insertionOffset in
-                    await simulatedRemote.move(removalOffset: removalOffset, insertionOffset: insertionOffset)
+                    let movedElement = await simulatedRemote.move(removalOffset: removalOffset, insertionOffset: insertionOffset)
+                    if logging {
+                        log.append("Moved item \"\(movedElement)\" from offset \(removalOffset) to \(insertionOffset)")
+                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+                    }
                 }
             )
         
-        let simulatedRemoteState = await simulatedRemote.listCopy()
-        XCTAssertEqual(simulatedRemoteState, newList, "")
+        if logging {
+            log.append("=== END OPERATIONS ===")
+        }
+        
+        let finalRemoteList = await simulatedRemote.listCopy()
+        XCTAssertEqual(finalRemoteList, newList, "")
+        
+        if logging {
+            print(log.map({ "\t\($0)" }).joined(separator: "\n"))
+        }
     }
 
     func testSimpleForwardMove() async throws {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
-            newList: ["a", "x", "d", "b", "c", "e", "f", "z"]
+            newList: ["a", "x", "d", "b", "c", "e", "f", "z"],
+            logging: true
         )
     }
     
     func testSimpleBackwardMove() async throws {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
-            newList: ["a", "c", "g", "d", "e", "b", "f", "z"]
+            newList: ["a", "c", "g", "d", "e", "b", "f", "z"],
+            logging: true
         )
     }
 
