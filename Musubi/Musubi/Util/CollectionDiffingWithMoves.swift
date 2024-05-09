@@ -61,7 +61,7 @@ extension Musubi {
             moveSideEffect: @escaping (Int, Int) async throws -> Void
         ) async throws {
             // to track, at any given time, which removals haven't been applied yet (as part of a move)
-            var unremovedElements = Set<UniquifiedElement>()
+            var unremovedElements: [UniquifiedElement] = []
             
             // to calculate the correct offsets for a move when it occurs and to verify final result
             var oldListCopy = self.oldList.uniquifiedList
@@ -77,10 +77,10 @@ extension Musubi {
                         // Since removals are iterated by high offset -> low offset, later removals
                         // in this loop won't be affected by this skip. Insertions may be affected,
                         // but we handle that dynamically in the later loop through insertions.
-                        unremovedElements.insert(element)
+                        unremovedElements.append(element)
                     }
                 default:
-                    throw Musubi.CollectionDiffingError.any(detail: "(impl err) saw insertion in removals")
+                    throw Musubi.CollectionDiffingError.impl(detail: "saw insertion in removals")
                 }
             }
             
@@ -90,11 +90,11 @@ extension Musubi {
                     // Regardless of whether this insertion is a move, we need to adjust its offset to
                     // account for all unapplied removals at this moment in time.
                     var adjustedInsertionOffset = originalInsertionOffset
-                    for unremovedElement in unremovedElements {
+                    for unremovedElement in unremovedElements.reversed() {
                         guard let unremovedElementCurrentOffset = oldListCopy.firstIndex(of: unremovedElement) else {
-                            throw Musubi.CollectionDiffingError.any(detail: "(impl err) can't find unremoved element")
+                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in oldLstCopy")
                         }
-                        if unremovedElementCurrentOffset <= originalInsertionOffset {
+                        if unremovedElementCurrentOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset += 1
                         }
                     }
@@ -109,7 +109,7 @@ extension Musubi {
                         // moment in time. Correctness relies on the uniqueness of elements.
                         let elementToMove = insertionElement
                         guard let removalOffset = oldListCopy.firstIndex(of: elementToMove) else {
-                            throw Musubi.CollectionDiffingError.any(detail: "(impl err) can't find unremoved element")
+                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in oldLstCopy")
                         }
                         // If we had adjusted the insertion offset to account for the unremoved
                         // elementToMove (in the case that it's "earlier than" this insertion in the list),
@@ -117,18 +117,24 @@ extension Musubi {
                         if removalOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset -= 1
                         }
-                        unremovedElements.remove(elementToMove)
+                        if let unremovedElementIndex = unremovedElements.firstIndex(of: elementToMove) {
+                            unremovedElements.remove(at: unremovedElementIndex)
+                        } else {
+                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in cache")
+                        }
                         oldListCopy.remove(at: removalOffset)
                         oldListCopy.insert(elementToMove, at: adjustedInsertionOffset)
                         try await moveSideEffect(removalOffset, adjustedInsertionOffset)
                     }
                 default:
-                    throw Musubi.CollectionDiffingError.any(detail: "(impl err) saw removal in insertions")
+                    throw Musubi.CollectionDiffingError.impl(detail: "saw removal in insertions")
                 }
             }
             
             if oldListCopy != self.newList.uniquifiedList {
-                throw Musubi.CollectionDiffingError.any(detail: "(impl err) newList != \(oldListCopy)")
+                throw Musubi.CollectionDiffingError.impl(
+                    detail: "result \(oldListCopy) != expected \(self.newList.uniquifiedList)"
+                )
             }
         }
         

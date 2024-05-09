@@ -4,7 +4,6 @@ import XCTest
 @testable import Musubi
 
 final class CollectionDiffingWithMovesTests: XCTestCase {
-    
     actor SimulatedRemote<RepeatableItem: Hashable> {
         typealias Element = RepeatableItem
         
@@ -82,11 +81,15 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
                 }
             )
         
+        let finalRemoteList = await simulatedRemote.listCopy()
+        
         if logging {
             log.append("=== END OPERATIONS ===")
+            log.append("Final remote list: \(finalRemoteList)")
+            log.append("Expected new list: \(newList)")
+            log.append("*** END ITERATION ***\n")
         }
         
-        let finalRemoteList = await simulatedRemote.listCopy()
         XCTAssertEqual(finalRemoteList, newList, "")
         
         if logging {
@@ -98,7 +101,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
             newList: ["a", "x", "d", "b", "c", "e", "f", "z"],
-            logging: true
+            logging: false
         )
     }
     
@@ -106,8 +109,220 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
             newList: ["a", "c", "g", "d", "e", "b", "f", "z"],
+            logging: false
+        )
+    }
+    
+    func testRandom1() async throws {
+        try await testWithSimulatedRemote(
+            oldList: ["A", "1", "5", "0", "C", "3", "B", "7", "B", "5", "3", "4", "8", "E", "A"],
+            newList: ["D", "8", "0", "8", "3", "1", "8", "A", "8", "C", "F", "F", "E", "1", "6", "3"],
             logging: true
         )
     }
+    
+    func testRandom2() async throws {
+        try await testWithSimulatedRemote(
+            oldList: ["A", "J", "I", "G", "D", "G", "C", "B", "A", "C", "E", "D", "I", "E"],
+            newList: ["A", "G", "D", "C", "G", "J", "B", "C", "D", "A", "E", "I", "E"],
+            logging: true
+        )
+    }
+    
+    struct AlphabetizedRandomGenerator {
+        enum Alphabet {
+            case englishLetters
+            case uInt16
+            
+            var maxValue: UInt16 {
+                switch self {
+                case .uInt16:
+                    UInt16.max
+                case .englishLetters:
+                    25  // zero-indexed
+                }
+            }
+        }
+        
+        let alphabet: Alphabet
+        let numPossibleValues: UInt16
+        
+        init(alphabet: Alphabet, numPossibleValues: UInt16) throws {
+            if (numPossibleValues - 1) > alphabet.maxValue {
+                throw Error.any(detail: "numPossibleValues out of alphabet's range")
+            }
+            
+            self.alphabet = alphabet
+            self.numPossibleValues = numPossibleValues
+        }
+        
+        let A_AS_UINT16 = UInt16(("A" as UnicodeScalar).value)
+        
+        func randomValue() -> String {
+            switch self.alphabet {
+            case .englishLetters:
+                String(Character(UnicodeScalar(UInt16.random(in: 0..<self.numPossibleValues) + A_AS_UINT16)!))
+            case .uInt16:
+                String(UInt16.random(in: 0..<self.numPossibleValues))
+            }
+        }
+        
+        func randomList(possibleLengths: Range<UInt>) -> [String] {
+            let listLength = UInt.random(in: possibleLengths)
+            switch self.alphabet {
+            case .englishLetters:
+                return (0..<listLength).map { _ in
+                    String(Character(UnicodeScalar(UInt16.random(in: 0..<self.numPossibleValues) + A_AS_UINT16)!))
+                }
+            case .uInt16:
+                return (0..<listLength).map { _ in
+                    String(UInt16.random(in: 0..<self.numPossibleValues))
+                }
+            }
+        }
+        
+        enum Error: LocalizedError {
+            case any(detail: String)
 
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .any(detail): "\(detail)"
+                }
+                return "[Musubi::CollectionDiffingWithMoves] (TESTS) \(description)"
+            }
+        }
+    }
+    
+    // TODO: allow specifying probability distribution of edits?
+    func randomlyEdited(
+        list: [String],
+        possibleNumEdits: Range<UInt>,
+        randomElementGenerator: AlphabetizedRandomGenerator
+    ) throws -> [String] {
+        var editedList = list
+        for _ in 0..<UInt.random(in: possibleNumEdits) {
+            switch UInt.random(in: 0..<3) {
+            case 0:
+                editedList.insert(
+                    randomElementGenerator.randomValue(),
+                    at: Int.random(in: 0...editedList.count)
+                )
+            case 1:
+                if editedList.count == 0 {
+                    continue
+                }
+                editedList.remove(at: Int.random(in: 0..<editedList.count))
+            case 2:
+                if editedList.count == 0 {
+                    continue
+                }
+                let elementToMove = editedList.remove(at: Int.random(in: 0..<editedList.count))
+                editedList.insert(elementToMove, at: Int.random(in: 0...editedList.count))
+            default:
+                continue
+            }
+        }
+        return editedList
+    }
+    
+    // TODO: parallelize?
+    func fuzzNewFromScratch(
+        numTests: UInt,
+        randomGenerator: AlphabetizedRandomGenerator,
+        possibleListLengths: Range<UInt>,
+        logging: Bool
+    ) async throws {
+        for _ in 0..<numTests {
+            try await testWithSimulatedRemote(
+                oldList: randomGenerator.randomList(possibleLengths: possibleListLengths),
+                newList: randomGenerator.randomList(possibleLengths: possibleListLengths),
+                logging: logging
+            )
+        }
+    }
+    
+    func fuzzEdits(
+        numTests: UInt,
+        randomGenerator: AlphabetizedRandomGenerator,
+        possibleListLengths: Range<UInt>,
+        possibleNumEdits: Range<UInt>,
+        logging: Bool
+    ) async throws {
+        for _ in 0..<numTests {
+            let oldList = randomGenerator.randomList(possibleLengths: possibleListLengths)
+            let newList = try randomlyEdited(
+                list: oldList,
+                possibleNumEdits: possibleNumEdits,
+                randomElementGenerator: randomGenerator
+            )
+            try await testWithSimulatedRemote(
+                oldList: oldList,
+                newList: newList,
+                logging: logging
+            )
+        }
+    }
+    
+    func testFuzzNewFromScratch0() async throws {
+        try await fuzzNewFromScratch(
+            numTests: 10,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .englishLetters,
+                numPossibleValues: 26
+            ),
+            possibleListLengths: 10..<30,
+            logging: true
+        )
+    }
+    
+    func testFuzzEdits0() async throws {
+        try await fuzzEdits(
+            numTests: 10,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .englishLetters,
+                numPossibleValues: 26
+            ),
+            possibleListLengths: 10..<30,
+            possibleNumEdits: 0..<30,
+            logging: true
+        )
+    }
+    
+    func testFuzzNewFromScratch1() async throws {
+        try await fuzzNewFromScratch(
+            numTests: 1000,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .uInt16,
+                numPossibleValues: 200
+            ),
+            possibleListLengths: 0..<500,
+            logging: false
+        )
+    }
+    
+    func testFuzzEdits1() async throws {
+        try await fuzzEdits(
+            numTests: 1000,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .uInt16,
+                numPossibleValues: 200
+            ),
+            possibleListLengths: 0..<500,
+            possibleNumEdits: 0..<500,
+            logging: false
+        )
+    }
+    
+    func testFuzzEdits2() async throws {
+        try await fuzzEdits(
+            numTests: 10000,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .uInt16,
+                numPossibleValues: 200
+            ),
+            possibleListLengths: 0..<500,
+            possibleNumEdits: 0..<500,
+            logging: false
+        )
+    }
 }
