@@ -121,56 +121,39 @@ extension Musubi {
                 .write(to: HEAD_FILE, options: .atomic)
         }
         
-        func commitAndPush(message: String) async throws -> Push_Response {
+        func makeCommit(message: String) async throws {
             guard let currentUser = Musubi.UserManager.shared.currentUser else {
                 throw Musubi.CloudRequestError.any(detail: "tried to commitAndPush without active user")
             }
             
             let proposedCommitBlob = Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList)
-            let requestBody = Push_RequestBody(
-                playlistID: self.handle.playlistID,
-                latestSyncCommitID: self.headCommitID,
-                proposedCommit: Musubi.Model.Commit(
-                    authorID: currentUser.spotifyInfo.id,
-                    date: Date.now,
-                    message: message,
-                    parentCommitIDs: [self.headCommitID],
-                    blobID: Musubi.Cryptography.hash(data: Data(proposedCommitBlob.utf8))
-                ),
-                proposedCommitBlob: proposedCommitBlob
-            )
-            var request = try MusubiCloudRequests.createRequest(
-                command: .PUSH,
-                bodyData: try MusubiCloudRequests.jsonEncoder().encode(requestBody)
-            )
-            let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
-            let response = try MusubiCloudRequests.jsonDecoder().decode(Push_Response.self, from: responseData)
             
-            switch response {
+            let cloudResponse: Musubi.Cloud.Response.Commit = try await Musubi.Cloud.make(
+                request: Musubi.Cloud.Request.Commit(
+                    playlistID: self.handle.playlistID,
+                    latestSyncCommitID: self.headCommitID,
+                    proposedCommit: Musubi.Model.Commit(
+                        authorID: currentUser.spotifyInfo.id,
+                        date: Date.now,
+                        message: message,
+                        parentCommitIDs: [self.headCommitID],
+                        blobID: proposedCommitBlob.blobID
+                    ),
+                    proposedCommitBlob: proposedCommitBlob
+                )
+            )
+            
+            switch cloudResponse {
             case .success:
                 // TODO: diff and save to Spotify
                 break
-            default:
+            case let .remoteUpdates(commits, blobs):
+                // TODO: cache commits/blobs and update new member var holding head blob of remote
+                break
+            case let .spotifyUpdates(blob):
+                // TODO: update new member var holding head blob of remote
                 break
             }
-            
-            return response
-        }
-        
-        private struct Push_RequestBody: Encodable {
-            let playlistID: String
-            let latestSyncCommitID: String
-            let proposedCommit: Musubi.Model.Commit
-            let proposedCommitBlob: Musubi.Model.Blob
-        }
-        
-        enum Push_Response: Decodable {
-            case success
-            case remoteUpdates(
-                commits: [String: Musubi.Model.Commit],
-                blobs: [String: Musubi.Model.Blob]
-            )
-            case spotifyUpdates(blob: Musubi.Model.Blob)
         }
     }
 }

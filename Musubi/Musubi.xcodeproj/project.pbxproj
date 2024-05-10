@@ -10,7 +10,7 @@
 		79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */; };
 		79223A152B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */; };
 		79223A1C2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A1B2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift */; };
-		7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */; };
+		7930D46B2B65E90A00E8C426 /* MusubiCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */; };
 		7930D46F2B6ACC1F00E8C426 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
@@ -72,7 +72,7 @@
 		79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToSelectableLocalClonesSheet.swift; sourceTree = "<group>"; };
 		79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDiffingWithMoves.swift; sourceTree = "<group>"; };
 		79223A1B2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDiffingWithMovesTests.swift; sourceTree = "<group>"; };
-		7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloudRequests.swift; sourceTree = "<group>"; };
+		7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloud.swift; sourceTree = "<group>"; };
 		7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
@@ -180,7 +180,7 @@
 				7947336A2B464E2B001C3FEB /* MusubiModel.swift */,
 				79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */,
 				7947338D2B4BBF05001C3FEB /* MusubiUserManager.swift */,
-				7930D46A2B65E90A00E8C426 /* MusubiCloudRequests.swift */,
+				7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */,
 				7947336C2B46566F001C3FEB /* SpotifyViewModel.swift */,
 				7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */,
 				7961DA1F2B59B15000650775 /* SpotifyConstants.swift */,
@@ -440,7 +440,7 @@
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,
 				7961DA202B59B15000650775 /* SpotifyConstants.swift in Sources */,
-				7930D46B2B65E90A00E8C426 /* MusubiCloudRequests.swift in Sources */,
+				7930D46B2B65E90A00E8C426 /* MusubiCloud.swift in Sources */,
 				794733822B4A7D32001C3FEB /* LoginView.swift in Sources */,
 				79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */,
 				794733962B4CE1A7001C3FEB /* SearchTabRoot.swift in Sources */,

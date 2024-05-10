@@ -73,14 +73,14 @@ extension Musubi {
             return data
         }
         
-        func makeAuthdMusubiCloudRequest(request: inout URLRequest) async throws -> Data {
+        func makeAuthdMusubiCloudRequest(urlRequest: inout URLRequest) async throws -> Data {
             try await refreshOAuthToken()
-            request.setValue(
+            urlRequest.setValue(
                 retrieveOAuthToken(),
                 forHTTPHeaderField: "X-Musubi-SpotifyAuth"
             )
             
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: urlRequest)
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw Musubi.CloudRequestError.any(detail: "unable to parse response as HTTP")

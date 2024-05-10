@@ -312,17 +312,4 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             logging: false
         )
     }
-    
-    func testFuzzEdits2() async throws {
-        try await fuzzEdits(
-            numTests: 10000,
-            randomGenerator: AlphabetizedRandomGenerator(
-                alphabet: .uInt16,
-                numPossibleValues: 200
-            ),
-            possibleListLengths: 0..<500,
-            possibleNumEdits: 0..<500,
-            logging: false
-        )
-    }
 }

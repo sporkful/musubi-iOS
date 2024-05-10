@@ -155,17 +155,13 @@ extension Musubi {
                 throw Musubi.RepositoryError.cloning(detail: "called initOrClone on unowned playlist")
             }
             
-            let requestBody = InitOrClone_RequestBody(playlistID: repositoryHandle.playlistID)
-            var request = try MusubiCloudRequests.createRequest(
-                command: .INIT_OR_CLONE,
-                bodyData: try MusubiCloudRequests.jsonEncoder().encode(requestBody)
+            let cloudResponse: Musubi.Cloud.Response.Clone = try await Musubi.Cloud.make(
+                request: Musubi.Cloud.Request.InitOrClone(
+                    playlistID: repositoryHandle.playlistID
+                )
             )
-            let responseData = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(request: &request)
             
-            try saveClone(
-                repositoryHandle: repositoryHandle,
-                response: try MusubiCloudRequests.jsonDecoder().decode(Clone_ResponseBody.self, from: responseData)
-            )
+            try saveClone(repositoryHandle: repositoryHandle, cloudResponse: cloudResponse)
             
             self.localClonesIndex.append(
                 Musubi.RepositoryReference(
@@ -183,11 +179,14 @@ extension Musubi {
 //        }
         
         // TODO: integrate Musubi.Storage.USER_STAGED_AUDIO_TRACK_INDEX_FILE
-        private func saveClone(repositoryHandle: Musubi.RepositoryHandle, response: Clone_ResponseBody) throws {
+        private func saveClone(
+            repositoryHandle: Musubi.RepositoryHandle,
+            cloudResponse: Musubi.Cloud.Response.Clone
+        ) throws {
             typealias LocalFS = Musubi.Storage.LocalFS
             
-            guard let headCommit = response.commits[response.headCommitID],
-                  let headBlob = response.blobs[headCommit.blobID]
+            guard let headCommit = cloudResponse.commits[cloudResponse.headCommitID],
+                  let headBlob = cloudResponse.blobs[headCommit.blobID]
             else {
                 throw Musubi.RepositoryError.cloning(detail: "clone response does not have valid head blob")
             }
@@ -198,20 +197,20 @@ extension Musubi {
             }
             try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             
-            for (blobID, blob) in response.blobs {
+            for (blobID, blob) in cloudResponse.blobs {
                 try Data(blob.utf8).write(
                     to: LocalFS.GLOBAL_OBJECT_FILE(objectID: blobID),
                     options: .atomic
                 )
             }
-            for (commitID, commit) in response.commits {
+            for (commitID, commit) in cloudResponse.commits {
                 try JSONEncoder().encode(commit).write(
                     to: LocalFS.GLOBAL_OBJECT_FILE(objectID: commitID),
                     options: .atomic
                 )
             }
             
-            try Data(response.headCommitID.utf8).write(
+            try Data(cloudResponse.headCommitID.utf8).write(
                 to: LocalFS.CLONE_HEAD_FILE(repositoryHandle: repositoryHandle),
                 options: .atomic
             )
@@ -219,7 +218,7 @@ extension Musubi {
                 to: LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: repositoryHandle),
                 options: .atomic
             )
-            if let forkParent = response.forkParent {
+            if let forkParent = cloudResponse.forkParent {
                 let forkParentHandle = Musubi.RepositoryHandle(
                     userID: forkParent.userID,
                     playlistID: forkParent.playlistID
@@ -228,24 +227,6 @@ extension Musubi {
                     to: LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: repositoryHandle),
                     options: .atomic
                 )
-            }
-        }
-        
-        private struct InitOrClone_RequestBody: Encodable {
-            let playlistID: String
-        }
-        
-        private struct Clone_ResponseBody: Decodable {
-            let commits: [String: Musubi.Model.Commit]
-            let blobs: [String: Musubi.Model.Blob]
-            
-            let headCommitID: String
-            let forkParent: RelatedRepository?
-            
-            struct RelatedRepository: Decodable {
-                let userID: String
-                let playlistID: String
-                // Note omission of remotely-mutable `LatestSyncCommitID`, which is handled by backend.
             }
         }
   

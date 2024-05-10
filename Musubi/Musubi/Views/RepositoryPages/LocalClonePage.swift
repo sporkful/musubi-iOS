@@ -37,7 +37,7 @@ struct LocalClonePage: View {
                         Image(systemName: "pencil")
                     }
                     Button {
-                        commitAndPush()
+                        commit()
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -110,12 +110,12 @@ struct LocalClonePage: View {
         )
     }
     
-    private func commitAndPush() {
+    // TODO: give this its own page with diff summary and message input
+    private func commit() {
         isViewDisabled = true
         Task {
             do {
-                // TODO: ! handle non-success variants of PushResponse
-                try await repositoryClone.commitAndPush(message: "test \(Date.now.formatted())")
+                try await repositoryClone.makeCommit(message: "test \(Date.now.formatted())")
             } catch {
                 print("[Musubi::LocalClonePage] commit and push failed")
                 print(error)

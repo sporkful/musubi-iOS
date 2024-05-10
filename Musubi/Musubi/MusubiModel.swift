@@ -32,6 +32,8 @@ extension Musubi.Model {
 }
 
 extension Musubi.Model.Blob {
+    var blobID: String { Musubi.Cryptography.hash(data: Data(self.utf8)) }
+    
     static func from(audioTrackList: Musubi.ViewModel.AudioTrackList) -> Self {
         return audioTrackList
             .map({ item in item.audioTrack.id })
