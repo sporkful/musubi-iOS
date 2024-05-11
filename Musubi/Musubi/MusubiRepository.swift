@@ -2,6 +2,26 @@
 
 import Foundation
 
+// namespaces
+extension Musubi {
+    struct Repository {
+        private init() {}
+        
+        enum Error: LocalizedError {
+            case cloning(detail: String)
+            case misc(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
+                    case let .misc(detail): "\(detail)"
+                }
+                return "[Musubi::Repository] \(description)"
+            }
+        }
+    }
+}
+
 extension Musubi {
     // Note Hashable conformance here is only for SwiftUI List materialization.
     struct RepositoryHandle: Codable, Hashable {
@@ -123,7 +143,7 @@ extension Musubi {
         
         func makeCommit(message: String) async throws {
             guard let currentUser = Musubi.UserManager.shared.currentUser else {
-                throw Musubi.CloudRequestError.any(detail: "tried to commitAndPush without active user")
+                throw Musubi.Cloud.Error.request(detail: "tried to commitAndPush without active user")
             }
             
             let proposedCommitBlob = Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList)

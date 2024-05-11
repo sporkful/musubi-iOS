@@ -46,8 +46,8 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         
         let simulatedRemote = SimulatedRemote(list: oldList)
         
-        let oldDiffableList = Musubi.DiffableList(rawList: oldList)
-        let newDiffableList = Musubi.DiffableList(rawList: newList)
+        let oldDiffableList = try Musubi.Diffing.DiffableList(rawList: oldList)
+        let newDiffableList = try Musubi.Diffing.DiffableList(rawList: newList)
         
         if logging {
             log.append("Old list uniquified: \(oldDiffableList.uniquifiedList)")
@@ -56,7 +56,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             log.append("\t Remote state: \(await simulatedRemote.listCopy())")
         }
 
-        try await Musubi.DetailedListDifference(oldList: oldDiffableList, newList: newDiffableList)
+        try await Musubi.Diffing.Difference(oldList: oldDiffableList, newList: newDiffableList)
             .applyWithSideEffects(
                 insertionSideEffect: { element, offset in
                     await simulatedRemote.insert(element.item, at: offset)
@@ -149,7 +149,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         
         init(alphabet: Alphabet, numPossibleValues: UInt16) throws {
             if (numPossibleValues - 1) > alphabet.maxValue {
-                throw Error.any(detail: "numPossibleValues out of alphabet's range")
+                throw Error.misc(detail: "numPossibleValues out of alphabet's range")
             }
             
             self.alphabet = alphabet
@@ -182,11 +182,11 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         }
         
         enum Error: LocalizedError {
-            case any(detail: String)
+            case misc(detail: String)
 
             var errorDescription: String? {
                 let description = switch self {
-                    case let .any(detail): "\(detail)"
+                    case let .misc(detail): "\(detail)"
                 }
                 return "[Musubi::CollectionDiffingWithMoves] (TESTS) \(description)"
             }

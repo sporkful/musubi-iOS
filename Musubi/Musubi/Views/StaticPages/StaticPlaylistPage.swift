@@ -115,7 +115,7 @@ struct StaticPlaylistPage: View {
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
             guard let restOfList = restOfList as? [Spotify.PlaylistAudioTrackItem] else {
-                throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
+                throw SpotifyRequests.Error.DEV(detail: "playlistTracklist multipage types")
             }
             self.audioTrackList.append(
                 audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
@@ -133,7 +133,7 @@ struct StaticPlaylistPage: View {
         Task {
             do {
                 guard let currentUser = Musubi.UserManager.shared.currentUser else {
-                    throw Musubi.RepositoryError.cloning(detail: "(StaticPlaylistPage) no current user")
+                    throw Musubi.Repository.Error.cloning(detail: "(StaticPlaylistPage) no current user")
                 }
                 try await currentUser.initOrClone(
                     repositoryHandle: Musubi.RepositoryHandle(

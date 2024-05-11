@@ -17,6 +17,25 @@ struct SpotifyRequests {
     struct Playback {
         private init() { }
     }
+    
+    enum Error: LocalizedError {
+        case auth(detail: String)
+        case request(detail: String)
+        case response(detail: String)
+        case misc(detail: String)
+        case DEV(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .auth(detail): "(auth) \(detail)"
+                case let .request(detail): "(request) \(detail)"
+                case let .response(detail): "(response) \(detail)"
+                case let .misc(detail): "(misc) \(detail)"
+                case let .DEV(detail): "(DEV) \(detail)"
+            }
+            return "[Spotify::Request] \(description)"
+        }
+    }
 }
 
 extension SpotifyRequests {
@@ -32,7 +51,7 @@ extension SpotifyRequests {
         setContentTypeJSON: Bool = false
     ) throws -> URLRequest {
         guard path.first == "/" else {
-            throw Spotify.RequestError.creation(detail: "given request path is invalid")
+            throw Error.request(detail: "given request path is invalid")
         }
         
         var components = URLComponents()
@@ -41,7 +60,7 @@ extension SpotifyRequests {
         components.path = "/v1" + path
         components.queryItems = queryItems
         guard let url = components.url else {
-            throw Spotify.RequestError.creation(detail: "failed to create valid request URL")
+            throw Error.request(detail: "failed to create valid request URL")
         }
         
         return try createRequest(
@@ -77,7 +96,7 @@ extension SpotifyRequests {
             documentAttributes: nil
         )
         guard let attributedString = attributedString else {
-            throw Spotify.RequestError.other(detail: "failed to convert html to plaintext")
+            throw Error.misc(detail: "failed to convert html to plaintext")
         }
         return attributedString.string
     }
@@ -172,7 +191,7 @@ extension SpotifyRequests.Read {
         let firstPage = try await albumFirstAudioTrackPage(albumID: albumID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
         guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
-            throw Spotify.RequestError.other(detail: "DEVERROR(?) albumTracklist multipage types")
+            throw SpotifyRequests.Error.DEV(detail: "albumTracklist multipage types")
         }
         return firstPage.items + restOfTrackList
     }
@@ -191,7 +210,7 @@ extension SpotifyRequests.Read {
         let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
         guard let restOfTrackList = restOfTrackList as? [Spotify.PlaylistAudioTrackItem] else {
-            throw Spotify.RequestError.other(detail: "DEVERROR(?) playlistTracklist multipage types")
+            throw SpotifyRequests.Error.DEV(detail: "playlistTracklist multipage types")
         }
         return firstPage.items + restOfTrackList
     }
@@ -207,7 +226,7 @@ extension SpotifyRequests.Read {
         firstPage = try JSONDecoder().decode(Spotify.ArtistAlbumPage.self, from: data)
         let restOfAlbumList = try await restOfList(firstPage: firstPage)
         guard let restOfAlbumList = restOfAlbumList as? [Spotify.AlbumMetadata] else {
-            throw Spotify.RequestError.other(detail: "DEVERROR(?) artistAlbums multipage types")
+            throw SpotifyRequests.Error.DEV(detail: "artistAlbums multipage types")
         }
         return firstPage.items + restOfAlbumList
     }

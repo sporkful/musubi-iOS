@@ -57,7 +57,7 @@ extension Musubi {
             let (data, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw Spotify.RequestError.response(detail: "unable to parse response as HTTP")
+                throw SpotifyRequests.Error.response(detail: "unable to parse response as HTTP")
             }
             guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
                 // TODO: auto log out on error code 401?
@@ -67,7 +67,7 @@ extension Musubi {
                     \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
                     """
                 print(errorDescription)
-                throw Spotify.RequestError.response(detail: errorDescription)
+                throw SpotifyRequests.Error.response(detail: errorDescription)
             }
             
             return data
@@ -83,11 +83,11 @@ extension Musubi {
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw Musubi.CloudRequestError.any(detail: "unable to parse response as HTTP")
+                throw Musubi.Cloud.Error.response(detail: "unable to parse response as HTTP")
             }
             // TODO: check this
             guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
-                throw Musubi.CloudRequestError.any(detail: "failed - \(httpResponse.statusCode)")
+                throw Musubi.Cloud.Error.response(detail: "failed - \(httpResponse.statusCode)")
             }
             return data
         }
@@ -147,10 +147,10 @@ extension Musubi {
             
             // TODO: consider showing auth webview if old access token given for refreshing was expired
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw Spotify.AuthError.any(detail: "unable to interpret response to requestOAuthToken")
+                throw SpotifyRequests.Error.auth(detail: "unable to interpret response to requestOAuthToken")
             }
             guard (httpResponse.statusCode == 200) else {
-                throw Spotify.AuthError.any(detail: "requestOAuthToken errored: \(httpResponse.statusCode)")
+                throw SpotifyRequests.Error.auth(detail: "requestOAuthToken errored: \(httpResponse.statusCode)")
             }
             return try JSONDecoder().decode(OAuthResponse.self, from: data)
         }

@@ -57,7 +57,7 @@ struct LoginView: View {
             "Error when logging in with Spotify.",
             isPresented: $showAlertLoginError,
             actions: {},
-            message: { Text(Musubi.ErrorMessage(suggestedFix: .reopen).text) }
+            message: { Text(Musubi.UI.ErrorMessage(suggestedFix: .reopen).text) }
         )
     }
 }

@@ -23,7 +23,6 @@
 		7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947336E2B46758F001C3FEB /* MusubiViewModel.swift */; };
 		794733722B469C01001C3FEB /* Cryptography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733712B469C01001C3FEB /* Cryptography.swift */; };
 		794733782B469E11001C3FEB /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733772B469E11001C3FEB /* Storage.swift */; };
-		7947337C2B472754001C3FEB /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947337B2B472754001C3FEB /* Error.swift */; };
 		7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */; };
 		794733822B4A7D32001C3FEB /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733812B4A7D32001C3FEB /* LoginView.swift */; };
 		794733862B4B180E001C3FEB /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733852B4B180E001C3FEB /* HomeView.swift */; };
@@ -88,7 +87,6 @@
 		7947336E2B46758F001C3FEB /* MusubiViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiViewModel.swift; sourceTree = "<group>"; };
 		794733712B469C01001C3FEB /* Cryptography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cryptography.swift; sourceTree = "<group>"; };
 		794733772B469E11001C3FEB /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
-		7947337B2B472754001C3FEB /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotSoSecretSecrets.swift; sourceTree = "<group>"; };
 		794733812B4A7D32001C3FEB /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		794733852B4B180E001C3FEB /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -238,7 +236,6 @@
 				79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */,
 				794733712B469C01001C3FEB /* Cryptography.swift */,
 				794733772B469E11001C3FEB /* Storage.swift */,
-				7947337B2B472754001C3FEB /* Error.swift */,
 				794733992B4CE922001C3FEB /* UI.swift */,
 				7961DA102B55ADDB00650775 /* UIColor+.swift */,
 				7961DA122B55ADE200650775 /* UIImage+.swift */,
@@ -435,7 +432,6 @@
 				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
-				7947337C2B472754001C3FEB /* Error.swift in Sources */,
 				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,

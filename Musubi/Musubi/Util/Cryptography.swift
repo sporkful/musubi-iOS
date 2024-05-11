@@ -11,6 +11,19 @@ extension Musubi {
 }
 
 extension Musubi.Cryptography {
+    enum Error: LocalizedError {
+        case pkce(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .pkce(detail): "(pkce) \(detail)"
+            }
+            return "[Musubi::Cryptography] \(description)"
+        }
+    }
+}
+
+extension Musubi.Cryptography {
     static func hash(data: Data) -> String {
         return SHA256.hash(data: data)
             .compactMap { String(format: "%02x", $0) }
@@ -45,7 +58,7 @@ extension Musubi.Cryptography {
     
     static func newPKCEChallenge(pkceVerifier: String) throws -> String {
         guard let pkceVerifier = pkceVerifier.data(using: .ascii) else {
-            throw Musubi.CryptographyError.pkce(detail: "failed to generate challenge")
+            throw Error.pkce(detail: "failed to generate challenge")
         }
         return encodeBase64URL(bytes: SHA256.hash(data: pkceVerifier))
     }

@@ -14,6 +14,19 @@ extension Musubi {
         struct Response {
             private init() {}
         }
+        
+        enum Error: LocalizedError {
+            case request(detail: String)
+            case response(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .request(detail): "(request) \(detail)"
+                    case let .response(detail): "(response) \(detail)"
+                }
+                return "[Musubi::Cloud] \(description)"
+            }
+        }
     }
 }
 
@@ -32,7 +45,7 @@ extension Musubi.Cloud {
         components.host = API_HOSTNAME
         components.path = request.httpPath
         guard let url = components.url else {
-            throw Musubi.CloudRequestError.any(detail: "failed to create valid request URL")
+            throw Error.request(detail: "failed to create valid request URL")
         }
         
         var urlRequest = URLRequest(url: url)

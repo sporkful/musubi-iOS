@@ -149,10 +149,10 @@ extension Musubi {
         // TODO: clean up reference-spaghetti between User and UserManager?
         func initOrClone(repositoryHandle: Musubi.RepositoryHandle) async throws {
             if localClonesIndex.contains(where: { $0.handle == repositoryHandle }) {
-                throw Musubi.RepositoryError.cloning(detail: "called initOrClone on already cloned repo")
+                throw Musubi.Repository.Error.cloning(detail: "called initOrClone on already cloned repo")
             }
             if repositoryHandle.userID != self.id {
-                throw Musubi.RepositoryError.cloning(detail: "called initOrClone on unowned playlist")
+                throw Musubi.Repository.Error.cloning(detail: "called initOrClone on unowned playlist")
             }
             
             let cloudResponse: Musubi.Cloud.Response.Clone = try await Musubi.Cloud.make(
@@ -188,12 +188,12 @@ extension Musubi {
             guard let headCommit = cloudResponse.commits[cloudResponse.headCommitID],
                   let headBlob = cloudResponse.blobs[headCommit.blobID]
             else {
-                throw Musubi.RepositoryError.cloning(detail: "clone response does not have valid head blob")
+                throw Musubi.Repository.Error.cloning(detail: "clone response does not have valid head blob")
             }
             
             let cloneDir = LocalFS.CLONE_DIR(repositoryHandle: repositoryHandle)
             if LocalFS.doesDirExist(at: cloneDir) {
-                throw Musubi.RepositoryError.cloning(detail: "tried to clone repo that was already cloned")
+                throw Musubi.Repository.Error.cloning(detail: "tried to clone repo that was already cloned")
             }
             try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             

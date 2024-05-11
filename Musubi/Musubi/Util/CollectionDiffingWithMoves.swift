@@ -5,7 +5,27 @@ import Foundation
 // TODO: improve memory/perf
 // (this should be fine for now since we'll never have >2 of these and playlist sizes are relatively small)
 
+// namespaces
 extension Musubi {
+    struct Diffing {
+        private init() {}
+        
+        enum Error: LocalizedError {
+            case misc(detail: String)
+            case DEV(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .misc(detail): "(misc) \(detail)"
+                    case let .DEV(detail): "(DEV) \(detail)"
+                }
+                return "[Musubi::Diffing] \(description)"
+            }
+        }
+    }
+}
+
+extension Musubi.Diffing {
     struct DiffableList<RepeatableItem: Hashable> {
         struct UniquifiedElement: Hashable, Equatable {
             let item: RepeatableItem
@@ -15,7 +35,7 @@ extension Musubi {
         let uniquifiedList: [UniquifiedElement]
         let indexLookup: [UniquifiedElement: Int]
         
-        init(rawList: [RepeatableItem]) {
+        init(rawList: [RepeatableItem]) throws {
             var counter: [RepeatableItem : Int] = [:]
             var uniquifiedList: [UniquifiedElement] = []
             for item in rawList {
@@ -30,12 +50,13 @@ extension Musubi {
             }
             self.indexLookup = indexLookup
             
-            // TODO: remove
-            assert(Set(self.uniquifiedList).count == self.uniquifiedList.count, "[Musubi::DiffableList] uniquify err")
+            if Set(self.uniquifiedList).count != self.uniquifiedList.count {
+                throw Error.DEV(detail: "failed to uniquify raw list")
+            }
         }
     }
     
-    struct DetailedListDifference<RepeatableItem: Hashable> {
+    struct Difference<RepeatableItem: Hashable> {
         typealias UniquifiedElement = DiffableList<RepeatableItem>.UniquifiedElement
         
         let oldList: DiffableList<RepeatableItem>
@@ -80,7 +101,7 @@ extension Musubi {
                         unremovedElements.append(element)
                     }
                 default:
-                    throw Musubi.CollectionDiffingError.impl(detail: "saw insertion in removals")
+                    throw Error.DEV(detail: "saw insertion in removals")
                 }
             }
             
@@ -92,7 +113,7 @@ extension Musubi {
                     var adjustedInsertionOffset = originalInsertionOffset
                     for unremovedElement in unremovedElements.reversed() {
                         guard let unremovedElementCurrentOffset = oldListCopy.firstIndex(of: unremovedElement) else {
-                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in oldLstCopy")
+                            throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
                         if unremovedElementCurrentOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset += 1
@@ -109,7 +130,7 @@ extension Musubi {
                         // moment in time. Correctness relies on the uniqueness of elements.
                         let elementToMove = insertionElement
                         guard let removalOffset = oldListCopy.firstIndex(of: elementToMove) else {
-                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in oldLstCopy")
+                            throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
                         // If we had adjusted the insertion offset to account for the unremoved
                         // elementToMove (in the case that it's "earlier than" this insertion in the list),
@@ -120,21 +141,19 @@ extension Musubi {
                         if let unremovedElementIndex = unremovedElements.firstIndex(of: elementToMove) {
                             unremovedElements.remove(at: unremovedElementIndex)
                         } else {
-                            throw Musubi.CollectionDiffingError.impl(detail: "can't find unremoved elem in cache")
+                            throw Error.DEV(detail: "can't find unremoved elem in cache")
                         }
                         oldListCopy.remove(at: removalOffset)
                         oldListCopy.insert(elementToMove, at: adjustedInsertionOffset)
                         try await moveSideEffect(removalOffset, adjustedInsertionOffset)
                     }
                 default:
-                    throw Musubi.CollectionDiffingError.impl(detail: "saw removal in insertions")
+                    throw Error.DEV(detail: "saw removal in insertions")
                 }
             }
             
             if oldListCopy != self.newList.uniquifiedList {
-                throw Musubi.CollectionDiffingError.impl(
-                    detail: "result \(oldListCopy) != expected \(self.newList.uniquifiedList)"
-                )
+                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.newList.uniquifiedList)")
             }
         }
         
@@ -173,7 +192,7 @@ extension Musubi {
     }
 }
 
-extension Musubi.DiffableList<String>.UniquifiedElement: CustomStringConvertible {
+extension Musubi.Diffing.DiffableList<String>.UniquifiedElement: CustomStringConvertible {
     var description: String {
         "(\"\(self.item)\", \(self.occurrence))"
     }

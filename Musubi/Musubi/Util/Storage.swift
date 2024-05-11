@@ -18,6 +18,21 @@ extension Musubi {
         struct Cloud {
             private init() {}
         }
+        
+        enum Error: LocalizedError {
+            case local(detail: String)
+            case remote(detail: String)
+            case keychain(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .local(detail): "(local) \(detail)"
+                    case let .remote(detail): "(remote) \(detail)"
+                    case let .keychain(detail): "(keychain) \(detail)"
+                }
+                return "[Musubi::Storage] \(description)"
+            }
+        }
     }
 }
 
@@ -43,7 +58,7 @@ extension Musubi.Storage.Keychain {
     static func save(keyIdentifier: KeyIdentifier, value: Data) throws {
         do {
             try update(keyIdentifier: keyIdentifier, value: value)
-        } catch Musubi.StorageError.keychain {
+        } catch Musubi.Storage.Error.keychain {
             try insert(keyIdentifier: keyIdentifier, value: value)
         }
     }
@@ -60,7 +75,7 @@ extension Musubi.Storage.Keychain {
         var result: AnyObject?
         let status = SecItemCopyMatching(query, &result)
         guard status == errSecSuccess else {
-            throw Musubi.StorageError.keychain(detail: "failed to retrieve \(keyIdentifier.string)")
+            throw Musubi.Storage.Error.keychain(detail: "failed to retrieve \(keyIdentifier.string)")
         }
         return result as! Data
     }
@@ -74,7 +89,7 @@ extension Musubi.Storage.Keychain {
 
         let status = SecItemDelete(query)
         guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw Musubi.StorageError.keychain(detail: "failed to delete \(keyIdentifier.string)")
+            throw Musubi.Storage.Error.keychain(detail: "failed to delete \(keyIdentifier.string)")
         }
     }
     
@@ -91,7 +106,7 @@ extension Musubi.Storage.Keychain {
 //            if status == errSecDuplicateItem {
 //                throw Musubi.StorageError.keychain(detail: "\(keyName.rawValue) already exists")
 //            }
-            throw Musubi.StorageError.keychain(detail: "failed to insert \(keyIdentifier.string)")
+            throw Musubi.Storage.Error.keychain(detail: "failed to insert \(keyIdentifier.string)")
         }
     }
     
@@ -111,7 +126,7 @@ extension Musubi.Storage.Keychain {
 //            if status == errSecItemNotFound {
 //                throw Musubi.StorageError.keychain(detail: "update nonexistent \(keyName.rawValue)")
 //            }
-            throw Musubi.StorageError.keychain(detail: "failed to update \(keyIdentifier.string)")
+            throw Musubi.Storage.Error.keychain(detail: "failed to update \(keyIdentifier.string)")
         }
     }
 }

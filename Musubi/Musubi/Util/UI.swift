@@ -7,6 +7,17 @@ import UIKit
 extension Musubi {
     struct UI {
         private init() {}
+        
+        enum Error: LocalizedError {
+            case misc(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .misc(detail): "\(detail)"
+                }
+                return "[Musubi::UI] \(description)"
+            }
+        }
     }
 }
 
@@ -47,5 +58,39 @@ extension Musubi.UI {
     
     static func clamp(y: CGFloat, minY: CGFloat, maxY: CGFloat) -> CGFloat {
         return min(max(y, minY), maxY)
+    }
+}
+
+extension Musubi.UI {
+    struct ErrorMessage {
+        private let suggestedFix: SuggestedFix
+        
+        init(suggestedFix: SuggestedFix) {
+            self.suggestedFix = suggestedFix
+        }
+        
+        var text: String {
+            """
+            Apologies for the inconvenience! \
+            We're still working out the kinks in this early release of Musubi. \
+            Please try again. \
+            \
+            If the same error keeps popping up, \(suggestedFix) \
+            We appreciate your patience and feedback - it helps us improve your future experience :)
+            """
+        }
+        
+        enum SuggestedFix {
+            case reopen, relogin, reinstall, none
+            
+            var text: String {
+                return switch self {
+                    case .reopen: "try quitting and re-opening the Musubi app."
+                    case .relogin: "try logging out and logging back in."
+                    case .reinstall: "try deleting and re-installing the Musubi app."
+                    case .none: "please let us know so we can fix it."
+                }
+            }
+        }
     }
 }
