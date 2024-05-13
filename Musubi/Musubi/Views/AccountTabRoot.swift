@@ -7,7 +7,11 @@ struct AccountTabRoot: View {
         NavigationStack {
             Form {
                 Section("Current session") {
-                    Text("Logged in as: \(Musubi.UserManager.shared.currentUser?.spotifyInfo.display_name ?? "?")")
+                    if let currentUser = Musubi.UserManager.shared.currentUser {
+                        Text("Logged in as: \(currentUser.spotifyInfo.name)")
+                    } else {
+                        Text("No user detected. Please log out below and log back in!")
+                    }
                     Button(role: .destructive) {
                         // TODO: "are you sure you want to log out? (dw your stuff is saved)"
                         Musubi.UserManager.shared.logOut()

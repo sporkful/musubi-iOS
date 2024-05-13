@@ -13,55 +13,51 @@ protocol SpotifyIdentifiable: SpotifyViewModel, Identifiable {
     var id: Spotify.ID { get }
 }
 
-protocol SpotifyNameable: SpotifyViewModel {
-    var name: String { get }
-}
-
-protocol SpotifyListPage: SpotifyViewModel {
-    associatedtype ItemType: SpotifyIdentifiable
-    
-    var items: [ItemType] { get }
-    var next: String? { get }
-}
-
-protocol SpotifyModelCardable: SpotifyViewModel {
+protocol SpotifyPreviewable: SpotifyViewModel {
     var name: String { get }
     var images: [Spotify.Image]? { get }
+}
+
+protocol SpotifyNavigable: SpotifyViewModel, Hashable {}
+
+protocol SpotifyListPage: SpotifyViewModel {
+    associatedtype Item: SpotifyViewModel
     
-    // TODO: playback?
+    var items: [Item] { get }
+    var next: String? { get }
 }
 
 extension Spotify {
     typealias ID = String
     
-    struct Image: SpotifyViewModel, Hashable {
+    struct Image: SpotifyViewModel {
         let url: String
         let height: Int?
         let width: Int?
     }
     
-    struct LoggedInUser: SpotifyIdentifiable, SpotifyNameable {
-//        let country: String
-        let display_name: String
-//        let explicit_content: [String: Bool]
+    struct LoggedInUser: SpotifyIdentifiable, SpotifyPreviewable {
+        let country: String
+        let display_name: String?
+        let explicit_content: [String: Bool]
 //        let external_urls: [String: String]
         let id: Spotify.ID
-//        let images: [Spotify.Image]?
-//        let product: String
+        let images: [Spotify.Image]?
+        let product: String
         
-        var name: String { display_name }
+        var name: String { display_name ?? id }
     }
     
-    struct OtherUser: SpotifyIdentifiable, SpotifyNameable, Hashable {
-        let display_name: String
+    struct OtherUser: SpotifyIdentifiable, SpotifyPreviewable {
+        let display_name: String?
         let external_urls: [String: String]
         let id: Spotify.ID
         let images: [Spotify.Image]?
         
-        var name: String { display_name }
+        var name: String { display_name ?? id }
     }
     
-    struct AudioTrack: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
+    struct AudioTrack: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
         let id: Spotify.ID
         let album: AlbumMetadata?
         let artists: [ArtistMetadata]
@@ -79,7 +75,7 @@ extension Spotify {
     
     // MARK: Artist info
     
-    struct ArtistMetadata: SpotifyIdentifiable, SpotifyNameable, SpotifyModelCardable, Hashable {
+    struct ArtistMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
         let id: Spotify.ID
         let name: String
         let images: [Spotify.Image]?
@@ -96,7 +92,7 @@ extension Spotify {
     
     // MARK: Album info
     
-    struct AlbumMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
+    struct AlbumMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
         let id: Spotify.ID
         let album_type: String
         let images: [Spotify.Image]?
@@ -119,7 +115,7 @@ extension Spotify {
     
     // MARK: Playlist info
     
-    struct PlaylistMetadata: SpotifyIdentifiable, SpotifyModelCardable, Hashable {
+    struct PlaylistMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
         let id: Spotify.ID
         private let description: String
 //        let followers: Followers
@@ -205,3 +201,7 @@ extension Spotify {
         )
     }
 }
+
+// components of SpotifyNavigable types
+extension Spotify.Image: Hashable {}
+extension Spotify.OtherUser: Hashable {}

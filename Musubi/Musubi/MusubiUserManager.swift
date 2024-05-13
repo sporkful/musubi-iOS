@@ -22,11 +22,11 @@ extension Musubi {
             components.host = "accounts.spotify.com"
             components.path = "/authorize"
             components.queryItems = [
-                URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
+                URLQueryItem(name: "client_id", value: SPOTIFY_CLIENT_ID),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "redirect_uri", value: SpotifyConstants.OAUTH_DUMMY_REDIRECT_URI),
+                URLQueryItem(name: "redirect_uri", value: REDIRECT),
     //            URLQueryItem(name: "state", value: ),
-                URLQueryItem(name: "scope", value: SpotifyConstants.ACCESS_SCOPES_STR),
+                URLQueryItem(name: "scope", value: SpotifyRequests.ACCESS_SCOPES_STR),
                 URLQueryItem(name: "code_challenge_method", value: "S256"),
                 URLQueryItem(name: "code_challenge", value: pkceChallenge),
             ]
@@ -37,59 +37,12 @@ extension Musubi {
         @MainActor
         func handleNewLogin(authCode: String, pkceVerifier: String) async throws {
             try await fetchOAuthToken(authCode: authCode, pkceVerifier: pkceVerifier)
-            
-            var currentUserRequest = URLRequest(url: URL(string: "https://api.spotify.com/v1/me")!)
-            currentUserRequest.httpMethod = "GET"
-            let data = try await makeAuthdSpotifyRequest(request: &currentUserRequest)
-            
-            self.currentUser = User(
-                spotifyInfo: try JSONDecoder().decode(Spotify.LoggedInUser.self, from: data)
-            )
+            self.currentUser = User(spotifyInfo: try await SpotifyRequests.Read.loggedInUser())
         }
         
-        func makeAuthdSpotifyRequest(request: inout URLRequest) async throws -> Data {
+        func getAuthToken() async throws -> String {
             try await refreshOAuthToken()
-            request.setValue(
-                "Bearer \(retrieveOAuthToken())",
-                forHTTPHeaderField: "Authorization"
-            )
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw SpotifyRequests.Error.response(detail: "unable to parse response as HTTP")
-            }
-            guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
-                // TODO: auto log out on error code 401?
-                // TODO: handle rate limiting gracefully / notify user
-                let errorDescription = """
-                    failed with status code \(httpResponse.statusCode) - retry after \
-                    \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
-                    """
-                print(errorDescription)
-                throw SpotifyRequests.Error.response(detail: errorDescription)
-            }
-            
-            return data
-        }
-        
-        func makeAuthdMusubiCloudRequest(urlRequest: inout URLRequest) async throws -> Data {
-            try await refreshOAuthToken()
-            urlRequest.setValue(
-                retrieveOAuthToken(),
-                forHTTPHeaderField: "X-Musubi-SpotifyAuth"
-            )
-            
-            let (data, response) = try await URLSession.shared.data(for: urlRequest)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw Musubi.Cloud.Error.response(detail: "unable to parse response as HTTP")
-            }
-            // TODO: check this
-            guard SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
-                throw Musubi.Cloud.Error.response(detail: "failed - \(httpResponse.statusCode)")
-            }
-            return data
+            return retrieveOAuthToken()
         }
         
         private let TOKEN_EXPIRATION_BUFFER: TimeInterval = 300
@@ -107,8 +60,8 @@ extension Musubi {
                 queryItems: [
                     URLQueryItem(name: "grant_type", value: "authorization_code"),
                     URLQueryItem(name: "code", value: authCode),
-                    URLQueryItem(name: "redirect_uri", value: SpotifyConstants.OAUTH_DUMMY_REDIRECT_URI),
-                    URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
+                    URLQueryItem(name: "redirect_uri", value: REDIRECT),
+                    URLQueryItem(name: "client_id", value: SPOTIFY_CLIENT_ID),
                     URLQueryItem(name: "code_verifier", value: pkceVerifier),
                 ]
             )
@@ -127,7 +80,7 @@ extension Musubi {
                 queryItems: [
                     URLQueryItem(name: "grant_type", value: "refresh_token"),
                     URLQueryItem(name: "refresh_token", value: lastRefreshToken),
-                    URLQueryItem(name: "client_id", value: SpotifyConstants.API_CLIENT_ID),
+                    URLQueryItem(name: "client_id", value: SPOTIFY_CLIENT_ID),
                 ]
             )
             

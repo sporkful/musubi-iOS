@@ -56,12 +56,24 @@ extension Musubi.Cloud {
         jsonEncoder.dateEncodingStrategy = .iso8601
         urlRequest.httpBody = try jsonEncoder.encode(request)
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        urlRequest.setValue(
+            try await Musubi.UserManager.shared.getAuthToken(),
+            forHTTPHeaderField: "X-Musubi-SpotifyAuth"
+        )
         
-        let response = try await Musubi.UserManager.shared.makeAuthdMusubiCloudRequest(urlRequest: &urlRequest)
+        let (responseData, responseMetadata) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = responseMetadata as? HTTPURLResponse else {
+            throw Musubi.Cloud.Error.response(detail: "unable to parse response as HTTP")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw Musubi.Cloud.Error.response(detail: "failed - \(httpResponse.statusCode)")
+        }
         
         let jsonDecoder = JSONDecoder()
         jsonDecoder.dateDecodingStrategy = .iso8601
-        return try jsonDecoder.decode(ResponseType.self, from: response)
+        return try jsonDecoder.decode(ResponseType.self, from: responseData)
     }
 }
 

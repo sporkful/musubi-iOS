@@ -19,7 +19,7 @@ struct ListCell: View {
         self.showThumbnail = showThumbnail
     }
     
-    init(item: SpotifyModelCardable, showThumbnail: Bool = true) {
+    init(item: SpotifyPreviewable, showThumbnail: Bool = true) {
         self.title = item.name
         self.caption = {
             switch item.self {

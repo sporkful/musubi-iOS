@@ -26,18 +26,19 @@ struct RetryableAsyncImage: View {
     }
     
     private func loadImage() async {
-        while image == nil {
-            if let (data, response) = try? await URLSession.shared.data(from: url),
-               let httpResponse = response as? HTTPURLResponse,
-               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode)
-            {
-                image = UIImage(data: data)
-                break // success
+        while true {
+            do {
+                self.image = try await SpotifyRequests.Read.image(url: url)
+                return
+            } catch {
+                print("[Musubi::RetryableAsyncImage] failed to load image")
+                print(error)
+                print("[Musubi::RetryableAsyncImage] retrying...")
             }
-            
             do {
                 try await Task.sleep(until: .now + .seconds(1), clock: .continuous)
             } catch {
+                print("[Musubi::RetryableAsyncImage] giving up")
                 break // task was cancelled
             }
         }

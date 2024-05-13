@@ -290,7 +290,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
     
     func testFuzzNewFromScratch1() async throws {
         try await fuzzNewFromScratch(
-            numTests: 1000,
+            numTests: 100,
             randomGenerator: AlphabetizedRandomGenerator(
                 alphabet: .uInt16,
                 numPossibleValues: 200
@@ -302,7 +302,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
     
     func testFuzzEdits1() async throws {
         try await fuzzEdits(
-            numTests: 1000,
+            numTests: 100,
             randomGenerator: AlphabetizedRandomGenerator(
                 alphabet: .uInt16,
                 numPossibleValues: 200

@@ -114,9 +114,6 @@ struct StaticPlaylistPage: View {
             )
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-            guard let restOfList = restOfList as? [Spotify.PlaylistAudioTrackItem] else {
-                throw SpotifyRequests.Error.DEV(detail: "playlistTracklist multipage types")
-            }
             self.audioTrackList.append(
                 audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
             )

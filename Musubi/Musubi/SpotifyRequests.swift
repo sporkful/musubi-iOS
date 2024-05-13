@@ -1,6 +1,7 @@
 // SpotifyRequests.swift
 
 import Foundation
+import SwiftUI // for UIImage
 
 // namespaces
 struct SpotifyRequests {
@@ -39,21 +40,48 @@ struct SpotifyRequests {
 }
 
 extension SpotifyRequests {
+    /// Reference:
+    /// https://developer.spotify.com/documentation/web-api/concepts/scopes
+    static var ACCESS_SCOPES_STR: String { ACCESS_SCOPES.joined(separator: " ") }
+    static let ACCESS_SCOPES = [
+        "ugc-image-upload",
+        "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
+        "playlist-read-private",
+        "playlist-read-collaborative",
+        "playlist-modify-private",
+        "playlist-modify-public",
+//        "user-follow-modify",
+        "user-follow-read",
+        "user-read-playback-position",
+        "user-top-read",
+        "user-read-recently-played",
+//        "user-library-modify",
+        "user-library-read",
+//        "user-read-email",
+        "user-read-private"
+    ]
+    
+    /// Reference:
+    /// https://developer.spotify.com/documentation/web-api/concepts/api-calls
+    static let HTTP_SUCCESS_CODES = Set([200, 201, 202, 204])
+}
+
+extension SpotifyRequests {
     private enum HTTPMethod: String {
         case GET, PUT, POST, DELETE
     }
     
-    private static func createRequest(
+    private static func makeRequest<Response: Decodable>(
         type: HTTPMethod,
         path: String,
         queryItems: [URLQueryItem] = [],
-        bodyData: Data? = nil,
-        setContentTypeJSON: Bool = false
-    ) throws -> URLRequest {
+        jsonBody: Data? = nil
+    ) async throws -> Response {
         guard path.first == "/" else {
             throw Error.request(detail: "given request path is invalid")
         }
-        
         var components = URLComponents()
         components.scheme = "https"
         components.host = "api.spotify.com"
@@ -63,30 +91,62 @@ extension SpotifyRequests {
             throw Error.request(detail: "failed to create valid request URL")
         }
         
-        return try createRequest(
+        return try await makeRequest(
             type: type,
             url: url,
-            bodyData: bodyData,
-            setContentTypeJSON: setContentTypeJSON
+            jsonBody: jsonBody
         )
     }
     
-    private static func createRequest(
+    private static func makeRequest<Response: Decodable>(
         type: HTTPMethod,
         url: URL,
-        bodyData: Data? = nil,
-        setContentTypeJSON: Bool = false
-    ) throws -> URLRequest {
+        jsonBody: Data? = nil
+    ) async throws -> Response {
+        let responseData = try await makeRequest(
+            type: type,
+            url: url,
+            jsonBody: jsonBody
+        )
+        return try JSONDecoder().decode(Response.self, from: responseData)
+    }
+    
+    private static func makeRequest(
+        type: HTTPMethod,
+        url: URL,
+        jsonBody: Data? = nil
+    ) async throws -> Data {
         var request = URLRequest(url: url)
         request.httpMethod = type.rawValue
-        if bodyData != nil {
-            request.httpBody = bodyData
-        }
-        if setContentTypeJSON {
+        request.timeoutInterval = 30
+        
+        if let jsonBody = jsonBody {
+            request.httpBody = jsonBody
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        request.timeoutInterval = 30
-        return request
+        
+        request.setValue(
+            "Bearer \(try await Musubi.UserManager.shared.getAuthToken())",
+            forHTTPHeaderField: "Authorization"
+        )
+        
+        let (responseData, responseMetadata) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = responseMetadata as? HTTPURLResponse else {
+            throw SpotifyRequests.Error.response(detail: "unable to parse response metadata as HTTP")
+        }
+        guard HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
+            // TODO: auto log out on error code 401?
+            // TODO: handle rate limiting gracefully / notify user
+            let errorDescription = """
+                failed with status code \(httpResponse.statusCode) - retry after \
+                \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
+                """
+            print(errorDescription)
+            throw SpotifyRequests.Error.response(detail: errorDescription)
+        }
+        
+        return responseData
     }
     
     private static func htmlToPlaintext(html: String) throws -> String {
@@ -105,29 +165,32 @@ extension SpotifyRequests {
 extension SpotifyRequests.Read {
     private typealias HTTPMethod = SpotifyRequests.HTTPMethod
     
+    static func loggedInUser() async throws -> Spotify.LoggedInUser {
+        return try await SpotifyRequests.makeRequest(
+            type: .GET,
+            url: URL(string: "https://api.spotify.com/v1/me")!
+        )
+    }
+    
     // TODO: transform into AsyncStream
-    static func restOfList<T: SpotifyListPage>(firstPage: T) async throws -> [SpotifyViewModel] {
-        var items: [SpotifyViewModel] = []
+    static func restOfList<Page: SpotifyListPage>(firstPage: Page) async throws -> [Page.Item] {
         var currentPage = firstPage
 //        var items = currentPage.items
+        var items: [Page.Item] = []
         while let nextPageURLString = currentPage.next,
               let nextPageURL = URL(string: nextPageURLString)
         {
-            var request = try SpotifyRequests.createRequest(type: HTTPMethod.GET, url: nextPageURL)
-            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-            currentPage = try JSONDecoder().decode(T.self, from: data)
+            currentPage = try await SpotifyRequests.makeRequest(type: HTTPMethod.GET, url: nextPageURL)
             items.append(contentsOf: currentPage.items)
         }
         return items
     }
     
     static func audioTrack(audioTrackID: Spotify.ID) async throws -> Spotify.AudioTrack {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/tracks/" + audioTrackID
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.AudioTrack.self, from: data)
     }
     
     private struct AudioTracks: Codable {
@@ -140,112 +203,91 @@ extension SpotifyRequests.Read {
         if audioTrackIDs.isEmpty {
             return []
         }
-        var request = try SpotifyRequests.createRequest(
+        let audioTracks: Self.AudioTracks = try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/tracks",
             queryItems: [URLQueryItem(name: "ids", value: audioTrackIDs)]
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(AudioTracks.self, from: data).tracks
+        return audioTracks.tracks
     }
 
     static func artistMetadata(artistID: Spotify.ID) async throws -> Spotify.ArtistMetadata {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.ArtistMetadata.self, from: data)
     }
     
     static func albumMetadata(albumID: Spotify.ID) async throws -> Spotify.AlbumMetadata {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/albums/" + albumID
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.AlbumMetadata.self, from: data)
     }
     
     static func playlistMetadata(playlistID: Spotify.ID) async throws -> Spotify.PlaylistMetadata {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID,
             queryItems: [URLQueryItem(name: "fields", value: "id,description,followers,images,name,owner,snapshot_id")]
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.PlaylistMetadata.self, from: data)
     }
     
     static func albumFirstAudioTrackPage(albumID: Spotify.ID) async throws -> Spotify.AlbumAudioTrackPage {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/albums/" + albumID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.AlbumAudioTrackPage.self, from: data)
     }
     
     static func albumTrackListFull(albumID: Spotify.ID) async throws -> [Spotify.AudioTrack] {
         let firstPage = try await albumFirstAudioTrackPage(albumID: albumID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
-        guard let restOfTrackList = restOfTrackList as? [Spotify.AudioTrack] else {
-            throw SpotifyRequests.Error.DEV(detail: "albumTracklist multipage types")
-        }
         return firstPage.items + restOfTrackList
     }
     
     static func playlistFirstAudioTrackPage(playlistID: Spotify.ID) async throws -> Spotify.PlaylistAudioTrackPage {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/playlists/" + playlistID + "/tracks/",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.PlaylistAudioTrackPage.self, from: data)
     }
     
     static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.PlaylistAudioTrackItem] {
         let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
-        guard let restOfTrackList = restOfTrackList as? [Spotify.PlaylistAudioTrackItem] else {
-            throw SpotifyRequests.Error.DEV(detail: "playlistTracklist multipage types")
-        }
         return firstPage.items + restOfTrackList
     }
     
     static func artistAlbums(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
-        var request = try SpotifyRequests.createRequest(
+        let firstPage: Spotify.ArtistAlbumPage = try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID + "/albums",
             queryItems: [URLQueryItem(name: "limit", value: "50")]
         )
-        let firstPage: Spotify.ArtistAlbumPage
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        firstPage = try JSONDecoder().decode(Spotify.ArtistAlbumPage.self, from: data)
         let restOfAlbumList = try await restOfList(firstPage: firstPage)
-        guard let restOfAlbumList = restOfAlbumList as? [Spotify.AlbumMetadata] else {
-            throw SpotifyRequests.Error.DEV(detail: "artistAlbums multipage types")
-        }
         return firstPage.items + restOfAlbumList
     }
     
     // TODO: why does this require market query
     static func artistTopTracks(artistID: String) async throws -> [Spotify.ID] {
-        var request = try SpotifyRequests.createRequest(
+        let topTracks: Spotify.ArtistTopTracks = try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID + "/top-tracks",
-            queryItems: [URLQueryItem(name: "market", value: "US")]
+            queryItems: [
+                URLQueryItem(
+                    name: "market",
+                    value: Musubi.UserManager.shared.currentUser?.spotifyInfo.country ?? "US"
+                )
+            ]
         )
-        let topTracks: Spotify.ArtistTopTracks
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        topTracks = try JSONDecoder().decode(Spotify.ArtistTopTracks.self, from: data)
         return topTracks.tracks.map({ $0.id })
     }
     
     static func search(query: String) async throws -> Spotify.SearchResults {
-        var request = try SpotifyRequests.createRequest(
+        return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/search",
             queryItems: [
@@ -254,8 +296,14 @@ extension SpotifyRequests.Read {
                 URLQueryItem(name: "limit", value: "5")
             ]
         )
-        let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-        return try JSONDecoder().decode(Spotify.SearchResults.self, from: data)
+    }
+    
+    static func image(url: URL) async throws -> UIImage {
+        let data = try await SpotifyRequests.makeRequest(type: .GET, url: url)
+        guard let image = UIImage(data: data) else {
+            throw SpotifyRequests.Error.response(detail: "failed to init UIImage from response data")
+        }
+        return image
     }
 }
 
@@ -286,19 +334,16 @@ extension SpotifyRequests.Write {
         }
         
         func insert(audioTrackID: Spotify.ID, at position: Int) async throws {
-            var request = try SpotifyRequests.createRequest(
+            let response: ResponseBody = try await SpotifyRequests.makeRequest(
                 type: HTTPMethod.POST,
                 path: "/playlists/" + playlistID + "/tracks",
-                bodyData: JSONEncoder().encode(
+                jsonBody: JSONEncoder().encode(
                     InsertionRequestBody(
                         uris: [uri(audioTrackID: audioTrackID)],
                         position: position
                     )
-                ),
-                setContentTypeJSON: true
+                )
             )
-            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
             self.lastSnapshotID = response.snapshot_id
         }
         
@@ -308,19 +353,16 @@ extension SpotifyRequests.Write {
         }
         
         func remove(at position: Int) async throws {
-            var request = try SpotifyRequests.createRequest(
+            let response: ResponseBody = try await SpotifyRequests.makeRequest(
                 type: HTTPMethod.DELETE,
                 path: "/playlists/" + playlistID + "/tracks",
-                bodyData: JSONEncoder().encode(
+                jsonBody: JSONEncoder().encode(
                     RemovalRequestBody(
                         positions: [position],
                         snapshot_id: self.lastSnapshotID
                     )
-                ),
-                setContentTypeJSON: true
+                )
             )
-            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
             self.lastSnapshotID = response.snapshot_id
         }
         
@@ -350,20 +392,17 @@ extension SpotifyRequests.Write {
                 return
             }
             
-            var request = try SpotifyRequests.createRequest(
+            let response: ResponseBody = try await SpotifyRequests.makeRequest(
                 type: HTTPMethod.PUT,
                 path: "/playlists/" + playlistID + "/tracks",
-                bodyData: JSONEncoder().encode(
+                jsonBody: JSONEncoder().encode(
                     MoveRequestBody(
                         removalOffset: removalOffset,
                         insertionOffset: insertionOffset,
                         snapshotID: self.lastSnapshotID
                     )
-                ),
-                setContentTypeJSON: true
+                )
             )
-            let data = try await Musubi.UserManager.shared.makeAuthdSpotifyRequest(request: &request)
-            let response = try JSONDecoder().decode(ResponseBody.self, from: data)
             self.lastSnapshotID = response.snapshot_id
         }
     }

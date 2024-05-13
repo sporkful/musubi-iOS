@@ -274,11 +274,11 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
         }
         
         Task { @MainActor in
-            if let (data, response) = try? await URLSession.shared.data(from: coverImageURL),
-               let httpResponse = response as? HTTPURLResponse,
-               SpotifyConstants.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode)
-            {
-                coverImage = UIImage(data: data)
+            do {
+                self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
+            } catch {
+                print("[Musubi::AudioTrackListPage] failed to load cover image")
+                print(error.localizedDescription)
             }
         }
     }
