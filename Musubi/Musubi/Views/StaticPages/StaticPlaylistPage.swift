@@ -9,10 +9,6 @@ struct StaticPlaylistPage: View {
     
     let playlistMetadata: Spotify.PlaylistMetadata
     
-    @State var name: String
-    @State var description: String
-    @State var coverImageURLString: String?
-    
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
     
     @State private var isViewDisabled = false
@@ -28,9 +24,9 @@ struct StaticPlaylistPage: View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .spotifyPlaylist,
-            name: $name,
-            description: $description,
-            coverImageURLString: $coverImageURLString,
+            name: Binding.constant(playlistMetadata.name),
+            description: Binding.constant(playlistMetadata.descriptionTextFromHTML),
+            coverImageURLString: Binding.constant(playlistMetadata.images?.first?.url),
             audioTrackList: $audioTrackList,
             showAudioTrackThumbnails: true,
             associatedPeople: .users([playlistMetadata.owner]),

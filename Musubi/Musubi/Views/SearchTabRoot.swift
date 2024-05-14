@@ -83,18 +83,13 @@ struct SearchTabRoot: View {
                 .navigationDestination(for: Spotify.AlbumMetadata.self) { albumMetadata in
                     StaticAlbumPage(
                         navigationPath: $navigationPath,
-                        albumMetadata: albumMetadata,
-                        name: albumMetadata.name,
-                        coverImageURLString: albumMetadata.images?.first?.url
+                        albumMetadata: albumMetadata
                     )
                 }
                 .navigationDestination(for: Spotify.PlaylistMetadata.self) { playlistMetadata in
                     StaticPlaylistPage(
                         navigationPath: $navigationPath,
-                        playlistMetadata: playlistMetadata,
-                        name: playlistMetadata.name,
-                        description: playlistMetadata.descriptionTextFromHTML,
-                        coverImageURLString: playlistMetadata.images?.first?.url
+                        playlistMetadata: playlistMetadata
                     )
                 }
                 .navigationDestination(for: Spotify.OtherUser.self) { user in

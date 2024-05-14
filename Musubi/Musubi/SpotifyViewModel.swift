@@ -69,7 +69,6 @@ extension Spotify {
         let name: String
         let preview_url: String?
         
-        // TODO: make sure this computed property doesn't mess up JSON decoding
         var images: [Spotify.Image]? { album?.images }
     }
     

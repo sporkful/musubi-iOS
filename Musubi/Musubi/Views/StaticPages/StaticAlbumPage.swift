@@ -7,14 +7,7 @@ struct StaticAlbumPage: View {
     
     let albumMetadata: Spotify.AlbumMetadata
     
-    // TODO: find way to automatically init this based on album.*
-    // note the obvious sol seems invalid https://forums.swift.org/t/state-messing-with-initializer-flow/25276/3
-    @State var name: String
-    @State var coverImageURLString: String?
-    
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
-    
-    @State private var description: String = "" // dummy to satisfy generality of AudioTrackListPage
     
     @State private var showSheetAddToSelectableClones = false
     
@@ -22,9 +15,9 @@ struct StaticAlbumPage: View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .album,
-            name: $name,
-            description: $description,
-            coverImageURLString: $coverImageURLString,
+            name: Binding.constant(albumMetadata.name),
+            description: Binding.constant(""),
+            coverImageURLString: Binding.constant(albumMetadata.images?.first?.url),
             audioTrackList: $audioTrackList,
             showAudioTrackThumbnails: false,
             associatedPeople: .artists(albumMetadata.artists),
