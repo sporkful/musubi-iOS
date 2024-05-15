@@ -5,20 +5,19 @@ import SwiftUI
 struct LocalClonePage: View {
     @Binding var navigationPath: NavigationPath
     
+    // TODO: make these environment variables rooted at parent navDest?
     @Binding var repositoryReference: Musubi.RepositoryReference
     
-    @State var repositoryClone: Musubi.RepositoryClone
+    @Bindable var repositoryClone: Musubi.RepositoryClone
     
     @State private var showSheetEditor = false
     
     @State private var showSheetAddToSelectableClones = false
     
-    // TODO: ! placeholder view
+    // TODO: placeholder view in lieu of all `isViewDisabled`s
     @State private var isViewDisabled = false
     
     var body: some View {
-        @Bindable var repositoryClone = repositoryClone
-        
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .musubiLocalClone,
@@ -37,9 +36,14 @@ struct LocalClonePage: View {
                         Image(systemName: "pencil")
                     }
                     Button {
-                        commit()
+                        // TODO: show commit preview / creation page
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        Image(systemName: "icloud.and.arrow.up")
+                    }
+                    Button {
+                        // TODO: show commit history / checkout page
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
                     }
                     Menu {
                         Button {
@@ -73,6 +77,7 @@ struct LocalClonePage: View {
                 }
             }
         )
+        // TODO: put this on navstack so users can keep edit page open while adding tracks via search tab
         .sheet(isPresented: $showSheetEditor) {
             LocalCloneEditorPage(
                 showSheet: $showSheetEditor,

@@ -2,6 +2,11 @@
 
 import SwiftUI
 
+// TODO: design
+// - "un/select all" checkbox
+// - ability to collapse sections (or if that's not possible, make each section a one-shallow navdest)
+// - show confirmation page with (frozen) selections
+// - include ability to search through selection possibilities
 struct AddToSelectableLocalClonesSheet: View {
     @Environment(Musubi.User.self) private var currentUser
     

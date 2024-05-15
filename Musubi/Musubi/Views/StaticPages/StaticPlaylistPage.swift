@@ -121,6 +121,8 @@ struct StaticPlaylistPage: View {
         }
     }
     
+    // TODO: automatically (switch tabs and) open clone upon success
+    // TODO: also pop this off navstack upon success so users don't get confused?
     private func initOrClone() {
         isViewDisabled = true
         Task {

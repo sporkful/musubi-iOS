@@ -15,7 +15,7 @@ struct HomeView: View {
 //                .badge("!") // TODO: notifications
                 .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
         }
-        .environment(currentUser)
+        .environment(currentUser) // TODO: all subviews can use this envvar instead of UserManager.shared...
         // TODO: overlay with floating playback card
     }
 }

@@ -7,15 +7,13 @@ struct LocalCloneEditorPage: View {
     
     @Binding var repositoryReference: Musubi.RepositoryReference
     
-    @State var repositoryClone: Musubi.RepositoryClone
+    @Bindable var repositoryClone: Musubi.RepositoryClone
     
     @State private var editMode = EditMode.active // intended to be always-active
     
     @State private var dummyNavigationPath = NavigationPath()
     
     var body: some View {
-        @Bindable var repositoryClone = repositoryClone
-        
         NavigationStack {
             List {
                 ForEach(repositoryClone.stagedAudioTrackList) { audioTrack in

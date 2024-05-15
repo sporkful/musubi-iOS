@@ -47,6 +47,8 @@
 		79CC004C2B6ED363007E56A2 /* LocalCloneEditorPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */; };
 		79D4DF7F2B6CC1B2009AB97A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 79D4DF7E2B6CC1B2009AB97A /* AsyncAlgorithms */; };
 		79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */; };
+		79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */; };
+		79F556C02B73FA02000304B9 /* CommitHistoryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +111,8 @@
 		79C8D5B82B6C2FC4006A8359 /* String+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+.swift"; sourceTree = "<group>"; };
 		79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCloneEditorPage.swift; sourceTree = "<group>"; };
 		79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUser.swift; sourceTree = "<group>"; };
+		79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewCommitPage.swift; sourceTree = "<group>"; };
+		79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitHistoryPage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -258,6 +262,8 @@
 				7930D46E2B6ACC1F00E8C426 /* LocalClonePage.swift */,
 				79CC004B2B6ED363007E56A2 /* LocalCloneEditorPage.swift */,
 				79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */,
+				79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */,
+				79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */,
 			);
 			path = RepositoryPages;
 			sourceTree = "<group>";
@@ -428,6 +434,7 @@
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				7978F85C2B51253C005D3880 /* StaticAlbumPage.swift in Sources */,
+				79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
@@ -439,6 +446,7 @@
 				7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */,
 				794733A72B4D15BD001C3FEB /* AudioTrackListCell.swift in Sources */,
 				794733862B4B180E001C3FEB /* HomeView.swift in Sources */,
+				79F556C02B73FA02000304B9 /* CommitHistoryPage.swift in Sources */,
 				7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */,
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 				79223A152B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift in Sources */,

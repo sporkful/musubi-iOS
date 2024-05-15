@@ -33,7 +33,7 @@ extension Musubi.Diffing {
         }
         
         let uniquifiedList: [UniquifiedElement]
-        let indexLookup: [UniquifiedElement: Int]
+        let indexLookup: [UniquifiedElement: Int]  // TODO: do we need this?
         
         init(rawList: [RepeatableItem]) throws {
             var counter: [RepeatableItem : Int] = [:]
@@ -73,15 +73,20 @@ extension Musubi.Diffing {
         }
         
         // TODO: rollback / atomicity
+        /// This function gives the caller the ability to specify a side effect for "move"s beyond
+        /// just "remove then insert". We use this for e.g. reordering audio tracks on Spotify
+        /// without overwriting their "Date Added" stamps.
+        /// - Parameter insertionSideEffect: (newElement, offset) { insert `newElement` at `offset`}
+        /// - Parameter removalSideEffect: (offset) { remove element at `offset` }
         /// - Parameter moveSideEffect: (removalOffset, insertionOffset) {
-        ///         side effect for move equivalent to { remove at removalOffset then insert at insertionOffset }
-        ///     }
+        ///     side effect equivalent to { remove at `removalOffset` then insert at `insertionOffset` } }
         func applyWithSideEffects(
             insertionSideEffect: @escaping (UniquifiedElement, Int) async throws -> Void,
             removalSideEffect: @escaping (Int) async throws -> Void,
             moveSideEffect: @escaping (Int, Int) async throws -> Void
         ) async throws {
-            // to track, at any given time, which removals haven't been applied yet (as part of a move)
+            // to track, at any given time, which removals haven't been applied yet
+            // (skipped as part of a move)
             var unremovedElements: [UniquifiedElement] = []
             
             // to calculate the correct offsets for a move when it occurs and to verify final result
@@ -112,6 +117,7 @@ extension Musubi.Diffing {
                     // account for all unapplied removals at this moment in time.
                     var adjustedInsertionOffset = originalInsertionOffset
                     for unremovedElement in unremovedElements.reversed() {
+                        // TODO: take advantage of fact that unremovedElements is already ordered(?)
                         guard let unremovedElementCurrentOffset = oldListCopy.firstIndex(of: unremovedElement) else {
                             throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
@@ -126,18 +132,18 @@ extension Musubi.Diffing {
                     } else {
                         // This insertion is part of a move.
                         // There is a probably a clever way to adjust `associatedWith`s, but for now
-                        // we just brute-force search for the element-to-move's index at this particular
+                        // we brute-force search for the element-to-move's index at this particular
                         // moment in time. Correctness relies on the uniqueness of elements.
                         let elementToMove = insertionElement
                         guard let removalOffset = oldListCopy.firstIndex(of: elementToMove) else {
                             throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
-                        // If we had adjusted the insertion offset to account for the unremoved
-                        // elementToMove (in the case that it's "earlier than" this insertion in the list),
-                        // then correct it to account for the removal now actually being executed.
+                        // If we had adjusted this insertion's offset to account for the unremoved
+                        // elementToMove, then correct it to account for its actual removal now.
                         if removalOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset -= 1
                         }
+                        // TODO: take advantage of fact that unremovedElements is already ordered(?)
                         if let unremovedElementIndex = unremovedElements.firstIndex(of: elementToMove) {
                             unremovedElements.remove(at: unremovedElementIndex)
                         } else {
