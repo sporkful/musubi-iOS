@@ -197,9 +197,8 @@ extension SpotifyRequests.Read {
         let tracks: [Spotify.AudioTrack]
     }
     
-    // TODO: transform into AsyncStream to allow input without upper bound of 50
     /// - Parameter audioTrackIDs: comma-separated with no spaces, max 50
-    static func audioTracks(audioTrackIDs: String) async throws -> [Spotify.AudioTrack] {
+    private static func audioTracks(audioTrackIDs: String) async throws -> [Spotify.AudioTrack] {
         if audioTrackIDs.isEmpty {
             return []
         }
@@ -209,6 +208,42 @@ extension SpotifyRequests.Read {
             queryItems: [URLQueryItem(name: "ids", value: audioTrackIDs)]
         )
         return audioTracks.tracks
+    }
+    
+    /// - Parameter audioTrackIDs: comma-separated with no spaces, no max limit
+    static func audioTracks(audioTrackIDs: String) -> AsyncThrowingStream<[Spotify.AudioTrack], Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    var numCommasSeen = 0
+                    var currentRangeStartIndex = audioTrackIDs.startIndex
+                    for index in audioTrackIDs.indices {
+                        if audioTrackIDs[index] == "," {
+                            numCommasSeen += 1
+                            if numCommasSeen % 50 == 0 {
+                                continuation.yield(
+                                    try await SpotifyRequests.Read.audioTracks(
+                                        audioTrackIDs: String(audioTrackIDs[currentRangeStartIndex..<index])
+                                    )
+                                )
+                                currentRangeStartIndex = audioTrackIDs.index(after: index)
+                            }
+                        }
+                    }
+                    if !(audioTrackIDs.last == "," && numCommasSeen % 50 == 0) {
+                        continuation.yield(
+                            try await SpotifyRequests.Read.audioTracks(
+                                audioTrackIDs: String(audioTrackIDs[currentRangeStartIndex...])
+                            )
+                        )
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
+        }
     }
 
     static func artistMetadata(artistID: Spotify.ID) async throws -> Spotify.ArtistMetadata {
