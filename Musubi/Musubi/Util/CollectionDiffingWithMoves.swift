@@ -32,7 +32,7 @@ extension Musubi.Diffing {
             let occurrence: Int  // per-item-value counter starting at 1
         }
         
-        let uniquifiedList: [UniquifiedElement]
+        let uniquifiedList: [UniquifiedElement]  // TODO: rename this to e.g. `contents`
         let indexLookup: [UniquifiedElement: Int]  // TODO: do we need this?
         
         init(rawList: [RepeatableItem]) throws {
@@ -54,50 +54,41 @@ extension Musubi.Diffing {
                 throw Error.DEV(detail: "failed to uniquify raw list")
             }
         }
-    }
-    
-    struct Difference<RepeatableItem: Hashable> {
-        typealias UniquifiedElement = DiffableList<RepeatableItem>.UniquifiedElement
         
-        let oldList: DiffableList<RepeatableItem>
-        let newList: DiffableList<RepeatableItem>
-        
-        let canonicalDifference: CollectionDifference<UniquifiedElement>
-        
-        init(oldList: DiffableList<RepeatableItem>, newList: DiffableList<RepeatableItem>) {
-            self.oldList = oldList
-            self.newList = newList
-            self.canonicalDifference = newList.uniquifiedList
-                .difference(from: oldList.uniquifiedList)
-                .inferringMoves()
+        func differenceCanonical(
+            from other: Self
+        ) -> CollectionDifference<UniquifiedElement> {
+            return self.uniquifiedList.difference(from: other.uniquifiedList).inferringMoves()
         }
         
-        // TODO: rollback / atomicity
-        /// This function gives the caller the ability to specify a side effect for "move"s beyond
-        /// just "remove then insert". We use this for e.g. reordering audio tracks on Spotify
-        /// without overwriting their "Date Added" stamps.
-        /// - Parameter insertionSideEffect: (newElement, offset) { insert `newElement` at `offset`}
-        /// - Parameter removalSideEffect: (offset) { remove element at `offset` }
-        /// - Parameter moveSideEffect: (removalOffset, insertionOffset) {
-        ///     side effect equivalent to { remove at `removalOffset` then insert at `insertionOffset` } }
-        func applyWithSideEffects(
-            insertionSideEffect: @escaping (UniquifiedElement, Int) async throws -> Void,
-            removalSideEffect: @escaping (Int) async throws -> Void,
-            moveSideEffect: @escaping (Int, Int) async throws -> Void
-        ) async throws {
+        func differenceWithLiveMoves(
+            from other: Self
+        ) throws -> [CollectionDifference<UniquifiedElement>.Change] {
+            typealias Change = CollectionDifference<UniquifiedElement>.Change
+            
+            var differenceWithLiveMoves: [Change] = []
+            
+            let canonicalDifference = self.differenceCanonical(from: other)
+            
             // to track, at any given time, which removals haven't been applied yet
             // (skipped as part of a move)
             var unremovedElements: [UniquifiedElement] = []
             
             // to calculate the correct offsets for a move when it occurs and to verify final result
-            var oldListCopy = self.oldList.uniquifiedList
+            var oldListCopy = other.uniquifiedList
             
-            for removal in self.canonicalDifference.removals.reversed() {
+            for removal in canonicalDifference.removals.reversed() {
                 switch removal {
                 case let .remove(offset, element, associatedWith):
                     if associatedWith == nil {
                         oldListCopy.remove(at: offset)
-                        try await removalSideEffect(offset)
+                        differenceWithLiveMoves.append(
+                            Change.remove(
+                                offset: offset,
+                                element: element,
+                                associatedWith: nil
+                            )
+                        )
                     } else {
                         // This removal is part of a move, so skip it for now.
                         // Since removals are iterated by high offset -> low offset, later removals
@@ -110,7 +101,7 @@ extension Musubi.Diffing {
                 }
             }
             
-            for insertion in self.canonicalDifference.insertions {
+            for insertion in canonicalDifference.insertions {
                 switch insertion {
                 case let .insert(originalInsertionOffset, insertionElement, associatedWith):
                     // Regardless of whether this insertion is a move, we need to adjust its offset to
@@ -128,7 +119,13 @@ extension Musubi.Diffing {
                     
                     if associatedWith == nil {
                         oldListCopy.insert(insertionElement, at: adjustedInsertionOffset)
-                        try await insertionSideEffect(insertionElement, adjustedInsertionOffset)
+                        differenceWithLiveMoves.append(
+                            Change.insert(
+                                offset: adjustedInsertionOffset,
+                                element: insertionElement,
+                                associatedWith: nil
+                            )
+                        )
                     } else {
                         // This insertion is part of a move.
                         // There is a probably a clever way to adjust `associatedWith`s, but for now
@@ -151,49 +148,24 @@ extension Musubi.Diffing {
                         }
                         oldListCopy.remove(at: removalOffset)
                         oldListCopy.insert(elementToMove, at: adjustedInsertionOffset)
-                        try await moveSideEffect(removalOffset, adjustedInsertionOffset)
+                        differenceWithLiveMoves.append(
+                            Change.insert(
+                                offset: adjustedInsertionOffset,
+                                element: elementToMove,
+                                associatedWith: removalOffset
+                            )
+                        )
                     }
                 default:
                     throw Error.DEV(detail: "saw removal in insertions")
                 }
             }
             
-            if oldListCopy != self.newList.uniquifiedList {
-                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.newList.uniquifiedList)")
+            if oldListCopy != self.uniquifiedList {
+                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.uniquifiedList)")
             }
-        }
-        
-        var pureInsertions: [CollectionDifference<UniquifiedElement>.Change] {
-            return self.canonicalDifference.insertions.filter { change in
-                switch change {
-                case let .insert(_, _, associatedWith):
-                    return associatedWith == nil
-                default:
-                    return false
-                }
-            }
-        }
-        
-        var pureRemovals: [CollectionDifference<UniquifiedElement>.Change] {
-            return self.canonicalDifference.removals.filter { change in
-                switch change {
-                case let .remove(_, _, associatedWith):
-                    return associatedWith == nil
-                default:
-                    return false
-                }
-            }
-        }
-        
-        var moveInsertions: [CollectionDifference<UniquifiedElement>.Change] {
-            return self.canonicalDifference.insertions.filter { change in
-                switch change {
-                case let .insert(_, _, associatedWith):
-                    return associatedWith != nil
-                default:
-                    return false
-                }
-            }
+            
+            return differenceWithLiveMoves
         }
     }
 }

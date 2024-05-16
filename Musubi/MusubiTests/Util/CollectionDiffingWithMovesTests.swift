@@ -55,31 +55,41 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             log.append("=== START OPERATIONS ===")
             log.append("\t Remote state: \(await simulatedRemote.listCopy())")
         }
-
-        try await Musubi.Diffing.Difference(oldList: oldDiffableList, newList: newDiffableList)
-            .applyWithSideEffects(
-                insertionSideEffect: { element, offset in
+        
+        for change in try newDiffableList.differenceWithLiveMoves(from: oldDiffableList) {
+            switch change {
+            case .insert(offset: let offset, element: let element, associatedWith: let associatedWith):
+                if let associatedWith = associatedWith {
+                    let movedElement = await simulatedRemote.move(
+                        removalOffset: associatedWith,
+                        insertionOffset: offset
+                    )
+                    
+                    if logging {
+                        log.append("Moved item \"\(movedElement)\" from offset \(associatedWith) to \(offset)")
+                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+                    }
+                    XCTAssertEqual(movedElement, element.item, "movedElement \(movedElement) != Change's \(element)")
+                }
+                else {
                     await simulatedRemote.insert(element.item, at: offset)
+                    
                     if logging {
                         log.append("Inserted new element \(element) at offset \(offset)")
                         log.append("\t Remote state: \(await simulatedRemote.listCopy())")
                     }
-                },
-                removalSideEffect: { offset in
-                    let removedElement = await simulatedRemote.remove(at: offset)
-                    if logging {
-                        log.append("Removed item \"\(removedElement)\" at offset \(offset)")
-                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
-                    }
-                },
-                moveSideEffect: { removalOffset, insertionOffset in
-                    let movedElement = await simulatedRemote.move(removalOffset: removalOffset, insertionOffset: insertionOffset)
-                    if logging {
-                        log.append("Moved item \"\(movedElement)\" from offset \(removalOffset) to \(insertionOffset)")
-                        log.append("\t Remote state: \(await simulatedRemote.listCopy())")
-                    }
                 }
-            )
+            case .remove(offset: let offset, element: let element, associatedWith: let associatedWith):
+                let removedElement = await simulatedRemote.remove(at: offset)
+                
+                if logging {
+                    log.append("Removed item \"\(removedElement)\" at offset \(offset)")
+                    log.append("\t Remote state: \(await simulatedRemote.listCopy())")
+                }
+                XCTAssertEqual(associatedWith, nil, "remove unexpectedly associatedWith \(associatedWith ?? -1)")
+                XCTAssertEqual(removedElement, element.item, "removedElement \(removedElement) != Change's \(element)")
+            }
+        }
         
         let finalRemoteList = await simulatedRemote.listCopy()
         
