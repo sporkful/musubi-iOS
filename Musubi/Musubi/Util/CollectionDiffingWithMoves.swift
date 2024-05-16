@@ -2,8 +2,7 @@
 
 import Foundation
 
-// TODO: improve memory/perf
-// (this should be fine for now since we'll never have >2 of these and playlist sizes are relatively small)
+// TODO: improve memory/perf - current asymptotics are atrocious but should be fine for MVP
 
 // namespaces
 extension Musubi {
@@ -33,7 +32,6 @@ extension Musubi.Diffing {
         }
         
         let uniquifiedList: [UniquifiedElement]  // TODO: rename this to e.g. `contents`
-        let indexLookup: [UniquifiedElement: Int]  // TODO: do we need this?
         
         init(rawList: [RepeatableItem]) throws {
             var counter: [RepeatableItem : Int] = [:]
@@ -43,12 +41,6 @@ extension Musubi.Diffing {
                 uniquifiedList.append(UniquifiedElement(item: item, occurrence: counter[item]!))
             }
             self.uniquifiedList = uniquifiedList
-            
-            var indexLookup: [UniquifiedElement: Int] = [:]
-            for (index, element) in zip(uniquifiedList.indices, uniquifiedList) {
-                indexLookup[element] = index
-            }
-            self.indexLookup = indexLookup
             
             if Set(self.uniquifiedList).count != self.uniquifiedList.count {
                 throw Error.DEV(detail: "failed to uniquify raw list")
@@ -114,6 +106,8 @@ extension Musubi.Diffing {
                         }
                         if unremovedElementCurrentOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset += 1
+                        } else {
+                            break
                         }
                     }
                     
@@ -140,7 +134,6 @@ extension Musubi.Diffing {
                         if removalOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset -= 1
                         }
-                        // TODO: take advantage of fact that unremovedElements is already ordered(?)
                         if let unremovedElementIndex = unremovedElements.firstIndex(of: elementToMove) {
                             unremovedElements.remove(at: unremovedElementIndex)
                         } else {
@@ -166,6 +159,132 @@ extension Musubi.Diffing {
             }
             
             return differenceWithLiveMoves
+        }
+        
+        struct VisualChange: Equatable, Hashable {
+            let element: UniquifiedElement
+            var change: Change
+            
+            enum Change: Equatable, Hashable {
+                case none
+                case inserted(associatedWith: Int?)
+                case removed(associatedWith: Int?)
+                
+                /*
+                 Note: would prefer to not do this since it changes semantics of enum equality
+                 with potential side effects for this enum in other parts of the code.
+                 The alternative workaround (which is currently implemented) is to just set all
+                 `associatedWith`s = nil until the final move calculation phase.
+                 
+                // Ignore associated values (for correct `firstIndexOf` lookup).
+                static func ==(lhs: Change, rhs: Change) -> Bool {
+                    switch (lhs, rhs) {
+                    case (.none, .none), (.inserted, .inserted), (.removed, .removed):
+                        true
+                    default:
+                        false
+                    }
+                }
+                 */
+            }
+        }
+        
+        func visualDifference(
+            from other: Self
+        ) throws -> [VisualChange] {
+            var unifiedSummary: [VisualChange] = other.uniquifiedList.map { uniquifiedElement in
+                VisualChange(element: uniquifiedElement, change: .none)
+            }
+            
+            let canonicalDifference = self.differenceCanonical(from: other)
+            
+            var unremovedElements: [UniquifiedElement] = []
+            
+            for removal in canonicalDifference.removals.reversed() {
+                switch removal {
+                case let .remove(offset, element, _):
+                    guard unifiedSummary[offset].element == element else {
+                        throw Error.DEV(detail: "(visualDifference) mismatched initial removal offsets")
+                    }
+                    // associatedWith will be set during final phase.
+                    unifiedSummary[offset].change = .removed(associatedWith: nil)
+                    unremovedElements.append(element)
+                default:
+                    throw Error.DEV(detail: "(visualDifference) saw insertion in removals")
+                }
+            }
+            
+            for insertion in canonicalDifference.insertions {
+                switch insertion {
+                case let .insert(originalInsertionOffset, insertionElement, _):
+                    var adjustedInsertionOffset = originalInsertionOffset
+                    for unremovedElement in unremovedElements.reversed() {
+                        guard let unremovedElementCurrentOffset = unifiedSummary.firstIndex(
+                            of: VisualChange(
+                                element: unremovedElement,
+                                change: .removed(associatedWith: nil)
+                            )
+                        )
+                        else {
+                            throw Error.DEV(detail: "(visualDifference) can't find unremoved element")
+                        }
+                        if unremovedElementCurrentOffset <= adjustedInsertionOffset {
+                            adjustedInsertionOffset += 1
+                        } else {
+                            break
+                        }
+                    }
+                    
+                    // associatedWith will be set during final phase.
+                    unifiedSummary.insert(
+                        VisualChange(
+                            element: insertionElement,
+                            change: .inserted(associatedWith: nil)
+                        ),
+                        at: adjustedInsertionOffset
+                    )
+                default:
+                    throw Error.DEV(detail: "(visualDifference) saw removal in insertions")
+                }
+            }
+            
+            var unifiedSummaryIndexLookup: [VisualChange: Int] = [:]
+            for (index, element) in zip(unifiedSummary.indices, unifiedSummary) {
+                unifiedSummaryIndexLookup[element] = index
+            }
+            
+            // Note choosing to iterate over removals or insertions is arbitrary here, since both
+            // are supersets of the set of all moves.
+            for removal in canonicalDifference.removals {
+                switch removal {
+                case let .remove(_, element, associatedWith):
+                    if associatedWith != nil {
+                        guard let removalIndex = unifiedSummaryIndexLookup[
+                            VisualChange(
+                                element: element,
+                                change: .removed(associatedWith: nil)
+                            )
+                        ] else {
+                            throw Error.DEV(detail: "(visualDifference) couldn't find moved element as removal")
+                        }
+                        guard let insertionIndex = unifiedSummaryIndexLookup[
+                            VisualChange(
+                                element: element,
+                                change: .inserted(associatedWith: nil)
+                            )
+                        ] else {
+                            throw Error.DEV(detail: "(visualDifference) couldn't find moved element as insertion")
+                        }
+                        
+                        unifiedSummary[removalIndex].change = .removed(associatedWith: insertionIndex)
+                        unifiedSummary[insertionIndex].change = .inserted(associatedWith: removalIndex)
+                    }
+                default:
+                    throw Error.DEV(detail: "(visualDifference) saw insertion in removals")
+                }
+            }
+            
+            return unifiedSummary
         }
     }
 }

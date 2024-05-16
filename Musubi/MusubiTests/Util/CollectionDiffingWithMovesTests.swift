@@ -97,12 +97,45 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             log.append("=== END OPERATIONS ===")
             log.append("Final remote list: \(finalRemoteList)")
             log.append("Expected new list: \(newList)")
-            log.append("*** END ITERATION ***\n")
         }
         
         XCTAssertEqual(finalRemoteList, newList, "")
         
+        log.append("VISUAL DIFFERENCE")
+        let visualDifference = try newDiffableList.visualDifference(from: oldDiffableList)
+        for visualChange in visualDifference {
+            switch visualChange.change {
+            case .none:
+                log.append("  \(visualChange.element)")
+            case .inserted(associatedWith: let associatedWith):
+                if let associatedWith = associatedWith {
+                    log.append("+ \(visualChange.element) (moved from \(associatedWith))")
+                    XCTAssertEqual(visualChange.element, visualDifference[associatedWith].element, "mismatched visual move")
+                } else {
+                    log.append("+ \(visualChange.element)")
+                }
+            case .removed(associatedWith: let associatedWith):
+                if let associatedWith = associatedWith {
+                    log.append("- \(visualChange.element) (moved from \(associatedWith))")
+                    XCTAssertEqual(visualChange.element, visualDifference[associatedWith].element, "mismatched visual move")
+                } else {
+                    log.append("- \(visualChange.element)")
+                }
+            }
+        }
+        
+        let visualDifferenceResult = visualDifference.compactMap { visualChange in
+            switch visualChange.change {
+            case .none, .inserted:
+                visualChange.element
+            case .removed:
+                nil
+            }
+        }
+        XCTAssertEqual(visualDifferenceResult, newDiffableList.uniquifiedList, "unexpected visual diff result")
+        
         if logging {
+            log.append("*** END ITERATION ***\n")
             print(log.map({ "\t\($0)" }).joined(separator: "\n"))
         }
     }
@@ -111,7 +144,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
             newList: ["a", "x", "d", "b", "c", "e", "f", "z"],
-            logging: false
+            logging: true
         )
     }
     
@@ -119,7 +152,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["a", "b", "c", "d", "e", "f"],
             newList: ["a", "c", "g", "d", "e", "b", "f", "z"],
-            logging: false
+            logging: true
         )
     }
     
@@ -127,7 +160,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["A", "1", "5", "0", "C", "3", "B", "7", "B", "5", "3", "4", "8", "E", "A"],
             newList: ["D", "8", "0", "8", "3", "1", "8", "A", "8", "C", "F", "F", "E", "1", "6", "3"],
-            logging: true
+            logging: false
         )
     }
     
@@ -135,7 +168,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         try await testWithSimulatedRemote(
             oldList: ["A", "J", "I", "G", "D", "G", "C", "B", "A", "C", "E", "D", "I", "E"],
             newList: ["A", "G", "D", "C", "G", "J", "B", "C", "D", "A", "E", "I", "E"],
-            logging: true
+            logging: false
         )
     }
     
@@ -319,6 +352,32 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             ),
             possibleListLengths: 0..<500,
             possibleNumEdits: 0..<500,
+            logging: false
+        )
+    }
+    
+    func testFuzzEditsPerf1() async throws {
+        try await fuzzEdits(
+            numTests: 100,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .uInt16,
+                numPossibleValues: 1678
+            ),
+            possibleListLengths: 777..<888,
+            possibleNumEdits: 61..<62,
+            logging: false
+        )
+    }
+    
+    func testFuzzEditsPerf2() async throws {
+        try await fuzzEdits(
+            numTests: 100,
+            randomGenerator: AlphabetizedRandomGenerator(
+                alphabet: .uInt16,
+                numPossibleValues: 1678
+            ),
+            possibleListLengths: 777..<888,
+            possibleNumEdits: 170..<172,
             logging: false
         )
     }
