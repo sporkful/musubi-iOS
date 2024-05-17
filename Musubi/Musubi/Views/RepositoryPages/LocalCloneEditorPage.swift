@@ -31,7 +31,7 @@ struct LocalCloneEditorPage: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack {
-                        Text("Editing Local Clone")
+                        Text("Edit Local Clone")
                             .font(.caption)
                         Text(repositoryReference.externalMetadata.name)
                             .font(.headline)

@@ -69,26 +69,26 @@ extension Musubi.UI {
             self.suggestedFix = suggestedFix
         }
         
-        var text: String {
+        var string: String {
             """
             Apologies for the inconvenience! \
             We're still working out the kinks in this early release of Musubi. \
             Please try again. \
             \
             If the same error keeps popping up, \(suggestedFix) \
-            We appreciate your patience and feedback - it helps us improve your future experience :)
+            We appreciate your patience and feedback - it helps us improve your future experience!
             """
         }
         
         enum SuggestedFix {
-            case reopen, relogin, reinstall, none
+            case reopen, relogin, reinstall, contactDev
             
             var text: String {
                 return switch self {
                     case .reopen: "try quitting and re-opening the Musubi app."
                     case .relogin: "try logging out and logging back in."
                     case .reinstall: "try deleting and re-installing the Musubi app."
-                    case .none: "please let us know so we can fix it."
+                    case .contactDev: "please let us know so we can fix it."
                 }
             }
         }

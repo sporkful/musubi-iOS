@@ -243,3 +243,53 @@ extension Musubi.Storage.LocalFS {
             && (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true
     }
 }
+
+extension Musubi.Storage.LocalFS {
+    // Parameter `commitID` is necessary since there may be differences in encoding (for hashing)
+    // across platforms.
+    static func save(commit: Musubi.Model.Commit, commitID: String) throws {
+        try JSONEncoder().encode(commit).write(
+            to: GLOBAL_OBJECT_FILE(objectID: commitID),
+            options: .atomic
+        )
+    }
+    
+    static func save(blob: Musubi.Model.Blob, blobID: String) throws {
+        try Data(blob.utf8).write(
+            to: GLOBAL_OBJECT_FILE(objectID: blobID),
+            options: .atomic
+        )
+    }
+    
+    static func loadCommit(commitID: String) throws -> Musubi.Model.Commit {
+        return try JSONDecoder().decode(
+            Musubi.Model.Commit.self,
+            from: Data(contentsOf: GLOBAL_OBJECT_FILE(objectID: commitID))
+        )
+    }
+    
+    static func loadBlob(blobID: String) throws -> Musubi.Model.Blob {
+        return try String(contentsOf: GLOBAL_OBJECT_FILE(objectID: blobID), encoding: .utf8)
+    }
+}
+
+/*
+// TODO: if can't find locally (e.g. if eviction is introduced for "cache"), try cas3 directly
+extension Musubi.Storage {
+    static func loadCommit(commitID: String) throws -> Musubi.Model.Commit {
+        do {
+            return try LocalFS.loadCommit(commitID: commitID)
+        } catch {
+            // TODO: try cas3 directly
+        }
+    }
+    
+    static func loadBlob(blobID: String) throws -> Musubi.Model.Blob {
+        do {
+            return try LocalFS.loadBlob(blobID: blobID)
+        } catch {
+            // TODO: try cas3 directly
+        }
+    }
+}
+*/

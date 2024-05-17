@@ -12,6 +12,8 @@ struct LocalClonePage: View {
     
     @State private var showSheetEditor = false
     
+    @State private var showSheetNewCommit = false
+    
     @State private var showSheetAddToSelectableClones = false
     
     // TODO: placeholder view in lieu of all `isViewDisabled`s
@@ -36,7 +38,7 @@ struct LocalClonePage: View {
                         Image(systemName: "pencil")
                     }
                     Button {
-                        // TODO: show commit preview / creation page
+                        showSheetNewCommit = true
                     } label: {
                         Image(systemName: "icloud.and.arrow.up")
                     }
@@ -86,6 +88,13 @@ struct LocalClonePage: View {
             )
             .interactiveDismissDisabled(true)
         }
+        .sheet(isPresented: $showSheetNewCommit) {
+            NewCommitPage(
+                showSheet: $showSheetNewCommit,
+                repositoryReference: $repositoryReference,
+                repositoryClone: repositoryClone
+            )
+        }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
                 audioTrackList: $repositoryClone.stagedAudioTrackList,
@@ -113,21 +122,6 @@ struct LocalClonePage: View {
                 )
             }
         )
-    }
-    
-    // TODO: give this its own page with diff summary and message input
-    private func commit() {
-        isViewDisabled = true
-        Task {
-            do {
-                try await repositoryClone.makeCommit(message: "test \(Date.now.formatted())")
-            } catch {
-                print("[Musubi::LocalClonePage] commit and push failed")
-                print(error)
-                // TODO: trigger alert
-            }
-            isViewDisabled = false
-        }
     }
 }
 

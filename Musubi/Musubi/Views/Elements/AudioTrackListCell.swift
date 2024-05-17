@@ -3,6 +3,7 @@
 import SwiftUI
 
 // TODO: playback ability
+//  - change audioTrack to ViewModel.UIDableAudioTrack and add context: ViewModel.AudioTrackList
 
 struct AudioTrackListCell: View {
     let isNavigable: Bool
@@ -10,15 +11,15 @@ struct AudioTrackListCell: View {
     
     let audioTrack: Spotify.AudioTrack
     let showThumbnail: Bool
+    var customTextStyle: ListCell.CustomTextStyle = .defaultStyle  // TODO: turn into custom view modifier?
     
     @State private var showSheetAddToSelectableClones = false
-    @State private var addableAudioTrack: Musubi.ViewModel.AudioTrackList = []
     
     @State private var showAlertUnsupportedAction = false
     
     var body: some View {
         HStack {
-            ListCell(item: audioTrack, showThumbnail: showThumbnail)
+            ListCell(item: audioTrack, showThumbnail: showThumbnail, customTextStyle: customTextStyle)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     // TODO: implement playback
@@ -100,14 +101,11 @@ struct AudioTrackListCell: View {
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: $addableAudioTrack,
+                audioTrackList: Binding.constant(Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack])),
                 showSheet: $showSheetAddToSelectableClones
             )
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
-        .task {
-            addableAudioTrack = Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack])
-        }
     }
 }
 

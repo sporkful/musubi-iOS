@@ -7,8 +7,32 @@ struct ListCell: View {
     private let caption: String
     private let thumbnailURL: URL?
     private let showThumbnail: Bool
+    private let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
     
-    init(repositoryReference: Musubi.RepositoryReference, showThumbnail: Bool = true) {
+    struct CustomTextStyle: Equatable {
+        var color: CustomColor
+        var bold: Bool
+        
+        enum CustomColor: Equatable {
+            case none, green, red
+            
+            var color: Color {
+                switch self {
+                case .none: .white
+                case .green: .green
+                case .red: .red
+                }
+            }
+        }
+        
+        static let defaultStyle = Self(color: .none, bold: false)
+    }
+    
+    init(
+        repositoryReference: Musubi.RepositoryReference,
+        showThumbnail: Bool = true,
+        customTextStyle: CustomTextStyle = .defaultStyle
+    ) {
         self.title = repositoryReference.externalMetadata.name
         self.caption = repositoryReference.externalMetadata.description
         if let coverImageURLString = repositoryReference.externalMetadata.coverImageURLString {
@@ -17,9 +41,14 @@ struct ListCell: View {
             self.thumbnailURL = nil
         }
         self.showThumbnail = showThumbnail
+        self.customTextStyle = customTextStyle
     }
     
-    init(item: SpotifyPreviewable, showThumbnail: Bool = true) {
+    init(
+        item: SpotifyPreviewable,
+        showThumbnail: Bool = true,
+        customTextStyle: CustomTextStyle = .defaultStyle
+    ) {
         self.title = item.name
         self.caption = {
             switch item.self {
@@ -45,6 +74,8 @@ struct ListCell: View {
             self.thumbnailURL = nil
         }
         self.showThumbnail = showThumbnail
+        
+        self.customTextStyle = customTextStyle
     }
     
     var body: some View {
@@ -81,6 +112,8 @@ struct ListCell: View {
             Spacer()
         }
         .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+        .foregroundColor(customTextStyle.color.color)
+        .bold(customTextStyle.bold)
     }
 }
 

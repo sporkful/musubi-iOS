@@ -107,6 +107,7 @@ extension Musubi {
             try! saveStagingArea() // intentional fail-fast
         }
         
+        // TODO: fix bug where this (using .count) doesn't take into account earlier removals
         func stagedAudioTrackListAppend(audioTracks: [Spotify.AudioTrack]) {
             self.stagedAudioTrackList.append(audioTrackList: audioTracks)
             try! saveStagingArea() // intentional fail-fast

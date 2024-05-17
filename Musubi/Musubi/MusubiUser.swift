@@ -198,16 +198,10 @@ extension Musubi {
             try LocalFS.createNewDir(at: cloneDir, withIntermediateDirectories: true)
             
             for (blobID, blob) in cloudResponse.blobs {
-                try Data(blob.utf8).write(
-                    to: LocalFS.GLOBAL_OBJECT_FILE(objectID: blobID),
-                    options: .atomic
-                )
+                try LocalFS.save(blob: blob, blobID: blobID)
             }
             for (commitID, commit) in cloudResponse.commits {
-                try JSONEncoder().encode(commit).write(
-                    to: LocalFS.GLOBAL_OBJECT_FILE(objectID: commitID),
-                    options: .atomic
-                )
+                try LocalFS.save(commit: commit, commitID: commitID)
             }
             
             try Data(cloudResponse.headCommitID.utf8).write(
