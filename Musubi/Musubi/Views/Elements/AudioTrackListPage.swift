@@ -202,7 +202,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             .font(.caption)
                     }
                     toolbarBuilder()
-                    ForEach($audioTrackList) { $item in
+                    ForEach(audioTrackList) { item in
                         Divider()
                         AudioTrackListCell(
                             isNavigable: true,
