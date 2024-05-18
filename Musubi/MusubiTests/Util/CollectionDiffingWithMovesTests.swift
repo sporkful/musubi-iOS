@@ -4,8 +4,8 @@ import XCTest
 @testable import Musubi
 
 final class CollectionDiffingWithMovesTests: XCTestCase {
-    actor SimulatedRemote<RepeatableItem: Hashable> {
-        typealias Element = RepeatableItem
+    actor SimulatedRemote {
+        typealias Element = Spotify.ID
         
         private var list: [Element]
         
@@ -32,9 +32,24 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         }
     }
     
-    func testWithSimulatedRemote<RepeatableItem: Hashable>(
-        oldList: [RepeatableItem],
-        newList: [RepeatableItem],
+    func dummyAudioTrack(id: Spotify.ID) -> Spotify.AudioTrack {
+        Spotify.AudioTrack(
+            id: id,
+            album: nil,
+            artists: [],
+            available_markets: nil,
+            disc_number: 0,
+            duration_ms: 0,
+            explicit: true,
+            external_urls: [:],
+            name: "dummy",
+            preview_url: nil
+        )
+    }
+    
+    func testWithSimulatedRemote(
+        oldList: [Spotify.ID],
+        newList: [Spotify.ID],
         logging: Bool
     ) async throws {
         var log: [String] = []
@@ -46,17 +61,21 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         
         let simulatedRemote = SimulatedRemote(list: oldList)
         
-        let oldDiffableList = try Musubi.Diffing.DiffableList(rawList: oldList)
-        let newDiffableList = try Musubi.Diffing.DiffableList(rawList: newList)
+        let oldDiffableList = try await Musubi.ViewModel.AudioTrackList(
+            audioTracks: oldList.map { id in dummyAudioTrack(id: id) }
+        )
+        let newDiffableList = try await Musubi.ViewModel.AudioTrackList(
+            audioTracks: newList.map { id in dummyAudioTrack(id: id) }
+        )
         
         if logging {
-            log.append("Old list uniquified: \(oldDiffableList.uniquifiedList)")
-            log.append("New list uniquified: \(newDiffableList.uniquifiedList)")
+            log.append("Old list uniquified: \(await oldDiffableList.contents)")
+            log.append("New list uniquified: \(await newDiffableList.contents)")
             log.append("=== START OPERATIONS ===")
             log.append("\t Remote state: \(await simulatedRemote.listCopy())")
         }
         
-        for change in try newDiffableList.differenceWithLiveMoves(from: oldDiffableList) {
+        for change in try await newDiffableList.differenceWithLiveMoves(from: oldDiffableList) {
             switch change {
             case .insert(offset: let offset, element: let element, associatedWith: let associatedWith):
                 if let associatedWith = associatedWith {
@@ -69,10 +88,10 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
                         log.append("Moved item \"\(movedElement)\" from offset \(associatedWith) to \(offset)")
                         log.append("\t Remote state: \(await simulatedRemote.listCopy())")
                     }
-                    XCTAssertEqual(movedElement, element.item, "movedElement \(movedElement) != Change's \(element)")
+                    XCTAssertEqual(movedElement, element.audioTrackID, "movedElement \(movedElement) != Change's \(element)")
                 }
                 else {
-                    await simulatedRemote.insert(element.item, at: offset)
+                    await simulatedRemote.insert(element.audioTrackID, at: offset)
                     
                     if logging {
                         log.append("Inserted new element \(element) at offset \(offset)")
@@ -87,7 +106,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
                     log.append("\t Remote state: \(await simulatedRemote.listCopy())")
                 }
                 XCTAssertEqual(associatedWith, nil, "remove unexpectedly associatedWith \(associatedWith ?? -1)")
-                XCTAssertEqual(removedElement, element.item, "removedElement \(removedElement) != Change's \(element)")
+                XCTAssertEqual(removedElement, element.audioTrackID, "removedElement \(removedElement) != Change's \(element)")
             }
         }
         
@@ -102,7 +121,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         XCTAssertEqual(finalRemoteList, newList, "")
         
         log.append("VISUAL DIFFERENCE")
-        let visualDifference = try newDiffableList.visualDifference(from: oldDiffableList)
+        let visualDifference = try await newDiffableList.visualDifference(from: oldDiffableList)
         for visualChange in visualDifference {
             switch visualChange.change {
             case .none:
@@ -132,7 +151,8 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
                 nil
             }
         }
-        XCTAssertEqual(visualDifferenceResult, newDiffableList.uniquifiedList, "unexpected visual diff result")
+        let newContents = await newDiffableList.contents
+        XCTAssertEqual(visualDifferenceResult, newContents, "unexpected visual diff result")
         
         if logging {
             log.append("*** END ITERATION ***\n")

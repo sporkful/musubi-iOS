@@ -6,19 +6,6 @@ import Foundation
 extension Musubi {
     struct ViewModel {
         private init() { }
-        
-        enum Error: LocalizedError {
-            case misc(detail: String)
-            case DEV(detail: String)
-
-            var errorDescription: String? {
-                let description = switch self {
-                    case let .misc(detail): "(misc) \(detail)"
-                    case let .DEV(detail): "(DEV) \(detail)"
-                }
-                return "[Musubi::ViewModel] \(description)"
-            }
-        }
     }
 }
 
@@ -26,28 +13,56 @@ extension Musubi.ViewModel {
     @Observable
     @MainActor
     class AudioTrackList {
+//        let contextType: ContextType
+//        
+//        enum ContextType: String {
+//            case album = "Album"
+//            case spotifyPlaylist = "Spotify Playlist"
+//            case musubiLocalClone = "Musubi Local Clone"
+//        }
+        
         private(set) var contents: [UniquifiedElement]
         
-        private var audioTrackCounter: [Spotify.ID : Int]
-        private var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
+        private(set) var audioTrackCounter: [Spotify.ID : Int]
+        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
         
-        struct UniquifiedElement: Identifiable, Equatable, Hashable {
+        struct UniquifiedElement: /*Identifiable,*/ Equatable, Hashable, CustomStringConvertible {
             let audioTrackID: Spotify.ID
             let occurrence: Int  // per-value counter starting at 1
             
             weak var context: AudioTrackList?
             
+            // for audio tracks with no context, e.g. from search
+            private var _audioTrack: Spotify.AudioTrack?
+            
+            var audioTrack: Spotify.AudioTrack? {
+                get async {
+                    if let _audioTrack = _audioTrack {
+                        return _audioTrack
+                    } else {
+                        return await self.context?.audioTrackData[audioTrackID]
+                    }
+                }
+            }
+            
+            // TODO: make context non-optional for this initializer
             init(audioTrackID: Spotify.ID, occurrence: Int, context: AudioTrackList?) {
                 self.audioTrackID = audioTrackID
                 self.occurrence = occurrence
                 self.context = context
+                self._audioTrack = nil
             }
             
-            var audioTrack: Spotify.AudioTrack? {
-                get async { await self.context?.audioTrackData[audioTrackID] }
+            init(audioTrack: Spotify.AudioTrack) {
+                self.audioTrackID = audioTrack.id
+                self.occurrence = 1
+                self.context = nil
+                self._audioTrack = audioTrack
             }
             
-            var id: String { "\(audioTrackID):\(occurrence)" }
+//            var id: String { "\(audioTrackID):\(occurrence)" }
+            
+            var description: String { "(\"\(audioTrackID)\", \(occurrence))" }
             
             static func == (
                 lhs: Musubi.ViewModel.AudioTrackList.UniquifiedElement,
@@ -55,7 +70,7 @@ extension Musubi.ViewModel {
             ) -> Bool {
                 return lhs.audioTrackID == rhs.audioTrackID
                     && lhs.occurrence == rhs.occurrence
-                    && lhs.context === rhs.context
+//                    && lhs.context === rhs.context // omission for correct canonical CollectionDifference
             }
             
             func hash(into hasher: inout Hasher) {
@@ -64,19 +79,19 @@ extension Musubi.ViewModel {
             }
         }
         
-        init(audioTracks: [Spotify.AudioTrack]) {
+        init(audioTracks: [Spotify.AudioTrack]) throws {
             self.contents = []
             self.audioTrackCounter = [:]
             self.audioTrackData = [:]
             
-            self._append(audioTracks: audioTracks)
+            try self._append(audioTracks: audioTracks)
         }
         
-        func append(audioTracks: [Spotify.AudioTrack]) async {
-            self._append(audioTracks: audioTracks)
+        func append(audioTracks: [Spotify.AudioTrack]) async throws {
+            try self._append(audioTracks: audioTracks)
         }
         
-        private func _append(audioTracks: [Spotify.AudioTrack]) {
+        private func _append(audioTracks: [Spotify.AudioTrack]) throws {
             for audioTrack in audioTracks {
                 if self.audioTrackData[audioTrack.id] == nil {
                     self.audioTrackData[audioTrack.id] = audioTrack
@@ -90,10 +105,25 @@ extension Musubi.ViewModel {
                     )
                 )
             }
-            assert(Set(self.contents).count == self.contents.count, "[Musubi::ViewModel] _append failed to uniquify")
+            
+            if Set(self.contents).count != self.contents.count {
+                throw Error.DEV(detail: "append failed to maintain uniqueness")
+            }
         }
         
-        func remove(at index: Int) async -> Spotify.ID {
+        func remove(at index: Int) async throws -> Spotify.ID {
+            return try self._remove(at: index)
+        }
+        
+        func remove(atOffsets offsets: IndexSet) async throws -> [Spotify.ID] {
+            var removedElements: [Spotify.ID] = []
+            for offset in offsets.sorted().reversed() {
+                removedElements.append(try self._remove(at: offset))
+            }
+            return removedElements
+        }
+        
+        func _remove(at index: Int) throws -> Spotify.ID {
             let removedElement = self.contents.remove(at: index)
             self.contents.indices.forEach { i in
                 if self.contents[i].audioTrackID == removedElement.audioTrackID
@@ -106,11 +136,15 @@ extension Musubi.ViewModel {
                     )
                 }
             }
-            assert(Set(self.contents).count == self.contents.count, "[Musubi::ViewModel] remove failed to uniquify")
+            
+            if Set(self.contents).count != self.contents.count {
+                throw Error.DEV(detail: "remove failed to maintain uniqueness")
+            }
+            
             return removedElement.audioTrackID
         }
         
-        func move(fromOffsets source: IndexSet, toOffset destination: Int) async {
+        func move(fromOffsets source: IndexSet, toOffset destination: Int) async throws {
             self.contents.move(fromOffsets: source, toOffset: destination)
             
             var recounter: [Spotify.ID : Int] = [:]
@@ -125,8 +159,35 @@ extension Musubi.ViewModel {
                 }
             }
             
-            assert(Set(self.contents).count == self.contents.count, "[Musubi::ViewModel] move failed to uniquify")
-            assert(recounter == self.audioTrackCounter, "[Musubi::ViewModel] move caused unstable counter")
+            if Set(self.contents).count != self.contents.count {
+                throw Error.DEV(detail: "move failed to maintain uniqueness")
+            }
+            if recounter != self.audioTrackCounter {
+                throw Error.DEV(detail: "move unstabilized counter")
+            }
+        }
+        
+        func toBlob() async -> Musubi.Model.Blob {
+            return self.contents
+                .map({ element in element.audioTrackID })
+                .joined(separator: ",")
+        }
+        
+        func toBlobData() async -> Data {
+            return Data(await self.toBlob().utf8)
+        }
+        
+        enum Error: LocalizedError {
+            case misc(detail: String)
+            case DEV(detail: String)
+
+            var errorDescription: String? {
+                let description = switch self {
+                    case let .misc(detail): "(misc) \(detail)"
+                    case let .DEV(detail): "(DEV) \(detail)"
+                }
+                return "[Musubi::ViewModel::AudioTrackList] \(description)"
+            }
         }
     }
 }

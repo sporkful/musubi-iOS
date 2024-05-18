@@ -4,6 +4,7 @@ import Foundation
 
 // TODO: improve memory/perf - current asymptotics are atrocious but should be fine for MVP
 
+/*
 // namespaces
 extension Musubi {
     struct Diffing {
@@ -46,28 +47,30 @@ extension Musubi.Diffing {
                 throw Error.DEV(detail: "failed to uniquify raw list")
             }
         }
-        
+ */
+
+extension Musubi.ViewModel.AudioTrackList {
         func differenceCanonical(
-            from other: Self
-        ) -> CollectionDifference<UniquifiedElement> {
-            return self.uniquifiedList.difference(from: other.uniquifiedList).inferringMoves()
+            from other: Musubi.ViewModel.AudioTrackList
+        ) async -> CollectionDifference<UniquifiedElement> {
+            return self.contents.difference(from: other.contents).inferringMoves()
         }
         
         func differenceWithLiveMoves(
-            from other: Self
-        ) throws -> [CollectionDifference<UniquifiedElement>.Change] {
+            from other: Musubi.ViewModel.AudioTrackList
+        ) async throws -> [CollectionDifference<UniquifiedElement>.Change] {
             typealias Change = CollectionDifference<UniquifiedElement>.Change
             
             var differenceWithLiveMoves: [Change] = []
             
-            let canonicalDifference = self.differenceCanonical(from: other)
+            let canonicalDifference = await self.differenceCanonical(from: other)
             
             // to track, at any given time, which removals haven't been applied yet
             // (skipped as part of a move)
             var unremovedElements: [UniquifiedElement] = []
             
             // to calculate the correct offsets for a move when it occurs and to verify final result
-            var oldListCopy = other.uniquifiedList
+            var oldListCopy = other.contents
             
             for removal in canonicalDifference.removals.reversed() {
                 switch removal {
@@ -154,8 +157,8 @@ extension Musubi.Diffing {
                 }
             }
             
-            if oldListCopy != self.uniquifiedList {
-                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.uniquifiedList)")
+            if oldListCopy != self.contents {
+                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.contents)")
             }
             
             return differenceWithLiveMoves
@@ -190,13 +193,13 @@ extension Musubi.Diffing {
         }
         
         func visualDifference(
-            from other: Self
-        ) throws -> [VisualChange] {
-            var unifiedSummary: [VisualChange] = other.uniquifiedList.map { uniquifiedElement in
+            from other: Musubi.ViewModel.AudioTrackList
+        ) async throws -> [VisualChange] {
+            var unifiedSummary: [VisualChange] = other.contents.map { uniquifiedElement in
                 VisualChange(element: uniquifiedElement, change: .none)
             }
             
-            let canonicalDifference = self.differenceCanonical(from: other)
+            let canonicalDifference = await self.differenceCanonical(from: other)
             
             var unremovedElements: [UniquifiedElement] = []
             
@@ -286,11 +289,4 @@ extension Musubi.Diffing {
             
             return unifiedSummary
         }
-    }
-}
-
-extension Musubi.Diffing.DiffableList<String>.UniquifiedElement: CustomStringConvertible {
-    var description: String {
-        "(\"\(self.item)\", \(self.occurrence))"
-    }
 }
