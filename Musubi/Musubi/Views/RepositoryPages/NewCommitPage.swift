@@ -11,8 +11,7 @@ struct NewCommitPage: View {
     
     @State private var commitMessage = ""
     
-    @State private var visualDiffFromHead: [Musubi.Diffing.DiffableList<Spotify.ID>.VisualChange] = []
-    @State private var relevantAudioTrackData: [Spotify.ID: Spotify.AudioTrack] = [:]
+    @State private var visualDiffFromHead: [Musubi.ViewModel.AudioTrackList.VisualChange] = []
     
     // TODO: impl
     @State private var showPlaceholderOverlay = false
@@ -31,13 +30,12 @@ struct NewCommitPage: View {
                             // TODO: row numbers and +/- annotations
                             // TODO: moves
                             // TODO: undo by row?
-                            if let audioTrack = relevantAudioTrackData[visualChange.element.item] {
                                 switch visualChange.change {
                                 case .none:
                                     AudioTrackListCell(
                                         isNavigable: false,
                                         navigationPath: $dummyNavigationPath,
-                                        audioTrack: audioTrack,
+                                        audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .defaultStyle
                                     )
@@ -45,7 +43,7 @@ struct NewCommitPage: View {
                                     AudioTrackListCell(
                                         isNavigable: false,
                                         navigationPath: $dummyNavigationPath,
-                                        audioTrack: audioTrack,
+                                        audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .green, bold: true)
                                     )
@@ -54,12 +52,11 @@ struct NewCommitPage: View {
                                     AudioTrackListCell(
                                         isNavigable: false,
                                         navigationPath: $dummyNavigationPath,
-                                        audioTrack: audioTrack,
+                                        audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .red, bold: true)
                                     )
                                     .listRowBackground(Color.red.opacity(0.180))
-                                }
                             }
                         }
                     }
@@ -147,28 +144,30 @@ struct NewCommitPage: View {
             let headAudioTrackIDList: [Spotify.ID] = try Musubi.Storage.LocalFS.loadBlob(blobID: headCommit.blobID)
                 .components(separatedBy: ",")
             
-            let stagedAudioTrackList: [Spotify.AudioTrack] = await repositoryClone.stagedAudioTrackList
-                .map { $0.audioTrack }
-            let stagedAudioTrackIDList: [Spotify.ID] = stagedAudioTrackList
-                .map { $0.id }
-            
-            self.visualDiffFromHead = try Musubi.Diffing.DiffableList(rawList: stagedAudioTrackIDList)
-                .visualDifference(from: Musubi.Diffing.DiffableList(rawList: headAudioTrackIDList))
-            
-            self.relevantAudioTrackData = Dictionary(
-                uniqueKeysWithValues: Set(stagedAudioTrackList).map { ($0.id, $0) }
-            )
-            
-            let audioTrackIDsToFetch: Set<Spotify.ID> = Set(headAudioTrackIDList)
-                .subtracting(stagedAudioTrackIDList)
-            let audioTrackDataStream = SpotifyRequests.Read.audioTracks(
-                audioTrackIDs: audioTrackIDsToFetch.joined(separator: ",")
-            )
-            for try await sublist in audioTrackDataStream {
-                for audioTrack in sublist {
-                    self.relevantAudioTrackData[audioTrack.id] = audioTrack
+            var relevantAudioTrackData = await self.repositoryClone.stagedAudioTrackList.audioTrackData
+            for try await sublist in SpotifyRequests.Read.audioTracks(
+                audioTrackIDs: Set(headAudioTrackIDList)
+                    .subtracting(relevantAudioTrackData.keys)
+                    .joined(separator: ",")
+            ) {
+                sublist.forEach { audioTrack in
+                    relevantAudioTrackData[audioTrack.id] = audioTrack
                 }
             }
+            
+            let headAudioTrackList = try await Musubi.ViewModel.AudioTrackList(
+                audioTracks: headAudioTrackIDList.map { id in
+                    guard let audioTrack = relevantAudioTrackData[id] else {
+                        throw Musubi.UI.Error.misc(
+                            detail: "[Musubi::NewCommitPage] missing audio track data in loadVisualDiffFromHead"
+                        )
+                    }
+                    return audioTrack
+                }
+            )
+            
+            self.visualDiffFromHead = try await self.repositoryClone.stagedAudioTrackList
+                .visualDifference(from: headAudioTrackList)
         } catch {
             print("[Musubi::NewCommitPage] failed to diff from head")
             print(error.localizedDescription)

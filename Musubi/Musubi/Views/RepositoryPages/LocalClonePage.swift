@@ -26,7 +26,7 @@ struct LocalClonePage: View {
             name: $repositoryReference.externalMetadata.name,
             description: $repositoryReference.externalMetadata.description,
             coverImageURLString: $repositoryReference.externalMetadata.coverImageURLString,
-            audioTrackList: $repositoryClone.stagedAudioTrackList,
+            audioTrackList: repositoryClone.stagedAudioTrackList,
             showAudioTrackThumbnails: true,
             associatedPeople: .users([]),
             miscCaption: nil,  // TODO: last modified?
@@ -97,7 +97,7 @@ struct LocalClonePage: View {
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: $repositoryClone.stagedAudioTrackList,
+                audioTrackList: repositoryClone.stagedAudioTrackList,
                 showSheet: $showSheetAddToSelectableClones
             )
         }

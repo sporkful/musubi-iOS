@@ -126,7 +126,7 @@ extension Musubi {
             if let openedLocalClone = self.openedLocalClone,
                destinationHandles.contains(openedLocalClone.handle)
             {
-                openedLocalClone.stagedAudioTrackListAppend(audioTracks: newAudioTracks)
+                try await openedLocalClone.stagedAudioTrackListAppend(audioTracks: newAudioTracks)
             }
             
             let blobifiedNewAudioTrackIDs = newAudioTracks

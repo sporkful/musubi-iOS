@@ -16,16 +16,25 @@ struct LocalCloneEditorPage: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(repositoryClone.stagedAudioTrackList) { audioTrack in
+                ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { element in
                     AudioTrackListCell(
                         isNavigable: false,
                         navigationPath: $dummyNavigationPath,
-                        audioTrack: audioTrack.audioTrack,
+                        audioTrackListElement: element,
                         showThumbnail: true
                     )
                 }
-                .onDelete { repositoryClone.stagedAudioTrackListRemove(atOffsets: $0) }
-                .onMove { repositoryClone.stagedAudioTracklistMove(fromOffsets: $0, toOffset: $1) }
+                // TODO: any way to enforce well-defined ordering of ops?
+                .onDelete { atOffsets in
+                    Task {
+                        try await repositoryClone.stagedAudioTrackListRemove(atOffsets: atOffsets)
+                    }
+                }
+                .onMove { (fromOffsets, toOffset) in
+                    Task {
+                        try await repositoryClone.stagedAudioTracklistMove(fromOffsets: fromOffsets, toOffset: toOffset)
+                    }
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

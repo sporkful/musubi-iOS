@@ -54,8 +54,7 @@ extension Musubi {
     class RepositoryClone {
         let handle: RepositoryHandle
         
-        // TODO: make private(set)?
-        var stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
+        let stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
         
         var headCommitID: String
         let forkParent: RepositoryHandle?
@@ -75,7 +74,7 @@ extension Musubi {
             self.HEAD_FILE = Musubi.Storage.LocalFS.CLONE_HEAD_FILE(repositoryHandle: self.handle)
             self.FORK_PARENT_FILE = Musubi.Storage.LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: self.handle)
             
-            self.stagedAudioTrackList = []
+            self.stagedAudioTrackList = try Musubi.ViewModel.AudioTrackList(audioTracks: [])
             self.headCommitID = try String(contentsOf: HEAD_FILE, encoding: .utf8)
             self.forkParent = try? JSONDecoder().decode(RepositoryHandle.self, from: Data(contentsOf: FORK_PARENT_FILE))
             
@@ -85,7 +84,7 @@ extension Musubi {
             Task { @MainActor in
                 do {
                     for try await audioTrackSublist in SpotifyRequests.Read.audioTracks(audioTrackIDs: blob) {
-                        self.stagedAudioTrackList.append(audioTrackList: audioTrackSublist)
+                        try await self.stagedAudioTrackList.append(audioTracks: audioTrackSublist)
                     }
                 } catch {
                     print("[Musubi::RepositoryClone] failed to hydrate stagedAudioTrackList")
@@ -95,26 +94,26 @@ extension Musubi {
             }
         }
         
-        // TODO: synchronization to self.stagedAudioTrackList?
+        // TODO: review concurrency correctness, keeping actor re-entrancy in mind
         // TODO: integrate Musubi.Storage.USER_STAGED_AUDIO_TRACK_INDEX_FILE
-        func stagedAudioTrackListRemove(atOffsets: IndexSet) {
-            self.stagedAudioTrackList.remove(atOffsets: atOffsets)
-            try! saveStagingArea() // intentional fail-fast
+        func stagedAudioTrackListRemove(atOffsets: IndexSet) async throws {
+            try await self.stagedAudioTrackList.remove(atOffsets: atOffsets)
+            try! await saveStagingArea() // intentional fail-fast
         }
         
-        func stagedAudioTracklistMove(fromOffsets: IndexSet, toOffset: Int) {
-            self.stagedAudioTrackList.move(fromOffsets: fromOffsets, toOffset: toOffset)
-            try! saveStagingArea() // intentional fail-fast
+        func stagedAudioTracklistMove(fromOffsets: IndexSet, toOffset: Int) async throws {
+            try await self.stagedAudioTrackList.move(fromOffsets: fromOffsets, toOffset: toOffset)
+            try! await saveStagingArea() // intentional fail-fast
         }
         
         // TODO: fix bug where this (using .count) doesn't take into account earlier removals
-        func stagedAudioTrackListAppend(audioTracks: [Spotify.AudioTrack]) {
-            self.stagedAudioTrackList.append(audioTrackList: audioTracks)
-            try! saveStagingArea() // intentional fail-fast
+        func stagedAudioTrackListAppend(audioTracks: [Spotify.AudioTrack]) async throws {
+            try await self.stagedAudioTrackList.append(audioTracks: audioTracks)
+            try! await saveStagingArea() // intentional fail-fast
         }
 
-        func saveStagingArea() throws {
-            try Data(Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList).utf8)
+        func saveStagingArea() async throws {
+            try await self.stagedAudioTrackList.toBlobData()
                 .write(to: STAGING_AREA_FILE, options: .atomic)
         }
         
@@ -128,7 +127,7 @@ extension Musubi {
                 throw Musubi.Cloud.Error.request(detail: "tried to commitAndPush without active user")
             }
             
-            let proposedCommitBlob = Musubi.Model.Blob.from(audioTrackList: self.stagedAudioTrackList)
+            let proposedCommitBlob = await self.stagedAudioTrackList.toBlob()
             
             let cloudResponse: Musubi.Cloud.Response.Commit = try await Musubi.Cloud.make(
                 request: Musubi.Cloud.Request.Commit(

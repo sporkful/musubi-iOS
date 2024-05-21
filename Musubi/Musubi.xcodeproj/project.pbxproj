@@ -49,6 +49,7 @@
 		79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */; };
 		79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */; };
 		79F556C02B73FA02000304B9 /* CommitHistoryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */; };
+		79F556C22B7605A3000304B9 /* SelectableListSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F556C12B7605A3000304B9 /* SelectableListSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +114,7 @@
 		79D4DF802B6CCCFD009AB97A /* MusubiUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiUser.swift; sourceTree = "<group>"; };
 		79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewCommitPage.swift; sourceTree = "<group>"; };
 		79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitHistoryPage.swift; sourceTree = "<group>"; };
+		79F556C12B7605A3000304B9 /* SelectableListSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableListSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -252,6 +254,7 @@
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				794733AB2B4E01E3001C3FEB /* ListCell.swift */,
 				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
+				79F556C12B7605A3000304B9 /* SelectableListSection.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -451,6 +454,7 @@
 				794733352B464331001C3FEB /* MusubiApp.swift in Sources */,
 				79223A152B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift in Sources */,
 				79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */,
+				79F556C22B7605A3000304B9 /* SelectableListSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

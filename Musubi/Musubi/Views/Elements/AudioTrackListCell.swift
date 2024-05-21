@@ -9,9 +9,12 @@ struct AudioTrackListCell: View {
     let isNavigable: Bool
     @Binding var navigationPath: NavigationPath
     
-    let audioTrack: Spotify.AudioTrack
+    let audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement
+    
     let showThumbnail: Bool
     var customTextStyle: ListCell.CustomTextStyle = .defaultStyle  // TODO: turn into custom view modifier?
+    
+    @State private var audioTrack: Spotify.AudioTrack? = nil
     
     @State private var showSheetAddToSelectableClones = false
     
@@ -19,12 +22,22 @@ struct AudioTrackListCell: View {
     
     var body: some View {
         HStack {
+            if let audioTrack = self.audioTrack {
             ListCell(item: audioTrack, showThumbnail: showThumbnail, customTextStyle: customTextStyle)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    // TODO: implement playback
+                    // TODO: implement playback through audioTrackListElement.context
                     print("playing \(audioTrack.name)")
                 }
+            } else {
+                ListCell(
+                    title: "(Unable to load track metadata)",
+                    caption: "ID: \(self.audioTrackListElement.audioTrackID)",
+                    thumbnailURL: nil,
+                    showThumbnail: showThumbnail,
+                    customTextStyle: customTextStyle
+                )
+            }
             if isNavigable {
             Menu {
                 Button {
@@ -62,25 +75,26 @@ struct AudioTrackListCell: View {
                         Text("Go to radio")
                     }
                 }
+                // TODO: apply this pattern in rest of views (condition outside button instead of inside action)
+                if let album = self.audioTrack?.album {
                 Button {
-                    if let album = audioTrack.album {
-                        navigationPath.append(album)
-                    }
+                    navigationPath.append(album)
                 } label: {
                     HStack {
                         Image(systemName: "smallcircle.circle")
                         Text("View album")
                     }
                 }
+                }
+                if let primaryArtist = self.audioTrack?.artists.first {
                 Button {
-                    if let primaryArtist = audioTrack.artists.first {
-                        navigationPath.append(primaryArtist)
-                    }
+                    navigationPath.append(primaryArtist)
                 } label: {
                     HStack {
                         Image(systemName: "person")
                         Text("View artist")
                     }
+                }
                 }
                 Button {
                     // TODO: impl
@@ -100,12 +114,23 @@ struct AudioTrackListCell: View {
             }
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
-            AddToSelectableLocalClonesSheet(
-                audioTrackList: Binding.constant(Musubi.ViewModel.AudioTrackList.from(audioTrackList: [self.audioTrack])),
-                showSheet: $showSheetAddToSelectableClones
-            )
+            if let audioTrack = self.audioTrack {
+                AddToSelectableLocalClonesSheet(
+                    audioTrackList: try! Musubi.ViewModel.AudioTrackList(audioTracks: [audioTrack]),
+                    showSheet: $showSheetAddToSelectableClones
+                )
+            } else {
+                // TODO: handle this case better
+                AddToSelectableLocalClonesSheet(
+                    audioTrackList: try! Musubi.ViewModel.AudioTrackList(audioTracks: []),
+                    showSheet: $showSheetAddToSelectableClones
+                )
+            }
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
+        .task {
+            self.audioTrack = await self.audioTrackListElement.audioTrack
+        }
     }
 }
 

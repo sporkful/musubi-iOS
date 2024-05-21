@@ -10,11 +10,11 @@ import SwiftUI
 struct AddToSelectableLocalClonesSheet: View {
     @Environment(Musubi.User.self) private var currentUser
     
-    @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
+    @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     @Binding var showSheet: Bool
     
-    @State private var selectedAudioTracks = Set<Musubi.ViewModel.UIDableAudioTrack>()
+    @State private var selectedAudioTracks = Set<Musubi.ViewModel.AudioTrackList.UniquifiedElement>()
     @State private var selectedRepoReferences = Set<Musubi.RepositoryReference>()
     
     @State private var showAlertErrorExecuteAdd = false
@@ -27,61 +27,27 @@ struct AddToSelectableLocalClonesSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Add Audio Tracks") {
-                    ForEach(audioTrackList) { audioTrack in
-                        HStack {
-                            AudioTrackListCell(
-                                isNavigable: false,
-                                navigationPath: $dummyNavigationPath,
-                                audioTrack: audioTrack.audioTrack,
-                                showThumbnail: true
-                            )
-                            if selectedAudioTracks.contains(audioTrack) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
-                                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        selectedAudioTracks.remove(audioTrack)
-                                    }
-                            } else {
-                                Image(systemName: "square")
-                                    .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
-                                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        selectedAudioTracks.insert(audioTrack)
-                                    }
-                            }
-                        }
-                        .listRowBackground(selectedAudioTracks.contains(audioTrack) ? Color.gray.opacity(0.5) : .none)
-                    }
-                }
-                Section("To Local Clones") {
-                    ForEach(currentUser.localClonesIndex, id: \.self) { repositoryReference in
-                        HStack {
-                            ListCell(repositoryReference: repositoryReference)
-                            if selectedRepoReferences.contains(repositoryReference) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
-                                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        selectedRepoReferences.remove(repositoryReference)
-                                    }
-                            } else {
-                                Image(systemName: "square")
-                                    .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
-                                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        selectedRepoReferences.insert(repositoryReference)
-                                    }
-                            }
-                        }
-                        .listRowBackground(selectedRepoReferences.contains(repositoryReference) ? Color.gray.opacity(0.5) : .none)
-                    }
-                }
+                SelectableListSection(
+                    sectionTitle: "Add Audio Tracks",
+                    selectableList: audioTrackList.contents,
+                    listCellBuilder: { element in
+                        AudioTrackListCell(
+                            isNavigable: false,
+                            navigationPath: $dummyNavigationPath,
+                            audioTrackListElement: element,
+                            showThumbnail: true
+                        )
+                    },
+                    selectedElements: $selectedAudioTracks
+                )
+                SelectableListSection(
+                    sectionTitle: "To Local Clones",
+                    selectableList: currentUser.localClonesIndex,
+                    listCellBuilder: { element in
+                        ListCell(repositoryReference: element)
+                    },
+                    selectedElements: $selectedRepoReferences
+                )
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -117,9 +83,9 @@ struct AddToSelectableLocalClonesSheet: View {
             .disabled(isViewDisabled)
             .alert("Musubi - failed to execute add action", isPresented: $showAlertErrorExecuteAdd, actions: {})
             .interactiveDismissDisabled(true)
-            .onChange(of: audioTrackList, initial: true) { _, audioTrackList in
+            .onChange(of: audioTrackList.contents, initial: true) { _, audioTrackListContents in
                 // default to all audio tracks selected
-                selectedAudioTracks = Set(audioTrackList)
+                selectedAudioTracks = Set(audioTrackListContents)
             }
         }
     }
@@ -129,9 +95,31 @@ struct AddToSelectableLocalClonesSheet: View {
         isViewDisabled = true
         Task {
             do {
-                let newAudioTracks = audioTrackList
-                    .filter({ selectedAudioTracks.contains($0) })
-                    .map({ $0.audioTrack })
+                // TODO: clean this - Swift's built-in map doesn't support async closures yet :(
+//                let newAudioTracks = try await audioTrackList.contents
+//                    .filter { element in
+//                        selectedAudioTracks.contains(element)
+//                    }
+//                    .map { element in
+//                        guard let audioTrack = await element.audioTrack else {
+//                            throw Musubi.UI.Error.misc(
+//                                detail: "[Musubi::AddToSel...] missing audio track data in executeAdd"
+//                            )
+//                        }
+//                        return audioTrack
+//                    }
+                
+                var newAudioTracks: [Spotify.AudioTrack] = []
+                for element in await audioTrackList.contents {
+                    if selectedAudioTracks.contains(element) {
+                        guard let audioTrack = await element.audioTrack else {
+                            throw Musubi.UI.Error.misc(
+                                detail: "[Musubi::AddToSel...] missing audio track data in executeAdd"
+                            )
+                        }
+                        newAudioTracks.append(audioTrack)
+                    }
+                }
                 
                 let destinationHandles = Set(selectedRepoReferences.map({ $0.handle }))
                 

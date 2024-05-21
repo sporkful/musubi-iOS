@@ -2,32 +2,33 @@
 
 import SwiftUI
 
-// TODO: further deduplicate code wrt StaticAlbumPage?
-
 struct StaticPlaylistPage: View {
     @Binding var navigationPath: NavigationPath
     
     let playlistMetadata: Spotify.PlaylistMetadata
     
-    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
+    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList?
+    
+    @State private var showSheetAddToSelectableClones = false
     
     @State private var isViewDisabled = false
     @State private var showAlertCloneError = false
-    
-    @State private var showSheetAddToSelectableClones = false
     
     private var repositoryHandle: Musubi.RepositoryHandle {
         Musubi.RepositoryHandle(userID: playlistMetadata.owner.id, playlistID: playlistMetadata.id)
     }
     
     var body: some View {
+        // TODO: safe way to remove dummy outer VStack?
+        VStack {
+        if let audioTrackList = self.audioTrackList {
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .spotifyPlaylist,
             name: Binding.constant(playlistMetadata.name),
             description: Binding.constant(playlistMetadata.descriptionTextFromHTML),
             coverImageURLString: Binding.constant(playlistMetadata.images?.first?.url),
-            audioTrackList: $audioTrackList,
+            audioTrackList: audioTrackList,
             showAudioTrackThumbnails: true,
             associatedPeople: .users([playlistMetadata.owner]),
             miscCaption: nil,
@@ -84,9 +85,11 @@ struct StaticPlaylistPage: View {
         )
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: $audioTrackList,
+                audioTrackList: audioTrackList,
                 showSheet: $showSheetAddToSelectableClones
             )
+        }
+        }
         }
         .disabled(isViewDisabled)
         .alert("Musubi - failed to clone repo", isPresented: $showAlertCloneError, actions: {})
@@ -105,13 +108,13 @@ struct StaticPlaylistPage: View {
         
         do {
             let firstPage = try await SpotifyRequests.Read.playlistFirstAudioTrackPage(playlistID: playlistMetadata.id)
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
-                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: firstPage.items)
+            self.audioTrackList = try await Musubi.ViewModel.AudioTrackList(
+                audioTracks: [Spotify.AudioTrack].from(playlistTrackItems: firstPage.items)
             )
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-            self.audioTrackList.append(
-                audioTrackList: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
+            try await self.audioTrackList!.append(
+                audioTracks: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
             )
         } catch {
             // TODO: alert user?

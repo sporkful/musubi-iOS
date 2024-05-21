@@ -78,6 +78,20 @@ struct ListCell: View {
         self.customTextStyle = customTextStyle
     }
     
+    init(
+        title: String,
+        caption: String,
+        thumbnailURL: URL?,
+        showThumbnail: Bool,
+        customTextStyle: CustomTextStyle
+    ) {
+        self.title = title
+        self.caption = caption
+        self.thumbnailURL = thumbnailURL
+        self.showThumbnail = showThumbnail
+        self.customTextStyle = customTextStyle
+    }
+    
     var body: some View {
         HStack {
             if showThumbnail {

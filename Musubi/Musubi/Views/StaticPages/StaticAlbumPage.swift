@@ -7,18 +7,21 @@ struct StaticAlbumPage: View {
     
     let albumMetadata: Spotify.AlbumMetadata
     
-    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList = []
+    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList?
     
     @State private var showSheetAddToSelectableClones = false
     
     var body: some View {
+        // TODO: safe way to remove dummy outer VStack?
+        VStack {
+        if let audioTrackList = self.audioTrackList {
         AudioTrackListPage(
             navigationPath: $navigationPath,
             contentType: .album,
             name: Binding.constant(albumMetadata.name),
             description: Binding.constant(""),
             coverImageURLString: Binding.constant(albumMetadata.images?.first?.url),
-            audioTrackList: $audioTrackList,
+            audioTrackList: audioTrackList,
             showAudioTrackThumbnails: false,
             associatedPeople: .artists(albumMetadata.artists),
             miscCaption: "Release Date: \(albumMetadata.release_date)",
@@ -58,9 +61,11 @@ struct StaticAlbumPage: View {
         )
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: $audioTrackList,
+                audioTrackList: audioTrackList,
                 showSheet: $showSheetAddToSelectableClones
             )
+        }
+        }
         }
         .task {
             await loadAudioTrackList()
@@ -77,15 +82,15 @@ struct StaticAlbumPage: View {
         
         do {
             let firstPage = try await SpotifyRequests.Read.albumFirstAudioTrackPage(albumID: albumMetadata.id)
-            self.audioTrackList = Musubi.ViewModel.AudioTrackList.from(
-                audioTrackList: firstPage.items.map { audioTrack in
+            self.audioTrackList = try await Musubi.ViewModel.AudioTrackList(
+                audioTracks: firstPage.items.map { audioTrack in
                     Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: self.albumMetadata)
                 }
             )
             
             let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-            self.audioTrackList.append(
-                audioTrackList: restOfList.map { audioTrack in
+            try await self.audioTrackList!.append(
+                audioTracks: restOfList.map { audioTrack in
                     Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: self.albumMetadata)
                 }
             )

@@ -43,7 +43,9 @@ struct SearchTabRoot: View {
                                 AudioTrackListCell(
                                     isNavigable: true,
                                     navigationPath: $navigationPath,
-                                    audioTrack: audioTrack,
+                                    audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement(
+                                        audioTrack: audioTrack
+                                    ),
                                     showThumbnail: true
                                 )
                             }

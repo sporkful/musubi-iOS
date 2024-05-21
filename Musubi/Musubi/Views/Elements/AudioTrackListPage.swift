@@ -19,7 +19,8 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
     @Binding var description: String
     @Binding var coverImageURLString: String?
     
-    @Binding var audioTrackList: Musubi.ViewModel.AudioTrackList
+    @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
+    
     let showAudioTrackThumbnails: Bool
     
     enum AssociatedPeople {
@@ -202,12 +203,12 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             .font(.caption)
                     }
                     toolbarBuilder()
-                    ForEach(audioTrackList) { item in
+                    ForEach(audioTrackList.contents, id: \.self) { element in
                         Divider()
                         AudioTrackListCell(
                             isNavigable: true,
                             navigationPath: $navigationPath,
-                            audioTrack: item.audioTrack,
+                            audioTrackListElement: element,
                             showThumbnail: showAudioTrackThumbnails
                         )
                     }
