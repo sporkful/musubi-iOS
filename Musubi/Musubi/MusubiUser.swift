@@ -9,109 +9,55 @@ extension Musubi {
         let spotifyInfo: Spotify.LoggedInUser
         nonisolated var id: Spotify.ID { spotifyInfo.id }
         
-        typealias LocalClonesIndex = [Musubi.RepositoryReference]
-        var localClonesIndex: LocalClonesIndex
+        private(set) var localClonesIndex: [Musubi.RepositoryReference]
+        private typealias LocalClonesIndexStorageFormat = [Musubi.RepositoryHandle]
+        private let LOCAL_CLONES_INDEX_FILE: URL
         
-        var openedLocalClone: Musubi.RepositoryClone?
+        private(set) var openedLocalClone: Musubi.RepositoryClone?
         
-        private var refreshExternalMetadataTimer: Timer?
-        
-        init?(spotifyInfo: Spotify.LoggedInUser) {
+        init(spotifyInfo: Spotify.LoggedInUser) throws {
             self.spotifyInfo = spotifyInfo
             self.localClonesIndex = []
             self.openedLocalClone = nil
             
-            do {
-                let userClonesDir = Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id)
-                let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
-                
-                if Musubi.Storage.LocalFS.doesFileExist(at: userClonesIndexFile) {
-                    self.localClonesIndex = try JSONDecoder().decode(
-                        LocalClonesIndex.self,
-                        from: Data(contentsOf: userClonesIndexFile)
-                    )
-                } else {
-                    try Musubi.Storage.LocalFS.createNewDir(
-                        at: userClonesDir,
-                        withIntermediateDirectories: true
-                    )
-                    try JSONEncoder().encode(self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
-                }
-            } catch {
-                print("[Musubi::User] failed to init user for \(spotifyInfo.display_name)")
-                return nil
-            }
+            self.LOCAL_CLONES_INDEX_FILE = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: spotifyInfo.id)
             
-            Task {
-                await startPeriodicRefreshExternalMetadata()
+            if Musubi.Storage.LocalFS.doesFileExist(at: self.LOCAL_CLONES_INDEX_FILE) {
+                let handles: LocalClonesIndexStorageFormat = try JSONDecoder().decode(
+                    LocalClonesIndexStorageFormat.self,
+                    from: Data(contentsOf: self.LOCAL_CLONES_INDEX_FILE)
+                )
+                self.localClonesIndex = handles.map { handle in
+                    Musubi.RepositoryReference(handle: handle)
+                }
+            } else {
+                try Musubi.Storage.LocalFS.createNewDir(
+                    at: Musubi.Storage.LocalFS.USER_CLONES_DIR(userID: self.id),
+                    withIntermediateDirectories: true
+                )
+                let emptyHandles: LocalClonesIndexStorageFormat = []
+                try JSONEncoder().encode(emptyHandles).write(to: self.LOCAL_CLONES_INDEX_FILE, options: .atomic)
             }
             
             // TODO: start playback polling if this is a premium user (here or when HomeView appears?)
         }
         
-        private func startPeriodicRefreshExternalMetadata() async {
-            self.refreshExternalMetadataTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
-                [weak self] (_) in
-                Task { [weak self] in
-                    await self?.refreshClonesExternalMetadata()
-                }
-            }
-            self.refreshExternalMetadataTimer?.fire()
-        }
-        
-        func pausePeriodicRefreshExternalMetadata(forTimeInSeconds: TimeInterval) async {
-            self.refreshExternalMetadataTimer?.invalidate()
-            self.refreshExternalMetadataTimer = nil
-            
-            Task {
-                try await Task.sleep(nanoseconds: UInt64(forTimeInSeconds * 1_000_000_000))
-                await startPeriodicRefreshExternalMetadata()
-            }
-        }
-        
-        // TODO: better error handling / retries?
-        private func refreshClonesExternalMetadata() async {
-            // Note that indices into `self.localClonesIndex` are not guaranteed to be stable for
-            // the full execution of the for-loop due to the `await`ing of the Spotify request on
-            // every iteration. Since this function is meant to be called periodically in the
-            // background and we don't need particularly strong consistency guarantees
-            // (it deals with Spotify-controlled metadata that we explicitly don't version control),
-            // we choose to `break` as soon as we detect that the underlying index has changed from
-            // when the function was invoked.
-            for i in self.localClonesIndex.indices {
-                guard self.localClonesIndex.indices.contains(i) else {
-                    break
-                }
-                let handle = self.localClonesIndex[i].handle
-                guard let newMetadata = try? await Musubi.RepositoryExternalMetadata.fromSpotify(handle: handle) else {
-                    // The erroring of the external request itself implies nothing about the index.
-                    continue
-                }
-                
-                guard self.localClonesIndex.indices.contains(i),
-                      self.localClonesIndex[i].handle == handle
-                else {
-                    break
-                }
-                // Avoid triggering unnecessary SwiftUI updates.
-                if newMetadata != self.localClonesIndex[i].externalMetadata {
-                    self.localClonesIndex[i].externalMetadata = newMetadata
-                }
-            }
-            Task {
-                try? await saveClonesIndex()
-            }
-        }
-        
         private nonisolated func saveClonesIndex() async throws {
-            let userClonesIndexFile = Musubi.Storage.LocalFS.USER_CLONES_INDEX_FILE(userID: self.id)
-            try JSONEncoder().encode(await self.localClonesIndex).write(to: userClonesIndexFile, options: .atomic)
+            let handles: LocalClonesIndexStorageFormat = await self.localClonesIndex.map { $0.handle }
+            try JSONEncoder().encode(handles).write(to: self.LOCAL_CLONES_INDEX_FILE, options: .atomic)
         }
         
-        // TODO: do we need to make this async to run on MainActor only?
-        func openLocalClone(repositoryHandle: RepositoryHandle) -> RepositoryClone? {
-            if self.openedLocalClone?.handle != repositoryHandle {
-                self.openedLocalClone = try? Musubi.RepositoryClone(handle: repositoryHandle)
+        // TODO: do we need to make this async / run on MainActor only? if so how?
+        // Called from inside a navigationDestination callback (LocalClonesTabRoot)
+        func openLocalClone(repositoryHandle handleToOpen: RepositoryHandle) -> RepositoryClone? {
+            if handleToOpen == self.openedLocalClone?.repositoryReference.handle {
+                return self.openedLocalClone
+            }
+            
+            if let repositoryReferenceToOpen = self.localClonesIndex.first(where: { $0.handle == handleToOpen }) {
+                self.openedLocalClone = try? Musubi.RepositoryClone(repositoryReference: repositoryReferenceToOpen)
+            } else {
+                self.openedLocalClone = nil
             }
             return self.openedLocalClone
         }
@@ -124,7 +70,7 @@ extension Musubi {
             }
             
             if let openedLocalClone = self.openedLocalClone,
-               destinationHandles.contains(openedLocalClone.handle)
+               destinationHandles.contains(openedLocalClone.repositoryReference.handle)
             {
                 try await openedLocalClone.stagedAudioTrackListAppend(audioTracks: newAudioTracks)
             }
@@ -134,7 +80,7 @@ extension Musubi {
                 .joined(separator: ",")
             
             for handle in destinationHandles {
-                if handle != self.openedLocalClone?.handle {
+                if handle != self.openedLocalClone?.repositoryReference.handle {
                     let stagingAreaFile = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: handle)
                     var blob = try String(contentsOf: stagingAreaFile, encoding: .utf8)
                     if !blob.isEmpty {
@@ -163,12 +109,7 @@ extension Musubi {
             
             try saveClone(repositoryHandle: repositoryHandle, cloudResponse: cloudResponse)
             
-            self.localClonesIndex.append(
-                Musubi.RepositoryReference(
-                    handle: repositoryHandle,
-                    externalMetadata: try await Musubi.RepositoryExternalMetadata.fromSpotify(handle: repositoryHandle)
-                )
-            )
+            self.localClonesIndex.append(Musubi.RepositoryReference(handle: repositoryHandle))
             // TODO: better error handling here?
             try? await saveClonesIndex()
         }

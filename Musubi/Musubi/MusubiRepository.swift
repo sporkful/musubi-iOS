@@ -23,36 +23,95 @@ extension Musubi {
 }
 
 extension Musubi {
-    // Note Hashable conformance here is only for SwiftUI List materialization.
-    struct RepositoryHandle: Codable, Hashable {
+    struct RepositoryHandle: Codable, Identifiable, Hashable {
         let userID: Spotify.ID
         let playlistID: Spotify.ID
+        
+        var id: String { "\(userID):\(playlistID)" }
     }
     
-    struct RepositoryExternalMetadata: Codable, Hashable {
-        var name: String
-        var description: String
-        var coverImageURLString: String?
+    // Keeping `RepositoryReference`s as "sink"s in the ARC graph generally avoids strong reference
+    // cycles. E.g. an opened `RepositoryClone` and its staged `ViewModel.AudioTrackList` are safe
+    // to simultaneously refer to the same RepositoryReference.
+    
+    @Observable
+    @MainActor
+    class RepositoryReference: Identifiable, Hashable {
+        nonisolated let handle: RepositoryHandle
         
-        static func fromSpotify(handle: RepositoryHandle) async throws -> Self {
-            let metadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: handle.playlistID)
-            return Self(
-                name: metadata.name,
-                description: metadata.descriptionTextFromHTML,
-                coverImageURLString: metadata.images?.first?.url
-            )
+        private(set) var externalMetadata: Spotify.PlaylistMetadata?
+        
+        private var refreshTimer: Timer?
+        
+        nonisolated var id: String { handle.id }
+        
+        // TODO: enforce that only MusubiUser can call this constructor
+        init(handle: RepositoryHandle) {
+            self.handle = handle
+            
+            Task {
+                await startPeriodicRefresh()
+            }
+        }
+        
+        private func refresh() async throws {
+            let newMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.handle.playlistID)
+            
+            // Avoid triggering unnecessary SwiftUI updates.
+            if newMetadata != self.externalMetadata {
+                self.externalMetadata = newMetadata
+            }
+        }
+        
+        private func startPeriodicRefresh() async {
+            if self.refreshTimer == nil {
+                self.refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
+                    [weak self] (_) in
+                    Task { [weak self] in
+                        try await self?.refresh()
+                    }
+                }
+                self.refreshTimer?.fire()
+            }
+        }
+        
+        func pausePeriodicRefresh(forTimeInSeconds: TimeInterval) async {
+            self.refreshTimer?.invalidate()
+            self.refreshTimer = nil
+            
+            Task {
+                try await Task.sleep(nanoseconds: UInt64(forTimeInSeconds * 1_000_000_000))
+                await startPeriodicRefresh()
+            }
+        }
+        
+        nonisolated static func == (lhs: Musubi.RepositoryReference, rhs: Musubi.RepositoryReference) -> Bool {
+            lhs.handle == rhs.handle
+        }
+        
+        nonisolated func hash(into hasher: inout Hasher) {
+            hasher.combine(handle)
         }
     }
     
-    struct RepositoryReference: Codable, Hashable {
-        let handle: RepositoryHandle
-        var externalMetadata: RepositoryExternalMetadata
+    struct RepositoryCommit: Identifiable {
+        let repositoryReference: RepositoryReference
+        let commitID: String
+        let commit: Musubi.Model.Commit
+        
+        init(repositoryReference: RepositoryReference, commitID: String) throws {
+            self.repositoryReference = repositoryReference
+            self.commitID = commitID
+            self.commit = try Musubi.Storage.LocalFS.loadCommit(commitID: commitID)
+        }
+        
+        var id: String { "\(self.repositoryReference.id):\(self.commitID)" }
     }
 
     @Observable
     @MainActor
     class RepositoryClone {
-        let handle: RepositoryHandle
+        let repositoryReference: RepositoryReference
         
         let stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
         
@@ -63,35 +122,17 @@ extension Musubi {
         private let HEAD_FILE: URL
         private let FORK_PARENT_FILE: URL
         
-        // TODO: better way to do this?
-        var stagingAreaHydrationError = false // use to trigger alerts on ClonePage view
-        
         // TODO: enforce that only MusubiUser can call this constructor
-        init(handle: RepositoryHandle) throws {
-            self.handle = handle
+        init(repositoryReference: RepositoryReference) throws {
+            self.repositoryReference = repositoryReference
             
-            self.STAGING_AREA_FILE = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: self.handle)
-            self.HEAD_FILE = Musubi.Storage.LocalFS.CLONE_HEAD_FILE(repositoryHandle: self.handle)
-            self.FORK_PARENT_FILE = Musubi.Storage.LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: self.handle)
+            self.STAGING_AREA_FILE = Musubi.Storage.LocalFS.CLONE_STAGING_AREA_FILE(repositoryHandle: repositoryReference.handle)
+            self.HEAD_FILE = Musubi.Storage.LocalFS.CLONE_HEAD_FILE(repositoryHandle: repositoryReference.handle)
+            self.FORK_PARENT_FILE = Musubi.Storage.LocalFS.CLONE_FORK_PARENT_FILE(repositoryHandle: repositoryReference.handle)
             
-            self.stagedAudioTrackList = try Musubi.ViewModel.AudioTrackList(audioTracks: [])
+            self.stagedAudioTrackList = Musubi.ViewModel.AudioTrackList(repositoryReference: self.repositoryReference)
             self.headCommitID = try String(contentsOf: HEAD_FILE, encoding: .utf8)
             self.forkParent = try? JSONDecoder().decode(RepositoryHandle.self, from: Data(contentsOf: FORK_PARENT_FILE))
-            
-            let blob = try String(contentsOf: STAGING_AREA_FILE, encoding: .utf8)
-            
-            // hydrate stagedAudioTrackList asynchronously
-            Task { @MainActor in
-                do {
-                    for try await audioTrackSublist in SpotifyRequests.Read.audioTracks(audioTrackIDs: blob) {
-                        try await self.stagedAudioTrackList.append(audioTracks: audioTrackSublist)
-                    }
-                } catch {
-                    print("[Musubi::RepositoryClone] failed to hydrate stagedAudioTrackList")
-                    print(error.localizedDescription)
-                    stagingAreaHydrationError = true
-                }
-            }
         }
         
         // TODO: review concurrency correctness, keeping actor re-entrancy in mind
@@ -127,11 +168,11 @@ extension Musubi {
                 throw Musubi.Cloud.Error.request(detail: "tried to commitAndPush without active user")
             }
             
-            let proposedCommitBlob = await self.stagedAudioTrackList.toBlob()
+            let proposedCommitBlob = try await self.stagedAudioTrackList.toBlob()
             
             let cloudResponse: Musubi.Cloud.Response.Commit = try await Musubi.Cloud.make(
                 request: Musubi.Cloud.Request.Commit(
-                    playlistID: self.handle.playlistID,
+                    playlistID: self.repositoryReference.handle.playlistID,
                     latestSyncCommitID: self.headCommitID,
                     proposedCommit: Musubi.Model.Commit(
                         authorID: currentUser.spotifyInfo.id,

@@ -35,7 +35,8 @@ struct AddToSelectableLocalClonesSheet: View {
                             isNavigable: false,
                             navigationPath: $dummyNavigationPath,
                             audioTrackListElement: element,
-                            showThumbnail: true
+                            showThumbnail: true,
+                            customTextStyle: .defaultStyle
                         )
                     },
                     selectedElements: $selectedAudioTracks
@@ -43,8 +44,12 @@ struct AddToSelectableLocalClonesSheet: View {
                 SelectableListSection(
                     sectionTitle: "To Local Clones",
                     selectableList: currentUser.localClonesIndex,
-                    listCellBuilder: { element in
-                        ListCell(repositoryReference: element)
+                    listCellBuilder: { repositoryReference in
+                        ListCellWrapper(
+                            item: repositoryReference,
+                            showThumbnail: true,
+                            customTextStyle: .defaultStyle
+                        )
                     },
                     selectedElements: $selectedRepoReferences
                 )
@@ -83,6 +88,7 @@ struct AddToSelectableLocalClonesSheet: View {
             .disabled(isViewDisabled)
             .alert("Musubi - failed to execute add action", isPresented: $showAlertErrorExecuteAdd, actions: {})
             .interactiveDismissDisabled(true)
+            // TODO: better way to do this? (onAppear gets called too many times)
             .onChange(of: audioTrackList.contents, initial: true) { _, audioTrackListContents in
                 // default to all audio tracks selected
                 selectedAudioTracks = Set(audioTrackListContents)
@@ -121,11 +127,9 @@ struct AddToSelectableLocalClonesSheet: View {
                     }
                 }
                 
-                let destinationHandles = Set(selectedRepoReferences.map({ $0.handle }))
-                
                 try await currentUser.addToLocalClones(
                     newAudioTracks: newAudioTracks,
-                    destinationHandles: destinationHandles
+                    destinationHandles: Set(selectedRepoReferences.map({ $0.handle }))
                 )
                 showSheet = false
                 isViewDisabled = false

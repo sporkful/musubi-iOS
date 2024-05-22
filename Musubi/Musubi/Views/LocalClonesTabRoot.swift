@@ -12,19 +12,22 @@ struct LocalClonesTabRoot: View {
         @Bindable var currentUser = currentUser
         NavigationStack(path: $navigationPath) {
             List {
-                ForEach($currentUser.localClonesIndex, id: \.self) { $repositoryReference in
-                    NavigationLink(value: repositoryReference.handle) {
+                ForEach(currentUser.localClonesIndex) { repositoryReference in
+                    NavigationLink(value: repositoryReference) {
                         // TODO: change this to binding? (probably won't get significant perf boost)
-                        ListCell(repositoryReference: repositoryReference)
+                        ListCellWrapper(
+                            item: repositoryReference,
+                            showThumbnail: true,
+                            customTextStyle: .defaultStyle
+                        )
                     }
                 }
             }
-            .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
+            .navigationDestination(for: Musubi.RepositoryReference.self) { repositoryReference in
                 // TODO: better error handling?
-                if let repositoryClone = currentUser.openLocalClone(repositoryHandle: repositoryHandle) {
+                if let repositoryClone = currentUser.openLocalClone(repositoryHandle: repositoryReference.handle) {
                     LocalClonePage(
                         navigationPath: $navigationPath,
-                        repositoryReference: $currentUser.localClonesIndex.first(where: { $0.wrappedValue.handle == repositoryHandle })!,
                         repositoryClone: repositoryClone
                     )
                 } else {

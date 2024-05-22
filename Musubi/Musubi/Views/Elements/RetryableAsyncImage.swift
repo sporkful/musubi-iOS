@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+// TODO: shared image pool/cache
+
 struct RetryableAsyncImage: View {
     let url: URL
     let width: CGFloat

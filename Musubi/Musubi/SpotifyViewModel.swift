@@ -13,12 +13,12 @@ protocol SpotifyIdentifiable: SpotifyViewModel, Identifiable {
     var id: Spotify.ID { get }
 }
 
-protocol SpotifyPreviewable: SpotifyViewModel {
+protocol SpotifyNavigable: SpotifyViewModel, Hashable {}
+
+protocol SpotifyPerson: SpotifyViewModel, SpotifyNavigable {
     var name: String { get }
     var images: [Spotify.Image]? { get }
 }
-
-protocol SpotifyNavigable: SpotifyViewModel, Hashable {}
 
 protocol SpotifyListPage: SpotifyViewModel {
     associatedtype Item: SpotifyViewModel
@@ -36,7 +36,7 @@ extension Spotify {
         let width: Int?
     }
     
-    struct LoggedInUser: SpotifyIdentifiable, SpotifyPreviewable {
+    struct LoggedInUser: SpotifyIdentifiable, SpotifyPerson {
         let country: String
         let display_name: String?
         let explicit_content: [String: Bool]
@@ -48,16 +48,16 @@ extension Spotify {
         var name: String { display_name ?? id }
     }
     
-    struct OtherUser: SpotifyIdentifiable, SpotifyPreviewable {
+    struct OtherUser: SpotifyIdentifiable, SpotifyPerson {
         let display_name: String?
-        let external_urls: [String: String]
+//        let external_urls: [String: String]
         let id: Spotify.ID
         let images: [Spotify.Image]?
         
         var name: String { display_name ?? id }
     }
     
-    struct AudioTrack: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
+    struct AudioTrack: SpotifyIdentifiable, SpotifyNavigable {
         let id: Spotify.ID
         let album: AlbumMetadata?
         let artists: [ArtistMetadata]
@@ -70,14 +70,18 @@ extension Spotify {
         let preview_url: String?
         
         var images: [Spotify.Image]? { album?.images }
+        
+        var uri: String { "spotify:track:\(id)" }
     }
     
     // MARK: Artist info
     
-    struct ArtistMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
+    struct ArtistMetadata: SpotifyIdentifiable, SpotifyNavigable, SpotifyPerson {
         let id: Spotify.ID
         let name: String
         let images: [Spotify.Image]?
+        
+        var uri: String { "spotify:artist:\(id)" }
     }
     
     struct ArtistTopTracks: SpotifyViewModel {
@@ -91,7 +95,7 @@ extension Spotify {
     
     // MARK: Album info
     
-    struct AlbumMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
+    struct AlbumMetadata: SpotifyIdentifiable, SpotifyNavigable {
         let id: Spotify.ID
         let album_type: String
         let images: [Spotify.Image]?
@@ -100,6 +104,8 @@ extension Spotify {
         let artists: [ArtistMetadata]
 //        let copyrights: Copyrights
 //        let label: String
+        
+        var uri: String { "spotify:album:\(id)" }
         
         struct Copyrights: Codable, Hashable {
             let text: String
@@ -114,7 +120,7 @@ extension Spotify {
     
     // MARK: Playlist info
     
-    struct PlaylistMetadata: SpotifyIdentifiable, SpotifyPreviewable, SpotifyNavigable {
+    struct PlaylistMetadata: SpotifyIdentifiable, SpotifyNavigable {
         let id: Spotify.ID
         private let description: String
 //        let followers: Followers
@@ -123,9 +129,9 @@ extension Spotify {
         let owner: OtherUser
         let snapshot_id: String
         
-        var descriptionTextFromHTML: String {
-            description.decodingHTMLEntities()
-        }
+        var descriptionTextFromHTML: String { description.decodingHTMLEntities() }
+        
+        var uri: String { "spotify:playlist:\(id)" }
         
         struct Followers: Codable, Hashable {
             let total: Int

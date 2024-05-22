@@ -52,18 +52,24 @@ extension Musubi.Diffing {
 extension Musubi.ViewModel.AudioTrackList {
         func differenceCanonical(
             from other: Musubi.ViewModel.AudioTrackList
-        ) async -> CollectionDifference<UniquifiedElement> {
+        ) async throws -> CollectionDifference<UniquifiedElement> {
+            try await self.initialHydrationTask.value
+            try await other.initialHydrationTask.value
+            
             return self.contents.difference(from: other.contents).inferringMoves()
         }
         
         func differenceWithLiveMoves(
             from other: Musubi.ViewModel.AudioTrackList
         ) async throws -> [CollectionDifference<UniquifiedElement>.Change] {
+            try await self.initialHydrationTask.value
+            try await other.initialHydrationTask.value
+            
             typealias Change = CollectionDifference<UniquifiedElement>.Change
             
             var differenceWithLiveMoves: [Change] = []
             
-            let canonicalDifference = await self.differenceCanonical(from: other)
+            let canonicalDifference = try await self.differenceCanonical(from: other)
             
             // to track, at any given time, which removals haven't been applied yet
             // (skipped as part of a move)
@@ -92,7 +98,7 @@ extension Musubi.ViewModel.AudioTrackList {
                         unremovedElements.append(element)
                     }
                 default:
-                    throw Error.DEV(detail: "saw insertion in removals")
+                    throw CustomError.DEV(detail: "saw insertion in removals")
                 }
             }
             
@@ -105,7 +111,7 @@ extension Musubi.ViewModel.AudioTrackList {
                     for unremovedElement in unremovedElements.reversed() {
                         // TODO: take advantage of fact that unremovedElements is already ordered(?)
                         guard let unremovedElementCurrentOffset = oldListCopy.firstIndex(of: unremovedElement) else {
-                            throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
+                            throw CustomError.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
                         if unremovedElementCurrentOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset += 1
@@ -130,7 +136,7 @@ extension Musubi.ViewModel.AudioTrackList {
                         // moment in time. Correctness relies on the uniqueness of elements.
                         let elementToMove = insertionElement
                         guard let removalOffset = oldListCopy.firstIndex(of: elementToMove) else {
-                            throw Error.DEV(detail: "can't find unremoved elem in oldLstCopy")
+                            throw CustomError.DEV(detail: "can't find unremoved elem in oldLstCopy")
                         }
                         // If we had adjusted this insertion's offset to account for the unremoved
                         // elementToMove, then correct it to account for its actual removal now.
@@ -140,7 +146,7 @@ extension Musubi.ViewModel.AudioTrackList {
                         if let unremovedElementIndex = unremovedElements.firstIndex(of: elementToMove) {
                             unremovedElements.remove(at: unremovedElementIndex)
                         } else {
-                            throw Error.DEV(detail: "can't find unremoved elem in cache")
+                            throw CustomError.DEV(detail: "can't find unremoved elem in cache")
                         }
                         oldListCopy.remove(at: removalOffset)
                         oldListCopy.insert(elementToMove, at: adjustedInsertionOffset)
@@ -153,12 +159,12 @@ extension Musubi.ViewModel.AudioTrackList {
                         )
                     }
                 default:
-                    throw Error.DEV(detail: "saw removal in insertions")
+                    throw CustomError.DEV(detail: "saw removal in insertions")
                 }
             }
             
             if oldListCopy != self.contents {
-                throw Error.DEV(detail: "result \(oldListCopy) != expected \(self.contents)")
+                throw CustomError.DEV(detail: "result \(oldListCopy) != expected \(self.contents)")
             }
             
             return differenceWithLiveMoves
@@ -195,11 +201,14 @@ extension Musubi.ViewModel.AudioTrackList {
         func visualDifference(
             from other: Musubi.ViewModel.AudioTrackList
         ) async throws -> [VisualChange] {
+            try await self.initialHydrationTask.value
+            try await other.initialHydrationTask.value
+            
             var unifiedSummary: [VisualChange] = other.contents.map { uniquifiedElement in
                 VisualChange(element: uniquifiedElement, change: .none)
             }
             
-            let canonicalDifference = await self.differenceCanonical(from: other)
+            let canonicalDifference = try await self.differenceCanonical(from: other)
             
             var unremovedElements: [UniquifiedElement] = []
             
@@ -207,13 +216,13 @@ extension Musubi.ViewModel.AudioTrackList {
                 switch removal {
                 case let .remove(offset, element, _):
                     guard unifiedSummary[offset].element == element else {
-                        throw Error.DEV(detail: "(visualDifference) mismatched initial removal offsets")
+                        throw CustomError.DEV(detail: "(visualDifference) mismatched initial removal offsets")
                     }
                     // associatedWith will be set during final phase.
                     unifiedSummary[offset].change = .removed(associatedWith: nil)
                     unremovedElements.append(element)
                 default:
-                    throw Error.DEV(detail: "(visualDifference) saw insertion in removals")
+                    throw CustomError.DEV(detail: "(visualDifference) saw insertion in removals")
                 }
             }
             
@@ -229,7 +238,7 @@ extension Musubi.ViewModel.AudioTrackList {
                             )
                         )
                         else {
-                            throw Error.DEV(detail: "(visualDifference) can't find unremoved element")
+                            throw CustomError.DEV(detail: "(visualDifference) can't find unremoved element")
                         }
                         if unremovedElementCurrentOffset <= adjustedInsertionOffset {
                             adjustedInsertionOffset += 1
@@ -247,7 +256,7 @@ extension Musubi.ViewModel.AudioTrackList {
                         at: adjustedInsertionOffset
                     )
                 default:
-                    throw Error.DEV(detail: "(visualDifference) saw removal in insertions")
+                    throw CustomError.DEV(detail: "(visualDifference) saw removal in insertions")
                 }
             }
             
@@ -268,7 +277,7 @@ extension Musubi.ViewModel.AudioTrackList {
                                 change: .removed(associatedWith: nil)
                             )
                         ] else {
-                            throw Error.DEV(detail: "(visualDifference) couldn't find moved element as removal")
+                            throw CustomError.DEV(detail: "(visualDifference) couldn't find moved element as removal")
                         }
                         guard let insertionIndex = unifiedSummaryIndexLookup[
                             VisualChange(
@@ -276,14 +285,14 @@ extension Musubi.ViewModel.AudioTrackList {
                                 change: .inserted(associatedWith: nil)
                             )
                         ] else {
-                            throw Error.DEV(detail: "(visualDifference) couldn't find moved element as insertion")
+                            throw CustomError.DEV(detail: "(visualDifference) couldn't find moved element as insertion")
                         }
                         
                         unifiedSummary[removalIndex].change = .removed(associatedWith: insertionIndex)
                         unifiedSummary[insertionIndex].change = .inserted(associatedWith: removalIndex)
                     }
                 default:
-                    throw Error.DEV(detail: "(visualDifference) saw insertion in removals")
+                    throw CustomError.DEV(detail: "(visualDifference) saw insertion in removals")
                 }
             }
             

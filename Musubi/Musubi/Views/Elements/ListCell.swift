@@ -2,12 +2,85 @@
 
 import SwiftUI
 
+protocol CustomPreviewable {
+    var title: String { get }
+    var caption: String? { get }
+    var thumbnailURLString: String? { get }
+}
+
+extension Musubi.RepositoryReference: CustomPreviewable {
+    var title: String { self.externalMetadata?.name ?? "(Loading local clone...)" }
+    var caption: String? { self.externalMetadata?.descriptionTextFromHTML }
+    var thumbnailURLString: String? { self.externalMetadata?.images?.last?.url }
+}
+
+extension Spotify.LoggedInUser: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { "Spotify User (Logged In)" }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.OtherUser: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { "Spotify User" }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.AudioTrack: CustomPreviewable {
+    var title: String { self.name }
+    
+    var caption: String? {
+        let albumString = if let album = self.album {
+            " • " + album.name
+        } else {
+            ""
+        }
+        return self.artists.map { $0.name }.joined(separator: ", ") + albumString
+    }
+    
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.ArtistMetadata: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { "Artist" }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.AlbumMetadata: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { self.artists.map { $0.name }.joined(separator: ", ") }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.PlaylistMetadata: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { self.descriptionTextFromHTML }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+struct ListCellWrapper<Item: CustomPreviewable>: View {
+    let item: Item
+    let showThumbnail: Bool
+    let customTextStyle: ListCell.CustomTextStyle
+    
+    var body: some View {
+        ListCell(
+            title: item.title,
+            caption: item.caption,
+            thumbnailURLString: item.thumbnailURLString,
+            showThumbnail: showThumbnail,
+            customTextStyle: customTextStyle
+        )
+    }
+}
+
 struct ListCell: View {
-    private let title: String
-    private let caption: String
-    private let thumbnailURL: URL?
-    private let showThumbnail: Bool
-    private let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
+    let title: String
+    let caption: String?
+    let thumbnailURLString: String?
+    let showThumbnail: Bool
+    let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
     
     struct CustomTextStyle: Equatable {
         var color: CustomColor
@@ -28,80 +101,19 @@ struct ListCell: View {
         static let defaultStyle = Self(color: .none, bold: false)
     }
     
-    init(
-        repositoryReference: Musubi.RepositoryReference,
-        showThumbnail: Bool = true,
-        customTextStyle: CustomTextStyle = .defaultStyle
-    ) {
-        self.title = repositoryReference.externalMetadata.name
-        self.caption = repositoryReference.externalMetadata.description
-        if let coverImageURLString = repositoryReference.externalMetadata.coverImageURLString {
-            self.thumbnailURL = URL(string: coverImageURLString)
-        } else {
-            self.thumbnailURL = nil
-        }
-        self.showThumbnail = showThumbnail
-        self.customTextStyle = customTextStyle
-    }
-    
-    init(
-        item: SpotifyPreviewable,
-        showThumbnail: Bool = true,
-        customTextStyle: CustomTextStyle = .defaultStyle
-    ) {
-        self.title = item.name
-        self.caption = {
-            switch item.self {
-            case is Spotify.AudioTrack:
-                let audioTrack = item as! Spotify.AudioTrack
-                let albumString = if let album = audioTrack.album {
-                    " • " + album.name
-                } else {
-                    ""
-                }
-                return audioTrack.artists.map { $0.name }.joined(separator: ", ") + albumString
-            case is Spotify.AlbumMetadata:
-                let album = item as! Spotify.AlbumMetadata
-                return album.artists.map { $0.name }.joined(separator: ", ")
-            default:
-                return ""
-            }
-        }()
-        
-        if let thumbnailURLString = item.images?.last?.url {
-            self.thumbnailURL = URL(string: thumbnailURLString)
-        } else {
-            self.thumbnailURL = nil
-        }
-        self.showThumbnail = showThumbnail
-        
-        self.customTextStyle = customTextStyle
-    }
-    
-    init(
-        title: String,
-        caption: String,
-        thumbnailURL: URL?,
-        showThumbnail: Bool,
-        customTextStyle: CustomTextStyle
-    ) {
-        self.title = title
-        self.caption = caption
-        self.thumbnailURL = thumbnailURL
-        self.showThumbnail = showThumbnail
-        self.customTextStyle = customTextStyle
-    }
-    
     var body: some View {
         HStack {
             if showThumbnail {
-                if let thumbnailURL = thumbnailURL {
+                if let thumbnailURLString = self.thumbnailURLString,
+                   let thumbnailURL = URL(string: thumbnailURLString)
+                {
                     RetryableAsyncImage(
                         url: thumbnailURL,
                         width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
                         height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
                     )
-                } else {
+                }
+                else {
                     ZStack {
                         Rectangle()
                             .fill(.gray)
@@ -117,7 +129,7 @@ struct ListCell: View {
             VStack(alignment: .leading) {
                 Text(title)
                     .lineLimit(1)
-                if caption != "" {
+                if let caption = self.caption {
                     Text(caption)
                         .font(.caption)
                         .lineLimit(1)

@@ -37,7 +37,7 @@ extension Musubi {
         @MainActor
         func handleNewLogin(authCode: String, pkceVerifier: String) async throws {
             try await fetchOAuthToken(authCode: authCode, pkceVerifier: pkceVerifier)
-            self.currentUser = User(spotifyInfo: try await SpotifyRequests.Read.loggedInUser())
+            self.currentUser = try User(spotifyInfo: try await SpotifyRequests.Read.loggedInUser())
         }
         
         func getAuthToken() async throws -> String {

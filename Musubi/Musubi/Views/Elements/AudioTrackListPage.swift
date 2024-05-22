@@ -4,35 +4,34 @@ import SwiftUI
 
 // TODO: fix bouncing at top and bottom edges
 
-struct AudioTrackListPage<CustomToolbar: View>: View {    
+struct AudioTrackListPage: View {
     @Binding var navigationPath: NavigationPath
     
-    enum ContentType: String {
-        case album = "Album"
-        case spotifyPlaylist = "Spotify Playlist"
-        case musubiLocalClone = "Musubi Local Clone"
-    }
-    
-    let contentType: ContentType
-    
-    @Binding var name: String
-    @Binding var description: String
-    @Binding var coverImageURLString: String?
-    
+    // TODO: is @Bindable necessary?
     @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     let showAudioTrackThumbnails: Bool
     
-    enum AssociatedPeople {
-        case artists([Spotify.ArtistMetadata])
-        case users([Spotify.OtherUser])
+    let customToolbarAdditionalItems: [CustomToolbarItem]
+    
+    struct CustomToolbarItem: Hashable {
+        let title: String
+        let sfSymbolName: String
+        let action: () -> Void
+        
+        static func == (lhs: AudioTrackListPage.CustomToolbarItem, rhs: AudioTrackListPage.CustomToolbarItem) -> Bool {
+            return lhs.title == rhs.title
+                && lhs.sfSymbolName == rhs.sfSymbolName
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(title)
+            hasher.combine(sfSymbolName)
+        }
     }
-    let associatedPeople: AssociatedPeople
-    let miscCaption: String?
     
-    let toolbarBuilder: () -> CustomToolbar
+    @State private var showSheetAddToSelectableClones = false
     
-    // TODO: make this binding to share the same image across views (e.g. with AudioTrackCell or LocalCloneEditorSheet)
     @State private var coverImage: UIImage?
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
@@ -158,58 +157,45 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
                             .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
                             .hidden()
                     }
-                    Text(name)
+                    Text(audioTrackList.context.name)
                         .font(.title.leading(.tight))
                         .fontWeight(.bold)
-                    if !description.isEmpty {
-                        Text(description)
+                    if let formattedDescription = audioTrackList.context.formattedDescription {
+                        Text(formattedDescription)
                             .font(.caption)
                     }
                     HStack {
-                        // TODO: fix repetition here somehow without turning into ViewBuilder
-                        switch associatedPeople {
-                        case .artists(let artists):
-                            ForEach(Array(zip(artists.indices, artists)), id: \.0) { index, artist in
-                                if index != 0 {
-                                    Text("•")
-                                }
-                                Button {
-                                    navigationPath.append(artist)
-                                } label: {
-                                    Text(artist.name)
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                        ForEach(Array(zip(audioTrackList.context.associatedPeople.indices, audioTrackList.context.associatedPeople)), id: \.0) { index, person in
+                            if index != 0 {
+                                Text("•")
                             }
-                        case .users(let users):
-                            ForEach(Array(zip(users.indices, users)), id: \.0) { index, user in
-                                if index != 0 {
-                                    Text("•")
-                                }
-                                Button {
-                                    navigationPath.append(user)
-                                } label: {
-                                    Text(user.name)
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                            Button {
+                                navigationPath.append(person)
+                            } label: {
+                                Text(person.name)
+                                    .font(.caption)
+                                    .fontWeight(.bold)
                             }
                         }
                     }
-                    Text(contentType.rawValue)
+                    Text(audioTrackList.context.type)
                         .font(.caption)
-                    if let miscCaption = miscCaption {
-                        Text(miscCaption)
+                    if let associatedDate = audioTrackList.context.associatedDate {
+                        Text(associatedDate)
                             .font(.caption)
                     }
-                    toolbarBuilder()
+                    CustomToolbar(
+                        customToolbarAdditionalItems: customToolbarAdditionalItems,
+                        showSheetAddToSelectableClones: $showSheetAddToSelectableClones
+                    )
                     ForEach(audioTrackList.contents, id: \.self) { element in
                         Divider()
                         AudioTrackListCell(
                             isNavigable: true,
                             navigationPath: $navigationPath,
                             audioTrackListElement: element,
-                            showThumbnail: showAudioTrackThumbnails
+                            showThumbnail: showAudioTrackThumbnails,
+                            customTextStyle: .defaultStyle
                         )
                     }
                 }
@@ -246,7 +232,7 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             ToolbarItem(placement: .principal) {
                 HStack {
                     Spacer()
-                    Text(name)
+                    Text(audioTrackList.context.name)
                         .font(.headline)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -261,14 +247,20 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
-        .onChange(of: coverImageURLString, initial: true) {
+        .onChange(of: audioTrackList.context.coverImageURLString, initial: true) {
             loadCoverImage()
+        }
+        .sheet(isPresented: $showSheetAddToSelectableClones) {
+            AddToSelectableLocalClonesSheet(
+                audioTrackList: audioTrackList,
+                showSheet: $showSheetAddToSelectableClones
+            )
         }
     }
     
     // TODO: share logic with RetryableAsyncImage?
     private func loadCoverImage() {
-        guard let coverImageURLString = coverImageURLString,
+        guard let coverImageURLString = audioTrackList.context.coverImageURLString,
               let coverImageURL = URL(string: coverImageURLString)
         else {
             return
@@ -283,7 +275,63 @@ struct AudioTrackListPage<CustomToolbar: View>: View {
             }
         }
     }
+    
+    struct CustomToolbar: View {
+        let customToolbarAdditionalItems: [CustomToolbarItem]
+        
+        @Binding var showSheetAddToSelectableClones: Bool
+        
+        var body: some View {
+            HStack {
+                ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                    Button {
+                        customToolbarItem.action()
+                    } label: {
+                        Image(systemName: customToolbarItem.sfSymbolName)
+                            .contentShape(Rectangle())
+                    }
+                }
+                Menu {
+                    Button {
+                        showSheetAddToSelectableClones = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus")
+                            Text("Add tracks from this collection to")
+                        }
+                    }
+                    ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                        Button {
+                            customToolbarItem.action()
+                        } label: {
+                            Label(customToolbarItem.title, systemImage: customToolbarItem.sfSymbolName)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
+                        .frame(height: Musubi.UI.MENU_SYMBOL_SIZE)
+                        .contentShape(Rectangle())
+                }
+                Spacer()
+                Button {
+                    // TODO: impl
+                } label: {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                    // TODO: opacity depending on toggle state
+                }
+                Button {
+                    // TODO: impl
+                } label: {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                }
+            }
+        }
+    }
 }
+
 
 //#Preview {
 //    AudioTrackListPage()

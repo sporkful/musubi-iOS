@@ -2,8 +2,7 @@
 
 import SwiftUI
 
-// TODO: playback ability
-//  - change audioTrack to ViewModel.UIDableAudioTrack and add context: ViewModel.AudioTrackList
+// TODO: rename to Playable...?
 
 struct AudioTrackListCell: View {
     let isNavigable: Bool
@@ -12,7 +11,7 @@ struct AudioTrackListCell: View {
     let audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement
     
     let showThumbnail: Bool
-    var customTextStyle: ListCell.CustomTextStyle = .defaultStyle  // TODO: turn into custom view modifier?
+    let customTextStyle: ListCell.CustomTextStyle
     
     @State private var audioTrack: Spotify.AudioTrack? = nil
     
@@ -23,17 +22,21 @@ struct AudioTrackListCell: View {
     var body: some View {
         HStack {
             if let audioTrack = self.audioTrack {
-            ListCell(item: audioTrack, showThumbnail: showThumbnail, customTextStyle: customTextStyle)
+                ListCellWrapper(
+                    item: audioTrack,
+                    showThumbnail: showThumbnail,
+                    customTextStyle: customTextStyle
+                )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    // TODO: implement playback through audioTrackListElement.context
+                    // TODO: implement playback through audioTrackListElement.parent
                     print("playing \(audioTrack.name)")
                 }
             } else {
                 ListCell(
-                    title: "(Unable to load track metadata)",
-                    caption: "ID: \(self.audioTrackListElement.audioTrackID)",
-                    thumbnailURL: nil,
+                    title: "(Loading track...)",
+                    caption: "(ID: \(self.audioTrackListElement.audioTrackID))",
+                    thumbnailURLString: nil,
                     showThumbnail: showThumbnail,
                     customTextStyle: customTextStyle
                 )
@@ -116,20 +119,19 @@ struct AudioTrackListCell: View {
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             if let audioTrack = self.audioTrack {
                 AddToSelectableLocalClonesSheet(
-                    audioTrackList: try! Musubi.ViewModel.AudioTrackList(audioTracks: [audioTrack]),
-                    showSheet: $showSheetAddToSelectableClones
-                )
-            } else {
-                // TODO: handle this case better
-                AddToSelectableLocalClonesSheet(
-                    audioTrackList: try! Musubi.ViewModel.AudioTrackList(audioTracks: []),
+                    audioTrackList: Musubi.ViewModel.AudioTrackList(audioTrack: audioTrack),
                     showSheet: $showSheetAddToSelectableClones
                 )
             }
+            // TODO: handle else case better?
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
-        .task {
-            self.audioTrack = await self.audioTrackListElement.audioTrack
+        .onChange(of: self.audioTrack, initial: true) { _, audioTrack in
+            if audioTrack == nil {
+                Task { @MainActor in
+                    self.audioTrack = await self.audioTrackListElement.audioTrack
+                }
+            }
         }
     }
 }

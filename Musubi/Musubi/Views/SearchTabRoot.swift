@@ -46,7 +46,8 @@ struct SearchTabRoot: View {
                                     audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement(
                                         audioTrack: audioTrack
                                     ),
-                                    showThumbnail: true
+                                    showThumbnail: true,
+                                    customTextStyle: .defaultStyle
                                 )
                             }
                         }
@@ -55,7 +56,11 @@ struct SearchTabRoot: View {
                         Section("Artists") {
                             ForEach(searchResults.artists.items) { artistMetadata in
                                 NavigationLink(value: artistMetadata) {
-                                    ListCell(item: artistMetadata)
+                                    ListCellWrapper(
+                                        item: artistMetadata,
+                                        showThumbnail: true,
+                                        customTextStyle: .defaultStyle
+                                    )
                                 }
                             }
                         }
@@ -64,7 +69,11 @@ struct SearchTabRoot: View {
                         Section("Albums") {
                             ForEach(searchResults.albums.items) { albumMetadata in
                                 NavigationLink(value: albumMetadata) {
-                                    ListCell(item: albumMetadata)
+                                    ListCellWrapper(
+                                        item: albumMetadata,
+                                        showThumbnail: true,
+                                        customTextStyle: .defaultStyle
+                                    )
                                 }
                             }
                         }
@@ -73,7 +82,11 @@ struct SearchTabRoot: View {
                         Section("Playlists") {
                             ForEach(searchResults.playlists.items) { playlistMetadata in
                                 NavigationLink(value: playlistMetadata) {
-                                    ListCell(item: playlistMetadata)
+                                    ListCellWrapper(
+                                        item: playlistMetadata,
+                                        showThumbnail: true,
+                                        customTextStyle: .defaultStyle
+                                    )
                                 }
                             }
                         }

@@ -5,8 +5,6 @@ import SwiftUI
 struct LocalCloneEditorPage: View {
     @Binding var showSheet: Bool
     
-    @Binding var repositoryReference: Musubi.RepositoryReference
-    
     @Bindable var repositoryClone: Musubi.RepositoryClone
     
     @State private var editMode = EditMode.active // intended to be always-active
@@ -21,7 +19,8 @@ struct LocalCloneEditorPage: View {
                         isNavigable: false,
                         navigationPath: $dummyNavigationPath,
                         audioTrackListElement: element,
-                        showThumbnail: true
+                        showThumbnail: true,
+                        customTextStyle: .defaultStyle
                     )
                 }
                 // TODO: any way to enforce well-defined ordering of ops?
@@ -42,7 +41,7 @@ struct LocalCloneEditorPage: View {
                     VStack {
                         Text("Edit Local Clone")
                             .font(.caption)
-                        Text(repositoryReference.externalMetadata.name)
+                        Text(repositoryClone.repositoryReference.name)
                             .font(.headline)
                     }
                     .padding(.vertical, 5)
