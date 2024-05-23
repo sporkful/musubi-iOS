@@ -108,6 +108,7 @@ extension Musubi {
         var id: String { "\(self.repositoryReference.id):\(self.commitID)" }
     }
 
+    // TODO: take out stagedAudioTrackList and merge this with RepositoryReference (and just call it Repository?)
     @Observable
     @MainActor
     class RepositoryClone {

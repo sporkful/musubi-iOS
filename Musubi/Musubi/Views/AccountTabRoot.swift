@@ -4,7 +4,6 @@ import SwiftUI
 
 struct AccountTabRoot: View {
     var body: some View {
-        NavigationStack {
             Form {
                 Section("Current session") {
                     if let currentUser = Musubi.UserManager.shared.currentUser {
@@ -20,8 +19,6 @@ struct AccountTabRoot: View {
                     }
                 }
             }
-            .navigationTitle("My Account")
-        }
     }
 }
 

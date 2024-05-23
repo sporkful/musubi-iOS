@@ -4,12 +4,12 @@ import SwiftUI
 import AsyncAlgorithms
 
 struct SearchTabRoot: View {
-    @State private var navigationPath = NavigationPath()
+    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
     @State private var searchText = ""
     @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank
     
-    let searchQueue = AsyncChannel<String>()
+    @State private var searchQueue = AsyncChannel<String>()
     @State private var searchQueueSize = 0
     
     @State private var showAudioTrackResults = true
@@ -18,7 +18,8 @@ struct SearchTabRoot: View {
     @State private var showPlaylistResults = true
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+            @Bindable var homeViewCoordinator = homeViewCoordinator
+        
             VStack {
                 HStack {
                     Spacer()
@@ -42,7 +43,7 @@ struct SearchTabRoot: View {
                             ForEach(searchResults.tracks.items) { audioTrack in
                                 AudioTrackListCell(
                                     isNavigable: true,
-                                    navigationPath: $navigationPath,
+                                    navigationPath: $homeViewCoordinator.spotifySearchNavPath,
                                     audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement(
                                         audioTrack: audioTrack
                                     ),
@@ -92,24 +93,6 @@ struct SearchTabRoot: View {
                         }
                     }
                 }
-                .navigationDestination(for: Spotify.ArtistMetadata.self) { artistMetadata in
-                    StaticArtistPage(artistMetadata: artistMetadata)
-                }
-                .navigationDestination(for: Spotify.AlbumMetadata.self) { albumMetadata in
-                    StaticAlbumPage(
-                        navigationPath: $navigationPath,
-                        albumMetadata: albumMetadata
-                    )
-                }
-                .navigationDestination(for: Spotify.PlaylistMetadata.self) { playlistMetadata in
-                    StaticPlaylistPage(
-                        navigationPath: $navigationPath,
-                        playlistMetadata: playlistMetadata
-                    )
-                }
-                .navigationDestination(for: Spotify.OtherUser.self) { user in
-                    StaticUserPage(user: user)
-                }
             }
             .searchable(text: $searchText, placement: .navigationBarDrawer)
             .onChange(of: searchText) { oldValue, newValue in
@@ -121,11 +104,11 @@ struct SearchTabRoot: View {
             .task {
                 await processSearchQueue()
             }
-            .navigationTitle("Search Spotify")
-        }
     }
     
     private func processSearchQueue() async {
+        searchQueue = AsyncChannel<String>()
+        searchQueueSize = 0
         var iter = searchQueue.makeAsyncIterator()
         while true {
             // Avoid dispatching / waiting for Spotify requests for intermediate queries generated

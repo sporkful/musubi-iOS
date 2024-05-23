@@ -252,8 +252,8 @@ struct AudioTrackListPage: View {
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             AddToSelectableLocalClonesSheet(
-                audioTrackList: audioTrackList,
-                showSheet: $showSheetAddToSelectableClones
+                showSheet: $showSheetAddToSelectableClones,
+                audioTrackList: audioTrackList
             )
         }
     }

@@ -50,8 +50,11 @@ struct LoginView: View {
             )
         }
         .fullScreenCover(item: currentUser) { currentUser in
-            HomeView(currentUser: currentUser)
-                .interactiveDismissDisabled()
+            HomeView(
+                currentUser: currentUser,
+                homeViewCoordinator: HomeViewCoordinator()
+            )
+            .interactiveDismissDisabled()
         }
         .alert(
             "Error when logging in with Spotify.",

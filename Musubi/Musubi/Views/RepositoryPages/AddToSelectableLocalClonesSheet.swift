@@ -10,15 +10,15 @@ import SwiftUI
 struct AddToSelectableLocalClonesSheet: View {
     @Environment(Musubi.User.self) private var currentUser
     
-    @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
-    
     @Binding var showSheet: Bool
+    @State private var isSheetDisabled = false
+    
+    @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     @State private var selectedAudioTracks = Set<Musubi.ViewModel.AudioTrackList.UniquifiedElement>()
     @State private var selectedRepoReferences = Set<Musubi.RepositoryReference>()
     
     @State private var showAlertErrorExecuteAdd = false
-    @State private var isViewDisabled = false
     
     @State private var editMode = EditMode.active // intended to be always-active
     
@@ -85,7 +85,6 @@ struct AddToSelectableLocalClonesSheet: View {
                 }
             }
             .environment(\.editMode, $editMode)
-            .disabled(isViewDisabled)
             .alert("Musubi - failed to execute add action", isPresented: $showAlertErrorExecuteAdd, actions: {})
             .interactiveDismissDisabled(true)
             // TODO: better way to do this? (onAppear gets called too many times)
@@ -93,13 +92,16 @@ struct AddToSelectableLocalClonesSheet: View {
                 // default to all audio tracks selected
                 selectedAudioTracks = Set(audioTrackListContents)
             }
+            .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
         }
     }
     
     // TODO: better error handling (e.g. rollback for atomicity)
     private func executeAdd() {
-        isViewDisabled = true
+        isSheetDisabled = true
         Task {
+            defer { isSheetDisabled = false }
+            
             do {
                 // TODO: clean this - Swift's built-in map doesn't support async closures yet :(
 //                let newAudioTracks = try await audioTrackList.contents
@@ -132,11 +134,9 @@ struct AddToSelectableLocalClonesSheet: View {
                     destinationHandles: Set(selectedRepoReferences.map({ $0.handle }))
                 )
                 showSheet = false
-                isViewDisabled = false
             } catch {
                 print("[Musubi::AddToSelectableLocalClonesSheet] failed to complete add")
                 print(error)
-                isViewDisabled = false
                 showAlertErrorExecuteAdd = true
             }
         }

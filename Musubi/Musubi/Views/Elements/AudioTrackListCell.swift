@@ -79,7 +79,9 @@ struct AudioTrackListCell: View {
                     }
                 }
                 // TODO: apply this pattern in rest of views (condition outside button instead of inside action)
-                if let album = self.audioTrack?.album {
+                if let album = self.audioTrack?.album,
+                   album != self.audioTrackListElement.parent?.context as? Spotify.AlbumMetadata
+                {
                 Button {
                     navigationPath.append(album)
                 } label: {
@@ -89,7 +91,9 @@ struct AudioTrackListCell: View {
                     }
                 }
                 }
-                if let primaryArtist = self.audioTrack?.artists.first {
+                if let primaryArtist = self.audioTrack?.artists.first,
+                   primaryArtist != self.audioTrackListElement.parent?.context as? Spotify.ArtistMetadata
+                {
                 Button {
                     navigationPath.append(primaryArtist)
                 } label: {
@@ -119,8 +123,8 @@ struct AudioTrackListCell: View {
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             if let audioTrack = self.audioTrack {
                 AddToSelectableLocalClonesSheet(
-                    audioTrackList: Musubi.ViewModel.AudioTrackList(audioTrack: audioTrack),
-                    showSheet: $showSheetAddToSelectableClones
+                    showSheet: $showSheetAddToSelectableClones,
+                    audioTrackList: Musubi.ViewModel.AudioTrackList(audioTrack: audioTrack)
                 )
             }
             // TODO: handle else case better?

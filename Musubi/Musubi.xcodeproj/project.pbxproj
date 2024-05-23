@@ -36,6 +36,7 @@
 		794C8D8F2B782D31008DE992 /* StaticAlbumPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D8E2B782D31008DE992 /* StaticAlbumPage.swift */; };
 		794C8D912B782D88008DE992 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D902B782D88008DE992 /* StaticPlaylistPage.swift */; };
 		794C8D932B7855AB008DE992 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D922B7855AB008DE992 /* LocalClonePage.swift */; };
+		794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D982B797F22008DE992 /* ViewModifiers.swift */; };
 		7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA102B55ADDB00650775 /* UIColor+.swift */; };
 		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA162B56510B00650775 /* MusubiRepository.swift */; };
@@ -102,6 +103,7 @@
 		794C8D8E2B782D31008DE992 /* StaticAlbumPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticAlbumPage.swift; sourceTree = "<group>"; };
 		794C8D902B782D88008DE992 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		794C8D922B7855AB008DE992 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
+		794C8D982B797F22008DE992 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		7961DA102B55ADDB00650775 /* UIColor+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+.swift"; sourceTree = "<group>"; };
 		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7961DA162B56510B00650775 /* MusubiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiRepository.swift; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
 				79F556C12B7605A3000304B9 /* SelectableListSection.swift */,
+				794C8D982B797F22008DE992 /* ViewModifiers.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -436,6 +439,7 @@
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */,
+				794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,

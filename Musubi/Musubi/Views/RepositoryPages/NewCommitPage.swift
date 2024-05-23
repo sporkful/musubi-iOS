@@ -4,18 +4,21 @@ import SwiftUI
 
 struct NewCommitPage: View {
     @Binding var showSheet: Bool
+    @State private var isSheetDisabled = false
     
     @Bindable var repositoryClone: Musubi.RepositoryClone
     
+    @State private var showAlertNoChangesToCommit = false
+    
     @State private var commitMessage = ""
+    @State private var showAlertEmptyMessage = false
+    @FocusState private var messageFieldIsFocused: Bool
     
     @State private var headAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     @State private var visualDiffFromHead: [Musubi.ViewModel.AudioTrackList.VisualChange] = []
     
-    // TODO: impl
-    @State private var showPlaceholderOverlay = false
-    
     @State private var showAlertErrorDiff = false
+    @State private var showAlertErrorCommit = false
     
     @State private var dummyNavigationPath = NavigationPath()
     
@@ -61,6 +64,7 @@ struct NewCommitPage: View {
                     }
                     Section("Commit message") {
                         TextField("Enter a message for your new commit here", text: $commitMessage)
+                            .focused($messageFieldIsFocused)
                     }
                     Button {
                         commit(message: commitMessage)
@@ -115,8 +119,46 @@ struct NewCommitPage: View {
                 }
                 .interactiveDismissDisabled(true)
                 .alert(
-                    "Failed to generate diff from head",
+                    "No new changes to commit!",
+                    isPresented: $showAlertNoChangesToCommit,
+                    actions: {
+                        Button(
+                            "OK",
+                            action: {
+                                showSheet = false
+                            }
+                        )
+                    }
+                )
+                .alert(
+                    "Please enter a commit message!",
+                    isPresented: $showAlertEmptyMessage,
+                    actions: {
+                        Button(
+                            "OK",
+                            action: {
+                                messageFieldIsFocused = true
+                            }
+                        )
+                    }
+                )
+                .alert(
+                    "Error when generating diff from head",
                     isPresented: $showAlertErrorDiff,
+                    actions: {
+                        Button(
+                            "OK",
+                            action: {
+                                showSheet = false
+                            }
+                        )
+                    }, message: {
+                        Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+                    }
+                )
+                .alert(
+                    "Error when creating commit",
+                    isPresented: $showAlertErrorCommit,
                     actions: {
                         Button(
                             "OK",
@@ -131,12 +173,13 @@ struct NewCommitPage: View {
                 .task {
                     await loadVisualDiffFromHead()
                 }
+                .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
             }
         }
     }
     
     private func loadVisualDiffFromHead() async {
-        do {            
+        do {
             self.headAudioTrackList = await Musubi.ViewModel.AudioTrackList(
                 repositoryCommit: try Musubi.RepositoryCommit(
                     repositoryReference: repositoryClone.repositoryReference,
@@ -144,6 +187,14 @@ struct NewCommitPage: View {
                 ),
                 knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData
             )
+            
+            // TODO: make waiting for hydration implicit (as part of ViewModel.AudioTrackList)
+            try await self.headAudioTrackList!.initialHydrationTask.value
+            if await self.headAudioTrackList!.contents == self.repositoryClone.stagedAudioTrackList.contents {
+                showAlertNoChangesToCommit = true
+                return
+            }
+            
             self.visualDiffFromHead = try await self.repositoryClone.stagedAudioTrackList
                 .visualDifference(from: self.headAudioTrackList!)
         } catch {
@@ -154,17 +205,23 @@ struct NewCommitPage: View {
     }
     
     private func commit(message: String) {
-        showPlaceholderOverlay = true
-        // TODO: check message is not empty
+        if message.isEmpty {
+            showAlertEmptyMessage = true
+            return
+        }
+        
+        isSheetDisabled = true
         Task {
+            defer { isSheetDisabled = false }
+            
             do {
                 try await repositoryClone.makeCommit(message: message)
+                showSheet = false
             } catch {
-                print("[Musubi::LocalClonePage] commit and push failed")
+                print("[Musubi::NewCommitPage] failed to commit")
                 print(error)
-                // TODO: trigger alert
+                showAlertErrorCommit = true
             }
-            showPlaceholderOverlay = false
         }
     }
 }

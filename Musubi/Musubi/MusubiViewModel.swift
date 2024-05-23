@@ -23,7 +23,13 @@ extension Musubi.RepositoryReference: AudioTrackListContext {
     var name: String { self.externalMetadata?.name ?? "(Loading local clone...)" }
     var formattedDescription: String? { self.externalMetadata?.formattedDescription }
     var coverImageURLString: String? { self.externalMetadata?.images?.first?.url }
-    var associatedPeople: [any SpotifyPerson] { [] }  // TODO: logged-in user?
+    var associatedPeople: [any SpotifyPerson] {
+        if let currentUserInfo = Musubi.UserManager.shared.currentUser?.spotifyInfo {
+            [currentUserInfo]
+        } else {
+            []
+        }
+    }
     var associatedDate: String? { nil }  // TODO: latest commit date?
     var type: String { "Musubi Local Clone" }
 }
@@ -32,7 +38,13 @@ extension Musubi.RepositoryCommit: AudioTrackListContext {
     @MainActor var name: String { "[COMMIT] \(self.repositoryReference.name)" }
     var formattedDescription: String? { "[COMMIT MESSAGE] \(self.commit.message)" }
     @MainActor var coverImageURLString: String? { self.repositoryReference.coverImageURLString }
-    var associatedPeople: [any SpotifyPerson] { [] }  // TODO: logged-in user?
+    var associatedPeople: [any SpotifyPerson] {
+        if let currentUserInfo = Musubi.UserManager.shared.currentUser?.spotifyInfo {
+            [currentUserInfo]
+        } else {
+            []
+        }
+    }
     var associatedDate: String? { self.commit.date.formatted() }
     var type: String { "Musubi Repository Commit" }
 }

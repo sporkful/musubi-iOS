@@ -4,12 +4,12 @@ import SwiftUI
 
 struct StaticPlaylistPage: View {
     @Environment(Musubi.User.self) private var currentUser
+    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
     @Binding var navigationPath: NavigationPath
     
     let playlistMetadata: Spotify.PlaylistMetadata
     
-    @State private var isViewDisabled = false
     @State private var showAlertCloneError = false
     
     private var associatedRepositoryHandle: Musubi.RepositoryHandle {
@@ -39,7 +39,6 @@ struct StaticPlaylistPage: View {
             showAudioTrackThumbnails: true,
             customToolbarAdditionalItems: [cloningToolbarItem]
         )
-        .disabled(isViewDisabled)
         .alert("Musubi - failed to create local clone", isPresented: $showAlertCloneError, actions: {})
     }
     
@@ -47,24 +46,34 @@ struct StaticPlaylistPage: View {
     // TODO: automatically (switch tabs and) open clone upon success
     // TODO: also pop this off navstack upon success so users don't get confused?
     private func initOrClone() {
-        isViewDisabled = true
-        Task {
-            do {
-//                if self.currentUser.localClonesIndex.contains(where: { $0.handle == self.associatedRepositoryHandle }) {
-//                    return []
-//                }
-                try await self.currentUser.initOrClone(
-                    repositoryHandle: Musubi.RepositoryHandle(
-                        userID: currentUser.id,
-                        playlistID: playlistMetadata.id
+        Task { @MainActor in
+            homeViewCoordinator.disableUI = true
+            defer { homeViewCoordinator.disableUI = false }
+            
+            homeViewCoordinator.myReposNavPath.removeLast(homeViewCoordinator.myReposNavPath.count)
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+            homeViewCoordinator.openTab = .myRepos
+            
+            if !self.currentUser.localClonesIndex.contains(where: { $0.handle == self.associatedRepositoryHandle }) {
+                do {
+                    try await self.currentUser.initOrClone(
+                        repositoryHandle: Musubi.RepositoryHandle(
+                            userID: currentUser.id,
+                            playlistID: playlistMetadata.id
+                        )
                     )
-                )
-            } catch {
-                print("[Musubi::StaticPlaylistPage] initOrClone error")
-                print(error.localizedDescription)
-                showAlertCloneError = true
+                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                } catch {
+                    print("[Musubi::StaticPlaylistPage] initOrClone error")
+                    print(error.localizedDescription)
+                    showAlertCloneError = true
+                    return
+                }
             }
-            isViewDisabled = false
+            
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+            homeViewCoordinator.myReposNavPath.append(self.associatedRepositoryHandle)
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
         }
     }
     
