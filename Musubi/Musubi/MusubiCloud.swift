@@ -134,11 +134,14 @@ extension Musubi.Cloud.Response {
     }
     
     enum Commit: MusubiCloudResponse {
-        case success
+        case success(
+            newCommitID: String,
+            newCommit: Musubi.Model.Commit
+        )
         case remoteUpdates(
             commits: [String: Musubi.Model.Commit],
             blobs: [String: Musubi.Model.Blob]
         )
-        case spotifyUpdates(blob: Musubi.Model.Blob)
+        case spotifyUpdates
     }
 }

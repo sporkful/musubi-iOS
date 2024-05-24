@@ -9,11 +9,13 @@ extension Musubi {
         
         enum Error: LocalizedError {
             case cloning(detail: String)
+            case committing(detail: String)
             case misc(detail: String)
 
             var errorDescription: String? {
                 let description = switch self {
                     case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
+                    case let .committing(detail): "(committing) \(detail)"
                     case let .misc(detail): "\(detail)"
                 }
                 return "[Musubi::Repository] \(description)"
@@ -114,7 +116,7 @@ extension Musubi {
     class RepositoryClone {
         let repositoryReference: RepositoryReference
         
-        let stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
+        var stagedAudioTrackList: Musubi.ViewModel.AudioTrackList
         
         var headCommitID: String
         let forkParent: RepositoryHandle?
@@ -164,6 +166,8 @@ extension Musubi {
                 .write(to: HEAD_FILE, options: .atomic)
         }
         
+        // Assumes caller has disabled UI. In particular, this task should be the only thing with
+        // the ability to mutate `self.stagedAudioTrackList` until it finishes executing.
         func makeCommit(message: String) async throws {
             guard let currentUser = Musubi.UserManager.shared.currentUser else {
                 throw Musubi.Cloud.Error.request(detail: "tried to commitAndPush without active user")
@@ -187,16 +191,74 @@ extension Musubi {
             )
             
             switch cloudResponse {
-            case .success:
-                // TODO: diff and save to Spotify
-                break
+            case let .success(newCommitID, newCommit):
+                try await completeCommit(
+                    newCommitID: newCommitID,
+                    newCommit: newCommit,
+                    newCommitBlob: proposedCommitBlob
+                )
             case let .remoteUpdates(commits, blobs):
                 // TODO: cache commits/blobs and update new member var holding head blob of remote
                 break
-            case let .spotifyUpdates(blob):
+            case .spotifyUpdates:
                 // TODO: update new member var holding head blob of remote
                 break
             }
+        }
+        
+        // TODO: atomicity?
+        private func completeCommit(
+            newCommitID: String,
+            newCommit: Musubi.Model.Commit,
+            newCommitBlob: Musubi.Model.Blob
+        ) async throws {
+                if newCommitBlob.blobID != newCommit.blobID {
+                    throw Musubi.Repository.Error.committing(detail: "received new commit doesn't match proposed blob")
+                }
+                
+                let headAudioTrackList = Musubi.ViewModel.AudioTrackList(
+                    repositoryCommit: try Musubi.RepositoryCommit(
+                        repositoryReference: self.repositoryReference,
+                        commitID: self.headCommitID
+                    ),
+                    knownAudioTrackData: self.stagedAudioTrackList.audioTrackData
+                )
+                
+                // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
+                let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
+                let spotifyWriteSession = SpotifyRequests.Write.Session(
+                    playlistID: self.repositoryReference.handle.playlistID,
+                    lastSnapshotID: playlistMetadata.snapshot_id
+                )
+                
+                // TODO: diff with newCommitBlob instead of stagedAudioTrackList?
+                for change in try await self.stagedAudioTrackList.differenceWithLiveMoves(from: headAudioTrackList) {
+                    switch change {
+                    case let .remove(offset, _, _):
+                        try await spotifyWriteSession.remove(at: offset)
+                    case let .insert(offset, element, associatedWith):
+                        if let associatedWith = associatedWith {
+                            try await spotifyWriteSession.move(removalOffset: associatedWith, insertionOffset: offset)
+                        } else {
+                            try await spotifyWriteSession.insert(audioTrackID: element.audioTrackID, at: offset)
+                        }
+                    }
+                }
+                
+                try Musubi.Storage.LocalFS.save(blob: newCommitBlob, blobID: newCommit.blobID)
+                try Musubi.Storage.LocalFS.save(commit: newCommit, commitID: newCommitID)
+                
+                self.headCommitID = newCommitID
+                try self.saveHeadPointer()
+        }
+        
+        func checkoutCommit(commit: Musubi.Model.Commit) async throws {
+            let blob = try Musubi.Storage.LocalFS.loadBlob(blobID: commit.blobID)
+            try Data(blob.utf8).write(to: STAGING_AREA_FILE, options: .atomic)
+            
+            // TODO: properly dispose of previous AudioTrackList instance
+            // TODO: synchronization wrt file system?
+            self.stagedAudioTrackList = Musubi.ViewModel.AudioTrackList(repositoryReference: self.repositoryReference)
         }
     }
 }

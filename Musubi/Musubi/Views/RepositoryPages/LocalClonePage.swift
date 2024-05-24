@@ -9,6 +9,7 @@ struct LocalClonePage: View {
     
     @State private var showSheetEditor = false
     @State private var showSheetNewCommit = false
+    @State private var showSheetCommitHistory = false
     
     var body: some View {
         AudioTrackListPage(
@@ -18,7 +19,7 @@ struct LocalClonePage: View {
             customToolbarAdditionalItems: [
                 .init(title: "Edit local clone", sfSymbolName: "pencil", action: { showSheetEditor = true }),
                 .init(title: "Create new commit", sfSymbolName: "icloud.and.arrow.up", action: { showSheetNewCommit = true }),
-                .init(title: "Show commit history", sfSymbolName: "clock.arrow.circlepath", action: { /* TODO: impl */ })
+                .init(title: "Show commit history", sfSymbolName: "clock.arrow.circlepath", action: { showSheetCommitHistory = true })
             ]
         )
         // TODO: put this on navstack so users can keep edit page open while adding tracks via search tab
@@ -32,6 +33,12 @@ struct LocalClonePage: View {
         .sheet(isPresented: $showSheetNewCommit) {
             NewCommitPage(
                 showSheet: $showSheetNewCommit,
+                repositoryClone: repositoryClone
+            )
+        }
+        .sheet(isPresented: $showSheetCommitHistory) {
+            CommitHistoryPage(
+                showSheet: $showSheetCommitHistory,
                 repositoryClone: repositoryClone
             )
         }
