@@ -74,6 +74,7 @@ struct HomeView: View {
             .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
             .tag(HomeViewCoordinator.Tab.myAccount)
         }
+        .listStyle(.plain)
         .environment(currentUser)
         .environment(homeViewCoordinator)
         .withCustomDisablingOverlay(isDisabled: $homeViewCoordinator.disableUI)

@@ -20,8 +20,6 @@ struct NewCommitPage: View {
     @State private var showAlertErrorDiff = false
     @State private var showAlertErrorCommit = false
     
-    @State private var dummyNavigationPath = NavigationPath()
-    
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
@@ -36,7 +34,7 @@ struct NewCommitPage: View {
                                 case .none:
                                     AudioTrackListCell(
                                         isNavigable: false,
-                                        navigationPath: $dummyNavigationPath,
+                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .defaultStyle
@@ -44,7 +42,7 @@ struct NewCommitPage: View {
                                 case .inserted(associatedWith: let associatedWith):
                                     AudioTrackListCell(
                                         isNavigable: false,
-                                        navigationPath: $dummyNavigationPath,
+                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .green, bold: true)
@@ -53,7 +51,7 @@ struct NewCommitPage: View {
                                 case .removed(associatedWith: let associatedWith):
                                     AudioTrackListCell(
                                         isNavigable: false,
-                                        navigationPath: $dummyNavigationPath,
+                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .red, bold: true)
@@ -78,81 +76,34 @@ struct NewCommitPage: View {
                         }
                     }
                 }
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        VStack {
-                            Text("New commit")
-                                .font(.caption)
-                            Text(repositoryClone.repositoryReference.name)
-                                .font(.headline)
-                        }
-                        .padding(.vertical, 5)
-                    }
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button(
-                            role: .cancel,
-                            action: {
-                                showSheet = false
-                            },
-                            label: {
-                                Text("Cancel")
-                            }
-                        )
-                    }
-                    // balances out above
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Text("Cancel")
-                            .hidden()
-//                        Button(
-//                            action: {
-//                                withAnimation {
-//                                    scrollProxy.scrollTo(bottom)
-//                                }
-//                            },
-//                            label: {
-//                                Text("Create")
-//                                    .bold()
-//                            }
-//                        )
-                    }
-                }
                 .interactiveDismissDisabled(true)
+                .withCustomSheetNavbar(
+                    caption: "New commit",
+                    title: repositoryClone.repositoryReference.name,
+                    cancellationControl: .init(title: "Cancel", action: { showSheet = false }),
+                    primaryControl: nil
+                )
                 .alert(
                     "No new changes to commit!",
                     isPresented: $showAlertNoChangesToCommit,
                     actions: {
-                        Button(
-                            "OK",
-                            action: {
-                                showSheet = false
-                            }
-                        )
+                        Button("OK", action: { showSheet = false } )
                     }
                 )
                 .alert(
                     "Please enter a commit message!",
                     isPresented: $showAlertEmptyMessage,
                     actions: {
-                        Button(
-                            "OK",
-                            action: {
-                                messageFieldIsFocused = true
-                            }
-                        )
+                        Button("OK", action: { messageFieldIsFocused = true })
                     }
                 )
                 .alert(
                     "Error when generating diff from head",
                     isPresented: $showAlertErrorDiff,
                     actions: {
-                        Button(
-                            "OK",
-                            action: {
-                                showSheet = false
-                            }
-                        )
-                    }, message: {
+                        Button("OK", action: { showSheet = false } )
+                    },
+                    message: {
                         Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                     }
                 )
@@ -160,13 +111,9 @@ struct NewCommitPage: View {
                     "Error when creating commit",
                     isPresented: $showAlertErrorCommit,
                     actions: {
-                        Button(
-                            "OK",
-                            action: {
-                                showSheet = false
-                            }
-                        )
-                    }, message: {
+                        Button("OK", action: { showSheet = false } )
+                    },
+                    message: {
                         Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                     }
                 )

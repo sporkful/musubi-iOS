@@ -62,6 +62,7 @@ extension Musubi {
             return self.openedLocalClone
         }
         
+        // TODO: change from handles to references
         // TODO: check that repositoryHandles is a subset of those in self.localClonesIndex?
         // TODO: better error handling (e.g. rollback for atomicity)
         func addToLocalClones(newAudioTracks: [Spotify.AudioTrack], destinationHandles: Set<RepositoryHandle>) async throws {

@@ -11,6 +11,22 @@ extension View {
     func withSpotifyNavigationDestinations(path: Binding<NavigationPath>) -> some View {
         modifier(WithSpotifyNavigationDestinations(navigationPath: path))
     }
+    
+    func withCustomSheetNavbar(
+        caption: String?,
+        title: String,
+        cancellationControl: CustomSheetNavbar.Control?,
+        primaryControl: CustomSheetNavbar.Control?
+    ) -> some View {
+        modifier(
+            CustomSheetNavbar(
+                caption: caption,
+                title: title,
+                cancellationControl: cancellationControl,
+                primaryControl: primaryControl
+            )
+        )
+    }
 }
 
 private struct WithCustomDisablingOverlay: ViewModifier {
@@ -61,6 +77,64 @@ private struct WithSpotifyNavigationDestinations: ViewModifier {
             }
             .navigationDestination(for: Spotify.OtherUser.self) { user in
                 StaticUserPage(user: user)
+            }
+    }
+}
+
+struct CustomSheetNavbar: ViewModifier {
+    let caption: String?
+    let title: String
+    
+    let cancellationControl: Control?
+    let primaryControl: Control?
+    
+    struct Control {
+        let title: String
+        let action: () -> Void
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        if let caption = caption {
+                            Text(caption)
+                                .font(.caption)
+                        }
+                        Text(title)
+                            .font(.headline)
+                    }
+                    .padding(.vertical, 5)
+                }
+                if let cancellationControl = self.cancellationControl {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(
+                            action: cancellationControl.action,
+                            label: {
+                                Text(cancellationControl.title)
+                            }
+                        )
+                    }
+                }
+                if let primaryControl = self.primaryControl {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(
+                            action: primaryControl.action,
+                            label: {
+                                Text(primaryControl.title)
+                                    .bold()
+                            }
+                        )
+                    }
+                } else {
+                    // invisible balancer
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Text(cancellationControl?.title ?? "Cancel")
+                            .hidden()
+                    }
+                }
             }
     }
 }

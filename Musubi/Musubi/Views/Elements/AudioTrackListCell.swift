@@ -5,6 +5,7 @@ import SwiftUI
 // TODO: rename to Playable...?
 
 struct AudioTrackListCell: View {
+    // TODO: better way to do this?
     let isNavigable: Bool
     @Binding var navigationPath: NavigationPath
     
@@ -114,7 +115,7 @@ struct AudioTrackListCell: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
+//                    .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
                     .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                     .contentShape(Rectangle())
             }

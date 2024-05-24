@@ -36,12 +36,10 @@ struct AudioTrackListPage: View {
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
     private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
+    private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
+    private let TITLE_TEXT_HEIGHT = Musubi.UI.TITLE_TEXT_HEIGHT
     
     private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .black }
-    
-    private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
-    private let SHUFFLE_SYMBOL_SIZE = Musubi.UI.SHUFFLE_SYMBOL_SIZE
-    private let MENU_SYMBOL_SIZE = Musubi.UI.MENU_SYMBOL_SIZE
     
     private let viewID = UUID() // for scroll view coordinate space id
     
@@ -93,7 +91,6 @@ struct AudioTrackListPage: View {
         )
     }
     
-    private let TITLE_TEXT_HEIGHT = Musubi.UI.TITLE_TEXT_HEIGHT
     private var navTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
@@ -165,7 +162,15 @@ struct AudioTrackListPage: View {
                             .font(.caption)
                     }
                     HStack {
-                        ForEach(Array(zip(audioTrackList.context.associatedPeople.indices, audioTrackList.context.associatedPeople)), id: \.0) { index, person in
+                        ForEach(
+                            Array(
+                                zip(
+                                    audioTrackList.context.associatedPeople.indices,
+                                    audioTrackList.context.associatedPeople
+                                )
+                            ),
+                            id: \.0
+                        ) { index, person in
                             if index != 0 {
                                 Text("•")
                             }
@@ -309,8 +314,8 @@ struct AudioTrackListPage: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
-                        .frame(height: Musubi.UI.MENU_SYMBOL_SIZE)
+//                        .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
+//                        .frame(height: Musubi.UI.MENU_SYMBOL_SIZE)
                         .contentShape(Rectangle())
                 }
                 Spacer()

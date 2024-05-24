@@ -9,15 +9,13 @@ struct LocalCloneEditorPage: View {
     
     @State private var editMode = EditMode.active // intended to be always-active
     
-    @State private var dummyNavigationPath = NavigationPath()
-    
     var body: some View {
         NavigationStack {
             List {
                 ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { element in
                     AudioTrackListCell(
                         isNavigable: false,
-                        navigationPath: $dummyNavigationPath,
+                        navigationPath: Binding.constant(NavigationPath()),
                         audioTrackListElement: element,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle

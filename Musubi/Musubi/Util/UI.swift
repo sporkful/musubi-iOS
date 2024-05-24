@@ -37,10 +37,10 @@ extension Musubi.UI {
     
     static let TITLE_TEXT_HEIGHT: CGFloat = 40
     
-    static let MENU_SYMBOL_SIZE: Double = 25
+//    static let MENU_SYMBOL_SIZE: Double = 25
     static let PLAY_SYMBOL_SIZE: Double = 50
     static let SHUFFLE_SYMBOL_SIZE: Double = 25
-    static let CHECKBOX_SYMBOL_SIZE: Double = 25
+    static let CHECKBOX_SYMBOL_SIZE: Double = (ImageDimension.cellThumbnail.rawValue / 2)
 }
 
 extension Musubi.UI {
