@@ -132,13 +132,16 @@ struct AudioTrackListCell: View {
         }
         .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
         .onChange(of: self.audioTrack, initial: true) { _, audioTrack in
-            if audioTrack == nil {
+            if !hasInitialLoaded || audioTrack == nil {
                 Task { @MainActor in
                     self.audioTrack = await self.audioTrackListElement.audioTrack
+                    self.hasInitialLoaded = true
                 }
             }
         }
     }
+    
+    @State private var hasInitialLoaded = false
 }
 
 //#Preview {

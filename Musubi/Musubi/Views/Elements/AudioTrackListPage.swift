@@ -35,9 +35,10 @@ struct AudioTrackListPage: View {
     @State private var coverImage: UIImage?
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
-    private let COVER_IMAGE_SHADOW_RADIUS = Musubi.UI.COVER_IMAGE_SHADOW_RADIUS
+    private let COVER_IMAGE_SHADOW_RADIUS: CGFloat = 5
+    private let TITLE_TEXT_HEIGHT: CGFloat = 42
+    private let NAVBAR_OFFSET: CGFloat = 52
     private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
-    private let TITLE_TEXT_HEIGHT = Musubi.UI.TITLE_TEXT_HEIGHT
     
     private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .black }
     
@@ -72,11 +73,11 @@ struct AudioTrackListPage: View {
         return Musubi.UI.lerp(
             x: scrollPosition,
             x1: 0.0,
-            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88,
+            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88 + NAVBAR_OFFSET,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
-            y2: TITLE_TEXT_HEIGHT * 3.30,
+            y2: TITLE_TEXT_HEIGHT * 3.30 + NAVBAR_OFFSET,
             minY: 1.0,
-            maxY: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88
+            maxY: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88 + NAVBAR_OFFSET
         )
     }
     private var gradientOpacity: CGFloat {
@@ -126,14 +127,11 @@ struct AudioTrackListPage: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                // TODO: this seems unreliable
-                // Note behavior changes depending on order of the following two modifiers.
-                // By calling frame after, we don't need to add any offset for safe area / navbar.
-                .ignoresSafeArea(.all, edges: [.horizontal, .top])
                 .frame(height: gradientDimension)
                 .opacity(gradientOpacity)
-                Spacer()
             }
+            .ignoresSafeArea(.all, edges: [.horizontal, .top])
+            .frame(maxHeight: .infinity, alignment: .topLeading)
             VStack {
                 if let image = coverImage {
                     Image(uiImage: image)
@@ -144,9 +142,9 @@ struct AudioTrackListPage: View {
                         .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
                         .opacity(coverImageOpacity)
                 }
-                Spacer()
             }
             .ignoresSafeArea(.all, edges: [.horizontal])
+            .frame(maxHeight: .infinity, alignment: .topLeading)
             ScrollView {
                 LazyVStack(alignment: .leading) {
                     if coverImage != nil {
@@ -226,7 +224,7 @@ struct AudioTrackListPage: View {
                     // By calling frame after, we don't need to add any offset for safe area / navbar.
                     .ignoresSafeArea(.all, edges: [.horizontal, .top])
                     .frame(height: 1)
-                    .opacity(0.420)
+                    .opacity(0.81)
                     .background(.ultraThinMaterial)
                     .opacity(navBarOpacity)
                 Spacer()

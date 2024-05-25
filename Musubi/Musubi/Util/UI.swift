@@ -33,10 +33,6 @@ extension Musubi.UI {
         case trackCover = 286
     }
     
-    static let COVER_IMAGE_SHADOW_RADIUS: CGFloat = 5
-    
-    static let TITLE_TEXT_HEIGHT: CGFloat = 40
-    
 //    static let MENU_SYMBOL_SIZE: Double = 25
     static let PLAY_SYMBOL_SIZE: Double = 50
     static let SHUFFLE_SYMBOL_SIZE: Double = 25
