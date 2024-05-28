@@ -37,6 +37,7 @@
 		794C8D912B782D88008DE992 /* StaticPlaylistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D902B782D88008DE992 /* StaticPlaylistPage.swift */; };
 		794C8D932B7855AB008DE992 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D922B7855AB008DE992 /* LocalClonePage.swift */; };
 		794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D982B797F22008DE992 /* ViewModifiers.swift */; };
+		794C8D9D2B7C4281008DE992 /* SpotifyPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */; };
 		7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA102B55ADDB00650775 /* UIColor+.swift */; };
 		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA162B56510B00650775 /* MusubiRepository.swift */; };
@@ -104,6 +105,7 @@
 		794C8D902B782D88008DE992 /* StaticPlaylistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticPlaylistPage.swift; sourceTree = "<group>"; };
 		794C8D922B7855AB008DE992 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794C8D982B797F22008DE992 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyPlaybackManager.swift; sourceTree = "<group>"; };
 		7961DA102B55ADDB00650775 /* UIColor+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+.swift"; sourceTree = "<group>"; };
 		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7961DA162B56510B00650775 /* MusubiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiRepository.swift; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 				7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */,
 				7947336C2B46566F001C3FEB /* SpotifyViewModel.swift */,
 				7947338B2B4B7955001C3FEB /* SpotifyRequests.swift */,
+				794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */,
 				7947337D2B4931F7001C3FEB /* NotSoSecretSecrets.swift */,
 				794733382B464333001C3FEB /* Assets.xcassets */,
 				7947333A2B464333001C3FEB /* Preview Content */,
@@ -441,6 +444,7 @@
 				79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */,
 				794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
+				794C8D9D2B7C4281008DE992 /* SpotifyPlaybackManager.swift in Sources */,
 				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,
 				7947339A2B4CE922001C3FEB /* UI.swift in Sources */,
 				7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */,

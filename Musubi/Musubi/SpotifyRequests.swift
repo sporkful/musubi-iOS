@@ -69,11 +69,11 @@ extension SpotifyRequests {
 }
 
 extension SpotifyRequests {
-    private enum HTTPMethod: String {
+    enum HTTPMethod: String {
         case GET, PUT, POST, DELETE
     }
     
-    private static func makeRequest<Response: Decodable>(
+    static func makeRequest<Response: Decodable>(
         type: HTTPMethod,
         path: String,
         queryItems: [URLQueryItem] = [],
@@ -98,7 +98,7 @@ extension SpotifyRequests {
         )
     }
     
-    private static func makeRequest<Response: Decodable>(
+    static func makeRequest<Response: Decodable>(
         type: HTTPMethod,
         url: URL,
         jsonBody: Data? = nil
@@ -111,7 +111,7 @@ extension SpotifyRequests {
         return try JSONDecoder().decode(Response.self, from: responseData)
     }
     
-    private static func makeRequest(
+    static func makeRequest(
         type: HTTPMethod,
         url: URL,
         jsonBody: Data? = nil
