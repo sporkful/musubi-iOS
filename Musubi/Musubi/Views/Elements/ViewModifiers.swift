@@ -35,13 +35,14 @@ private struct WithCustomDisablingOverlay: ViewModifier {
     func body(content: Content) -> some View {
         ZStack {
             content
-                .allowsHitTesting(!isDisabled)
+//                .allowsHitTesting(!isDisabled)
+                .disabled(isDisabled)
             if isDisabled {
-                ZStack {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.360))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ignoresSafeArea(.all, edges: .all)
+//                ZStack {
+//                    Rectangle()
+//                        .fill(Color.gray.opacity(0.360))
+//                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+//                        .ignoresSafeArea(.all, edges: .all)
                     ProgressView("Loading")
                         .controlSize(.large)
                         .padding()
@@ -49,7 +50,7 @@ private struct WithCustomDisablingOverlay: ViewModifier {
                         .bold()
                         .background(Color.gray.opacity(0.8), in: RoundedRectangle(cornerRadius: 8))
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                }
+//                }
             }
         }
     }

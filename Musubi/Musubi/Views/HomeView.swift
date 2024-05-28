@@ -21,6 +21,13 @@ class HomeViewCoordinator {
     var myForksNavPath = NavigationPath()
     var spotifySearchNavPath = NavigationPath()
     var myAccountNavPath = NavigationPath()
+    
+    enum ScrollAnchor: Equatable, Hashable {
+        case none
+        case top
+        case bottom
+    }
+    var myReposDesiredScrollAnchor: ScrollAnchor = .none
 }
 
 struct HomeView: View {

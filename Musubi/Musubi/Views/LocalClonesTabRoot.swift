@@ -4,8 +4,10 @@ import SwiftUI
 
 struct LocalClonesTabRoot: View {
     @Environment(Musubi.User.self) private var currentUser
+    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
     var body: some View {
+        ScrollViewReader { scrollProxy in
             List {
                 ForEach(currentUser.localClonesIndex) { repositoryReference in
                     NavigationLink(value: repositoryReference.handle) {
@@ -16,7 +18,15 @@ struct LocalClonesTabRoot: View {
                         )
                     }
                 }
+                Divider()
+                    .id(HomeViewCoordinator.ScrollAnchor.bottom)
             }
+            .onChange(of: homeViewCoordinator.myReposDesiredScrollAnchor) { _, newState in
+                withAnimation {
+                    scrollProxy.scrollTo(newState)
+                }
+            }
+        }
     }
 }
 

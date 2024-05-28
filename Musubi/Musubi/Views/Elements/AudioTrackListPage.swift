@@ -18,15 +18,18 @@ struct AudioTrackListPage: View {
         let title: String
         let sfSymbolName: String
         let action: () -> Void
+        var isDisabledVisually: Bool = false
         
         static func == (lhs: AudioTrackListPage.CustomToolbarItem, rhs: AudioTrackListPage.CustomToolbarItem) -> Bool {
             return lhs.title == rhs.title
                 && lhs.sfSymbolName == rhs.sfSymbolName
+                && lhs.isDisabledVisually == rhs.isDisabledVisually
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(title)
             hasher.combine(sfSymbolName)
+            hasher.combine(isDisabledVisually)
         }
     }
     
@@ -287,12 +290,22 @@ struct AudioTrackListPage: View {
         var body: some View {
             HStack {
                 ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                if !customToolbarItem.isDisabledVisually {
                     Button {
                         customToolbarItem.action()
                     } label: {
                         Image(systemName: customToolbarItem.sfSymbolName)
                             .contentShape(Rectangle())
                     }
+                } else {
+                    Button {
+                    } label: {
+                        Image(systemName: customToolbarItem.sfSymbolName)
+                            .contentShape(Rectangle())
+                    }
+                    .disabled(true)
+                    .onTapGesture(perform: customToolbarItem.action)
+                }
                 }
                 Menu {
                     Button {
@@ -304,11 +317,20 @@ struct AudioTrackListPage: View {
                         }
                     }
                     ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                    if !customToolbarItem.isDisabledVisually {
                         Button {
                             customToolbarItem.action()
                         } label: {
                             Label(customToolbarItem.title, systemImage: customToolbarItem.sfSymbolName)
                         }
+                    } else {
+                        Button {
+                        } label: {
+                            Label(customToolbarItem.title, systemImage: customToolbarItem.sfSymbolName)
+                        }
+                        .disabled(true)
+                        .onTapGesture(perform: customToolbarItem.action)
+                    }
                     }
                 } label: {
                     Image(systemName: "ellipsis")
