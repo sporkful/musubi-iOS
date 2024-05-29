@@ -61,12 +61,15 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
         
         let simulatedRemote = SimulatedRemote(list: oldList)
         
-        let oldDiffableList = try await Musubi.ViewModel.AudioTrackList(
+        let oldDiffableList = await Musubi.ViewModel.AudioTrackList.initTestInstance(
             audioTracks: oldList.map { id in dummyAudioTrack(id: id) }
         )
-        let newDiffableList = try await Musubi.ViewModel.AudioTrackList(
+        let newDiffableList = await Musubi.ViewModel.AudioTrackList.initTestInstance(
             audioTracks: newList.map { id in dummyAudioTrack(id: id) }
         )
+        
+        // testing waiting for hydration before logging contents
+        let differenceWithLiveMoves = try await newDiffableList.differenceWithLiveMoves(from: oldDiffableList)
         
         if logging {
             log.append("Old list uniquified: \(await oldDiffableList.contents)")
@@ -75,7 +78,7 @@ final class CollectionDiffingWithMovesTests: XCTestCase {
             log.append("\t Remote state: \(await simulatedRemote.listCopy())")
         }
         
-        for change in try await newDiffableList.differenceWithLiveMoves(from: oldDiffableList) {
+        for change in differenceWithLiveMoves {
             switch change {
             case .insert(offset: let offset, element: let element, associatedWith: let associatedWith):
                 if let associatedWith = associatedWith {

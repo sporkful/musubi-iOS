@@ -9,7 +9,8 @@ extension Musubi {
     }
 }
 
-protocol AudioTrackListContext: Identifiable {
+protocol AudioTrackListContext {
+    var id: String { get } // TODO: check that IDs are unique across types
     var name: String { get }
     var formattedDescription: String? { get }
     var coverImageURLString: String? { get }
@@ -83,7 +84,15 @@ extension Musubi.ViewModel {
         private(set) var contents: [UniquifiedElement]
         
         private(set) var audioTrackCounter: [Spotify.ID : Int]
-        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
+//        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
+        
+        // temporary placeholder for above - see UniquifiedElement defn below for origin
+        func audioTrackData() async -> [Spotify.ID : Spotify.AudioTrack] {
+            Dictionary(
+                self.contents.map { ($0.audioTrackID, $0.audioTrack) },
+                uniquingKeysWith: { (first, _) in first }
+            )
+        }
         
         // TODO: check correctness of this, esp wrt deadlocks (current sol is ad-hoc)
         // TODO: automate v for all nonprivate async funcs?
@@ -98,10 +107,29 @@ extension Musubi.ViewModel {
         private(set) var initialHydrationError: Error? = nil
         
         struct UniquifiedElement: Equatable, Hashable, CustomStringConvertible {
-            let audioTrackID: Spotify.ID
+            let audioTrackID: Spotify.ID  // note redundancy with self.audioTrack is for legacy reasons.
             let occurrence: Int  // per-value counter starting at 1
             
             weak var parent: AudioTrackList?
+            
+            let audioTrack: Spotify.AudioTrack
+            
+            init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList? = nil, audioTrack: Spotify.AudioTrack) {
+                self.audioTrackID = audioTrackID
+                self.occurrence = occurrence
+                self.parent = parent
+                self.audioTrack = audioTrack
+            }
+            
+            init(audioTrack: Spotify.AudioTrack) {
+                self.audioTrackID = audioTrack.id
+                self.occurrence = 1
+                self.parent = nil
+                self.audioTrack = audioTrack
+            }
+            
+            /*
+             // TODO: revisit this if memory efficiency needed, e.g. with global shared cache of track data.
             
             // for audio tracks with no parent, e.g. from search
             private var _audioTrack: Spotify.AudioTrack?
@@ -129,6 +157,8 @@ extension Musubi.ViewModel {
                 self.parent = nil
                 self._audioTrack = audioTrack
             }
+             
+             */
             
             var description: String { "(\"\(audioTrackID)\", \(occurrence))" }
             
@@ -138,12 +168,13 @@ extension Musubi.ViewModel {
             ) -> Bool {
                 return lhs.audioTrackID == rhs.audioTrackID
                     && lhs.occurrence == rhs.occurrence
-//                    && lhs.parent === rhs.parent // omission for correct canonical CollectionDifference
+                    && lhs.parent?.context.id == rhs.parent?.context.id
             }
             
             func hash(into hasher: inout Hasher) {
                 hasher.combine(audioTrackID)
                 hasher.combine(occurrence)
+                // TODO: do something with parent?
             }
         }
         
@@ -151,7 +182,6 @@ extension Musubi.ViewModel {
             self.context = repositoryReference
             self.contents = []
             self.audioTrackCounter = [:]
-            self.audioTrackData = [:]
             self.initialHydrationTask = Task {}
             
             self.initialHydrationTask = Task {
@@ -179,7 +209,7 @@ extension Musubi.ViewModel {
             self.context = repositoryCommit
             self.contents = []
             self.audioTrackCounter = [:]
-            self.audioTrackData = knownAudioTrackData ?? [:]
+//            self.audioTrackData = knownAudioTrackData ?? [:]
             self.initialHydrationTask = Task {}
             
             self.initialHydrationTask = Task {
@@ -220,7 +250,6 @@ extension Musubi.ViewModel {
             self.context = playlistMetadata
             self.contents = []
             self.audioTrackCounter = [:]
-            self.audioTrackData = [:]
             self.initialHydrationTask = Task {}
             
             self.initialHydrationTask = Task {
@@ -246,7 +275,6 @@ extension Musubi.ViewModel {
             self.context = albumMetadata
             self.contents = []
             self.audioTrackCounter = [:]
-            self.audioTrackData = [:]
             self.initialHydrationTask = Task {}
             
             self.initialHydrationTask = Task {
@@ -276,7 +304,6 @@ extension Musubi.ViewModel {
             self.context = audioTrack
             self.contents = []
             self.audioTrackCounter = [:]
-            self.audioTrackData = [:]
             self.initialHydrationTask = Task {}
             
             try! self._append(audioTracks: [audioTrack])
@@ -296,15 +323,16 @@ extension Musubi.ViewModel {
         
         private func _append(audioTracks: [Spotify.AudioTrack]) throws {
             for audioTrack in audioTracks {
-                if self.audioTrackData[audioTrack.id] == nil {
-                    self.audioTrackData[audioTrack.id] = audioTrack
-                }
+//                if self.audioTrackData[audioTrack.id] == nil {
+//                    self.audioTrackData[audioTrack.id] = audioTrack
+//                }
                 self.audioTrackCounter[audioTrack.id] = (self.audioTrackCounter[audioTrack.id] ?? 0) + 1
                 self.contents.append(
                     UniquifiedElement(
                         audioTrackID: audioTrack.id,
                         occurrence: self.audioTrackCounter[audioTrack.id]!,
-                        parent: self
+                        parent: self,
+                        audioTrack: audioTrack
                     )
                 )
             }
@@ -339,7 +367,8 @@ extension Musubi.ViewModel {
                     self.contents[i] = UniquifiedElement(
                         audioTrackID: self.contents[i].audioTrackID,
                         occurrence: self.contents[i].occurrence - 1,
-                        parent: self
+                        parent: self,
+                        audioTrack: self.contents[i].audioTrack
                     )
                 }
             }
@@ -363,7 +392,8 @@ extension Musubi.ViewModel {
                     self.contents[i] = UniquifiedElement(
                         audioTrackID: element.audioTrackID,
                         occurrence: recounter[element.audioTrackID]!,
-                        parent: self
+                        parent: self,
+                        audioTrack: element.audioTrack
                     )
                 }
             }
@@ -401,6 +431,37 @@ extension Musubi.ViewModel {
                 }
                 return "[Musubi::ViewModel::AudioTrackList] \(description)"
             }
+        }
+        
+        // MARK: - FOR TESTING
+        
+        private init(audioTracks: [Spotify.AudioTrack]) {
+            self.context = Spotify.AlbumMetadata(
+                id: "dummyalbum",
+                album_type: "",
+                images: nil,
+                name: "dummyalbum",
+                release_date: "",
+                artists: []
+            )
+            self.contents = []
+            self.audioTrackCounter = [:]
+            self.initialHydrationTask = Task {}
+            
+            self.initialHydrationTask = Task {
+                try await Task.sleep(until: .now + .seconds(1.0), clock: .continuous)
+                if audioTracks.count <= 3 {
+                    try await self.initialHydrationAppend(audioTracks: audioTracks)
+                    return
+                }
+                try await self.initialHydrationAppend(audioTracks: Array(audioTracks[0..<3]))
+                try await Task.sleep(until: .now + .seconds(1.0), clock: .continuous)
+                try await self.initialHydrationAppend(audioTracks: Array(audioTracks[3...]))
+            }
+        }
+        
+        static func initTestInstance(audioTracks: [Spotify.AudioTrack]) -> Musubi.ViewModel.AudioTrackList {
+            return Musubi.ViewModel.AudioTrackList(audioTracks: audioTracks)
         }
     }
 }

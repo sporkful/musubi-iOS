@@ -132,7 +132,7 @@ struct NewCommitPage: View {
                     repositoryReference: repositoryClone.repositoryReference,
                     commitID: repositoryClone.headCommitID
                 ),
-                knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData
+                knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData()
             )
             
             // TODO: make waiting for hydration implicit (as part of ViewModel.AudioTrackList)

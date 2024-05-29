@@ -241,12 +241,13 @@ fileprivate struct ConfirmationPage: View {
                 self.selectedAudioTracksOrdered = []
                 for element in await audioTrackList.contents {
                     if selectedAudioTracks.contains(element) {
-                        guard let audioTrack = await element.audioTrack else {
-                            throw Musubi.UI.Error.misc(
-                                detail: "missing audio track data in orderSelectedAudioTracks"
-                            )
-                        }
-                        self.selectedAudioTracksOrdered.append(audioTrack)
+//                        guard let audioTrack = await element.audioTrack else {
+//                            throw Musubi.UI.Error.misc(
+//                                detail: "missing audio track data in orderSelectedAudioTracks"
+//                            )
+//                        }
+//                        self.selectedAudioTracksOrdered.append(audioTrack)
+                        self.selectedAudioTracksOrdered.append(element.audioTrack)
                     }
                 }
                 

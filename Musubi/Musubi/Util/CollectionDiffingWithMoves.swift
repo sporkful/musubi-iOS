@@ -56,7 +56,12 @@ extension Musubi.ViewModel.AudioTrackList {
             try await self.initialHydrationTask.value
             try await other.initialHydrationTask.value
             
-            return self.contents.difference(from: other.contents).inferringMoves()
+            return self.contents
+                .difference(
+                    from: other.contents,
+                    by: { ($0.audioTrackID == $1.audioTrackID) && ($0.occurrence == $1.occurrence) }
+                )
+                .inferringMoves()
         }
         
         func differenceWithLiveMoves(

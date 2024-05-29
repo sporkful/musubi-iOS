@@ -221,7 +221,7 @@ extension Musubi {
                         repositoryReference: self.repositoryReference,
                         commitID: self.headCommitID
                     ),
-                    knownAudioTrackData: self.stagedAudioTrackList.audioTrackData
+                    knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
                 )
                 
                 // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
