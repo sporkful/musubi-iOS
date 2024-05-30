@@ -35,6 +35,8 @@ struct AudioTrackListPage: View {
     
     @State private var showSheetAddToSelectableClones = false
     
+    @State private var showAlertErrorRehydration = false
+    
     @State private var coverImage: UIImage?
     
     private let COVER_IMAGE_INITIAL_DIMENSION = Musubi.UI.ImageDimension.audioTracklistCover.rawValue
@@ -261,6 +263,39 @@ struct AudioTrackListPage: View {
                 showSheet: $showSheetAddToSelectableClones,
                 audioTrackList: audioTrackList
             )
+        }
+        .onAppear(perform: rehydrateIfNeeded)
+        .alert(
+            "Error when refreshing contents",
+            isPresented: $showAlertErrorRehydration,
+            actions: {
+                Button("OK", action: { navigationPath.removeLast() } )
+            },
+            message: {
+                Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+            }
+        )
+    }
+    
+    // TODO: better regulation of when this is called, e.g. user swipe up to reload?
+    // TODO: refresh metadata as well?
+    private func rehydrateIfNeeded() {
+        Task {
+            guard let contextPlaylist = audioTrackList.context as? Spotify.PlaylistMetadata else {
+                // All other contexts are either relatively static or maintained locally.
+                return
+            }
+            print("[Musubi::AudioTrackListPage] rehydrateIfNeeded on remote playlist")
+            
+            do {
+                try await audioTrackList.refreshContentsIfNeeded(
+                    newContents: SpotifyRequests.Read.playlistTrackListFull(playlistID: contextPlaylist.id)
+                )
+            } catch {
+                print("[Musubi::AudioTrackListPage] failed to complete rehydrateIfNeeded")
+                print(error.localizedDescription)
+                showAlertErrorRehydration = true
+            }
         }
     }
     

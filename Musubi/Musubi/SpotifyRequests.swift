@@ -290,10 +290,10 @@ extension SpotifyRequests.Read {
         )
     }
     
-    static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.PlaylistAudioTrackItem] {
+    static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.AudioTrack] {
         let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
         let restOfTrackList = try await restOfList(firstPage: firstPage)
-        return firstPage.items + restOfTrackList
+        return (firstPage.items + restOfTrackList).map({ $0.track })
     }
     
     static func artistAlbums(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {

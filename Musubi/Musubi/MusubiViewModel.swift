@@ -255,13 +255,9 @@ extension Musubi.ViewModel {
             self.initialHydrationTask = Task {
                 do {
                     let firstPage = try await SpotifyRequests.Read.playlistFirstAudioTrackPage(playlistID: playlistMetadata.id)
-                    try await self.initialHydrationAppend(
-                        audioTracks: [Spotify.AudioTrack].from(playlistTrackItems: firstPage.items)
-                    )
+                    try await self.initialHydrationAppend(audioTracks: firstPage.items.map({ $0.track }))
                     let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-                    try await self.initialHydrationAppend(
-                        audioTracks: [Spotify.AudioTrack].from(playlistTrackItems: restOfList)
-                    )
+                    try await self.initialHydrationAppend(audioTracks: restOfList.map({ $0.track }))
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify playlist")
                     print(error.localizedDescription)
@@ -403,6 +399,17 @@ extension Musubi.ViewModel {
             }
             if recounter != self.audioTrackCounter {
                 throw CustomError.DEV(detail: "move unstabilized counter")
+            }
+        }
+        
+        func refreshContentsIfNeeded(newContents: [Spotify.AudioTrack]) async throws {
+            guard let remotePlaylistContext = self.context as? Spotify.PlaylistMetadata else {
+                throw CustomError.DEV(detail: "called refreshContentsIfNeeded on non-playlist")
+            }
+            
+            if newContents != self.contents.map({ $0.audioTrack }) {
+                self.contents = []
+                try self._append(audioTracks: newContents)
             }
         }
         

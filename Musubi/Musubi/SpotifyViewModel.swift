@@ -168,12 +168,6 @@ extension Spotify.AudioTrack {
     }
 }
 
-extension Array where Element == Spotify.AudioTrack {
-    static func from(playlistTrackItems: [Spotify.PlaylistAudioTrackItem]) -> Self {
-        return playlistTrackItems.map { item in item.track }
-    }
-}
-
 // TODO: metadata returned from search query is stripped, so just pull bare display info then expand when user clicks
 extension Spotify {
     struct SearchResults: SpotifyViewModel {

@@ -69,7 +69,7 @@ class SpotifyPlaybackManager {
     
     private var remoteDevicesPoller: Timer? = nil
     private var remotePlaybackPoller: Timer? = nil
-//    private var localPlaybackPoller: Timer? = nil // for if remote polling hits Spotify rate limit
+//    private var localPlaybackPoller: Timer? = nil // in case remote polling hits Spotify rate limit
     
     // in seconds
     private let REMOTE_DEVICES_POLLER_INTERVAL: TimeInterval = 5 * 60.0
