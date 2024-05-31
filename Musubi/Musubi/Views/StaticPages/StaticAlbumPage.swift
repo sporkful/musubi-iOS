@@ -5,12 +5,12 @@ import SwiftUI
 struct StaticAlbumPage: View {
     @Binding var navigationPath: NavigationPath
     
-    let albumMetadata: Spotify.AlbumMetadata
+    @State var audioTrackList: Musubi.ViewModel.AudioTrackList
     
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
-            audioTrackList: Musubi.ViewModel.AudioTrackList(albumMetadata: albumMetadata),
+            audioTrackList: audioTrackList,
             showAudioTrackThumbnails: false,
             customToolbarAdditionalItems: []
         )

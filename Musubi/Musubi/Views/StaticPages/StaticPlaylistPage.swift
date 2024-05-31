@@ -8,7 +8,11 @@ struct StaticPlaylistPage: View {
     
     @Binding var navigationPath: NavigationPath
     
-    let playlistMetadata: Spotify.PlaylistMetadata
+    @State var audioTrackList: Musubi.ViewModel.AudioTrackList
+    
+    private var playlistMetadata: Spotify.PlaylistMetadata {
+        audioTrackList.context as! Spotify.PlaylistMetadata
+    }
     
     @State private var showAlertAlreadyCloned = false
     @State private var showAlertCloneError = false
@@ -36,7 +40,7 @@ struct StaticPlaylistPage: View {
     var body: some View {
         AudioTrackListPage(
             navigationPath: $navigationPath,
-            audioTrackList: Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata),
+            audioTrackList: audioTrackList,
             showAudioTrackThumbnails: true,
             customToolbarAdditionalItems: [
                 (

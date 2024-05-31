@@ -2,6 +2,8 @@
 
 import Foundation
 
+// TODO: add `nonisolated let`s in MainActor classes as appropriate
+
 // namespaces
 extension Musubi {
     struct Repository {
@@ -44,6 +46,7 @@ extension Musubi {
         private(set) var externalMetadata: Spotify.PlaylistMetadata?
         
         private var refreshTimer: Timer?
+        private let REFRESH_INTERVAL: TimeInterval = 3 * 60.0 // TODO: tune this for Spotify's rate limit
         
         nonisolated var id: String { handle.id }
         
@@ -67,7 +70,7 @@ extension Musubi {
         
         private func startPeriodicRefresh() async {
             if self.refreshTimer == nil {
-                self.refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) {
+                self.refreshTimer = Timer.scheduledTimer(withTimeInterval: REFRESH_INTERVAL, repeats: true) {
                     [weak self] (_) in
                     Task { [weak self] in
                         try await self?.refresh()
@@ -77,12 +80,12 @@ extension Musubi {
             }
         }
         
-        func pausePeriodicRefresh(forTimeInSeconds: TimeInterval) async {
+        func pausePeriodicRefresh(forTimeInSeconds seconds: TimeInterval) async {
             self.refreshTimer?.invalidate()
             self.refreshTimer = nil
             
             Task {
-                try await Task.sleep(nanoseconds: UInt64(forTimeInSeconds * 1_000_000_000))
+                try await Task.sleep(until: .now + .seconds(seconds), clock: .continuous)
                 await startPeriodicRefresh()
             }
         }

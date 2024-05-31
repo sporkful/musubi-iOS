@@ -79,7 +79,7 @@ extension Musubi.ViewModel {
     @Observable
     @MainActor
     class AudioTrackList {
-        let context: any AudioTrackListContext
+        nonisolated let context: any AudioTrackListContext
         
         private(set) var contents: [UniquifiedElement]
         
@@ -174,7 +174,7 @@ extension Musubi.ViewModel {
             func hash(into hasher: inout Hasher) {
                 hasher.combine(audioTrackID)
                 hasher.combine(occurrence)
-                // TODO: do something with parent?
+                hasher.combine(parent?.context.id ?? "")
             }
         }
         
@@ -338,6 +338,15 @@ extension Musubi.ViewModel {
             }
         }
         
+        func removeAll() async {
+            self._removeAll()
+        }
+        
+        private func _removeAll() {
+            self.contents = []
+            self.audioTrackCounter = [:]
+        }
+        
         func remove(at index: Int) async throws -> Spotify.ID {
             try await self.initialHydrationTask.value
             
@@ -356,6 +365,12 @@ extension Musubi.ViewModel {
         
         func _remove(at index: Int) throws -> Spotify.ID {
             let removedElement = self.contents.remove(at: index)
+            
+            self.audioTrackCounter[removedElement.audioTrackID]! -= 1
+            if self.audioTrackCounter[removedElement.audioTrackID] == 0 {
+                self.audioTrackCounter[removedElement.audioTrackID] = nil
+            }
+            
             self.contents.indices.forEach { i in
                 if self.contents[i].audioTrackID == removedElement.audioTrackID
                     && self.contents[i].occurrence > removedElement.occurrence
@@ -403,12 +418,12 @@ extension Musubi.ViewModel {
         }
         
         func refreshContentsIfNeeded(newContents: [Spotify.AudioTrack]) async throws {
-            guard let remotePlaylistContext = self.context as? Spotify.PlaylistMetadata else {
+            guard let _ = self.context as? Spotify.PlaylistMetadata else {
                 throw CustomError.DEV(detail: "called refreshContentsIfNeeded on non-playlist")
             }
             
             if newContents != self.contents.map({ $0.audioTrack }) {
-                self.contents = []
+                self._removeAll()
                 try self._append(audioTracks: newContents)
             }
         }

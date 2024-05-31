@@ -67,13 +67,13 @@ private struct WithSpotifyNavigationDestinations: ViewModifier {
             .navigationDestination(for: Spotify.AlbumMetadata.self) { albumMetadata in
                 StaticAlbumPage(
                     navigationPath: $navigationPath,
-                    albumMetadata: albumMetadata
+                    audioTrackList: .init(albumMetadata: albumMetadata)
                 )
             }
             .navigationDestination(for: Spotify.PlaylistMetadata.self) { playlistMetadata in
                 StaticPlaylistPage(
                     navigationPath: $navigationPath,
-                    playlistMetadata: playlistMetadata
+                    audioTrackList: .init(playlistMetadata: playlistMetadata)
                 )
             }
             .navigationDestination(for: Spotify.OtherUser.self) { user in
