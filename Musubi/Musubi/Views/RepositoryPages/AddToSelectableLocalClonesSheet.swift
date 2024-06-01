@@ -138,7 +138,7 @@ struct AddToSelectableLocalClonesSheet: View {
                 }
             } catch {
                 print("[Musubi::AddToSelectableLocalClonesSheet] failed to wait for hydration")
-                print(error)
+                print(error.localizedDescription)
                 showAlertErrorHydration = true
             }
         }
@@ -255,7 +255,7 @@ fileprivate struct ConfirmationPage: View {
                 try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
             } catch {
                 print("[Musubi::AddToSelectableLocalClonesSheet] failed to order selected audio tracks")
-                print(error)
+                print(error.localizedDescription)
                 showAlertErrorOrdering = true
             }
         }
@@ -280,7 +280,7 @@ fileprivate struct ConfirmationPage: View {
                 showParentSheet = false
             } catch {
                 print("[Musubi::AddToSelectableLocalClonesSheet] failed to complete add")
-                print(error)
+                print(error.localizedDescription)
                 showAlertErrorOrdering = true
             }
         }

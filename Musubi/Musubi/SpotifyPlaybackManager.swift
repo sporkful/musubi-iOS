@@ -2,11 +2,13 @@
 
 import Foundation
 
+// TODO: resolve redundant/conflicting notions of context between AudioTrackList and PlaybackManager
+
 @Observable
 @MainActor
 class SpotifyPlaybackManager {
-    private(set) var availableDevices: [SpotifyAvailableDevice]
-    private(set) var activeDevice: SpotifyAvailableDevice?
+    private(set) var availableDevices: [AvailableDeviceInfo: String] // value = deviceID (volatile)
+    private(set) var activeDevice: AvailableDeviceInfo?
     private(set) var isPlaying: Bool
     private(set) var currentTrack: Musubi.ViewModel.AudioTrackList.UniquifiedElement?
     private(set) var context: Context
@@ -16,9 +18,11 @@ class SpotifyPlaybackManager {
     // Used to prevent conflicting concurrent remote-seek-requests when user is scrubbing.
     var isRequestingRemoteSeek: Bool
     
+    let POSITION_MS_SLIDER_MIN = 10.0
+    
     enum Context: Equatable {
         case local(context: (any AudioTrackListContext)?)
-        case remote(uri: String)
+        case remote(uri: String?)
         
         static func == (lhs: SpotifyPlaybackManager.Context, rhs: SpotifyPlaybackManager.Context) -> Bool {
             // Avoid using `default` so cases added in the future will be forced to be implemented.
@@ -37,25 +41,36 @@ class SpotifyPlaybackManager {
     
     enum LocalRepeatState: Equatable {
         case off, track, context
+        
+        fileprivate init(remoteRepeatState: Remote.PlaybackState.RepeatState) {
+            self = switch remoteRepeatState {
+                case .off: .off
+                case .track: .track
+                case .context: .context
+            }
+        }
     }
     
-    struct SpotifyAvailableDevice: Decodable {
-        let id: String?
-        let is_active: Bool
-//        let is_private_session: Bool
-//        let is_restricted: Bool
+    struct AvailableDeviceInfo: Equatable, Hashable {
+        let is_restricted: Bool
         let name: String
-        let type: String // e.g. "computer", "smartphone", "speaker", etc. // TODO: enumify?
-//        let volume_percent: Int?
-//        let supports_volume: Bool
+        let type: String // e.g. "computer", "smartphone", "speaker", etc.
+        
+        // TODO: enumify type? need to handle unknown cases though
+        
+        fileprivate init(availableDevice: Remote.AvailableDevice) {
+            self.is_restricted = availableDevice.is_restricted
+            self.name = availableDevice.name
+            self.type = availableDevice.type
+        }
     }
     
     init() {
-        self.availableDevices = []
+        self.availableDevices = [:]
         self.activeDevice = nil
         self.isPlaying = false
         self.currentTrack = nil
-        self.context = .local(context: nil)
+        self.context = .remote(uri: nil)
         self.repeatState = .context
         self.positionMilliseconds = 0
         self.isRequestingRemoteSeek = false
@@ -63,18 +78,18 @@ class SpotifyPlaybackManager {
         Task {
             await startRemoteDevicesPoller()
             await startRemotePlaybackPoller()
-//            await startLocalPlaybackPoller()
+            await startLocalPlaybackPoller()
         }
     }
     
-    private var remoteDevicesPoller: Timer? = nil
-    private var remotePlaybackPoller: Timer? = nil
-//    private var localPlaybackPoller: Timer? = nil // in case remote polling hits Spotify rate limit
+    private var remoteDevicesPoller: Timer? = nil // polls Spotify for available devices
+    private var remotePlaybackPoller: Timer? = nil // polls Spotify for actual current playback state
+    private var localPlaybackPoller: Timer? = nil // interpolates self.position between remotePlaybackPoller firings
     
     // in seconds
     private let REMOTE_DEVICES_POLLER_INTERVAL: TimeInterval = 5 * 60.0
-    private let REMOTE_PLAYBACK_POLLER_INTERVAL: TimeInterval = 1.0
-//    private let LOCAL_PLAYBACK_POLLER_INTERVAL: TimeInterval = 1.0
+    private let REMOTE_PLAYBACK_POLLER_INTERVAL: TimeInterval = 5.0 // kept high to stay within Spotify rate limits
+    private let LOCAL_PLAYBACK_POLLER_INTERVAL: TimeInterval = 1.0
     
     // TODO: proper ARC management
     // (current iteration should be fine for MVP since this object is global wrt user)
@@ -99,6 +114,15 @@ class SpotifyPlaybackManager {
         }
     }
     
+    func startLocalPlaybackPoller() async {
+        if self.localPlaybackPoller == nil {
+            self.localPlaybackPoller = startPoller(
+                timeInterval: LOCAL_PLAYBACK_POLLER_INTERVAL,
+                action: localPlaybackPollerAction
+            )
+        }
+    }
+    
     func startRemotePlaybackPoller() async {
         if self.remotePlaybackPoller == nil {
             self.remotePlaybackPoller = startPoller(
@@ -108,15 +132,6 @@ class SpotifyPlaybackManager {
         }
     }
     
-//    func startLocalPlaybackPoller() async {
-//        if self.localPlaybackPoller == nil {
-//            self.localPlaybackPoller = startPoller(
-//                timeInterval: LOCAL_PLAYBACK_POLLER_INTERVAL,
-//                action: localPlaybackPollerAction
-//            )
-//        }
-//    }
-    
     // TODO: error handling
     
     // TODO: account for actor re-entrancy / enforce ordering of concurrent requests
@@ -124,16 +139,94 @@ class SpotifyPlaybackManager {
     
     private func remoteDevicesPollerAction() async {
         do {
-            self.availableDevices = try await Remote.fetchAvailableDevices().devices
+            for availableDevice in try await Remote.fetchAvailableDevices().devices {
+                let info = AvailableDeviceInfo(availableDevice: availableDevice)
+                self.availableDevices[info] = availableDevice.id
+            }
         } catch {
             print("[Spotify::PlaybackManager] (remote devices poller) failed to fetch available devices")
         }
     }
     
+    // TODO: account for redundant increment whenever this runs immediately after a `remotePlaybackPollerAction`
+    private func localPlaybackPollerAction() async {
+        if self.isPlaying,
+           let currentAudioTrack = self.currentTrack?.audioTrack
+        {
+            let intervalMilliseconds = LOCAL_PLAYBACK_POLLER_INTERVAL * 1000
+            if self.positionMilliseconds + intervalMilliseconds < Double(currentAudioTrack.duration_ms) {
+                self.positionMilliseconds += intervalMilliseconds
+            } else {
+                self.remotePlaybackPoller?.fire()
+            }
+        }
+    }
+    
     private func remotePlaybackPollerAction() async {
+        do {
+            let remoteState = try await Remote.fetchState()
+            
+            if !self.isRequestingRemoteSeek {
+                self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), POSITION_MS_SLIDER_MIN)
+            }
+            
+            self.isPlaying = remoteState.is_playing
+            
+            switch self.context {
+            case .remote(uri: let uri):
+                if uri != remoteState.context?.uri {
+                    self.context = .remote(uri: remoteState.context?.uri)
+                }
+                if let remoteAudioTrack = remoteState.item {
+                    if self.currentTrack != .init(audioTrack: remoteAudioTrack) {
+                        self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                    }
+                } else {
+                    self.currentTrack = nil
+                }
+                if self.repeatState != .init(remoteRepeatState: remoteState.repeat_state) {
+                    self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
+                }
+            
+            case .local(context: let context):
+                if remoteState.repeat_state == .off && remoteState.context == nil {
+                    // Remote state reflects that local control is currently being maintained,
+                    // so we don't need to do anything other than play the next track in the local
+                    // context at the appropriate time.
+                    if !remoteState.is_playing && (remoteState.progress_ms ?? 0) == 0 {
+                        await playNextInLocalContext()
+                    }
+                } else {
+                    // Remote has taken the reins from local control.
+                    self.context = .remote(uri: remoteState.context?.uri)
+                    if let remoteAudioTrack = remoteState.item {
+                        self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                    } else {
+                        self.currentTrack = nil
+                    }
+                    self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
+                }
+            }
+            
+            let activeDeviceInfo = AvailableDeviceInfo(availableDevice: remoteState.device)
+            if self.activeDevice != activeDeviceInfo {
+                self.activeDevice = activeDeviceInfo
+            }
+            self.availableDevices[activeDeviceInfo] = remoteState.device.id
+        }
+        catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 204 {
+            self.isPlaying = false
+            self.activeDevice = nil
+            // TODO: clear entirety of this view model?
+        }
+        catch {
+            print("[Spotify::PlaybackManager] (remote playback poller) unexpected error")
+            print(error.localizedDescription)
+        }
+    }
+    
+    private func playNextInLocalContext() async {
         
-        // TODO: at end, fire low priority task that also updates self.availableDevices with current device info,
-        // specifically non-persistent ID/name
     }
 }
 
@@ -144,7 +237,7 @@ private extension SpotifyPlaybackManager {
         private init() {} // namespace
         
         struct PlaybackState: Decodable {
-            let device: SpotifyAvailableDevice
+            let device: AvailableDevice
             let repeat_state: RepeatState
             let shuffle_state: Bool
             let context: Context?
@@ -171,8 +264,19 @@ private extension SpotifyPlaybackManager {
             }
         }
         
+        struct AvailableDevice: Decodable {
+            let id: String?
+//            let is_active: Bool // defer to polling playback state
+//            let is_private_session: Bool
+            let is_restricted: Bool
+            let name: String
+            let type: String
+//            let volume_percent: Int?
+//            let supports_volume: Bool
+        }
+        
         struct AllAvailableDevices: Decodable {
-            let devices: [SpotifyAvailableDevice]
+            let devices: [AvailableDevice]
         }
         
         private typealias HTTPMethod = SpotifyRequests.HTTPMethod

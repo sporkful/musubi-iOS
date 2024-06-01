@@ -20,18 +20,20 @@ struct SpotifyRequests {
     }
     
     enum Error: LocalizedError {
+        case response(httpStatusCode: Int, retryAfter: Int?)
         case auth(detail: String)
         case request(detail: String)
-        case response(detail: String)
-        case misc(detail: String)
+        case parsing(detail: String)
         case DEV(detail: String)
 
         var errorDescription: String? {
             let description = switch self {
+                case let .response(httpStatusCode, retryAfter): """
+                    failed with status code \(httpStatusCode) - retry after \(retryAfter ?? -1))
+                    """
                 case let .auth(detail): "(auth) \(detail)"
                 case let .request(detail): "(request) \(detail)"
-                case let .response(detail): "(response) \(detail)"
-                case let .misc(detail): "(misc) \(detail)"
+                case let .parsing(detail): "(misc parsing) \(detail)"
                 case let .DEV(detail): "(DEV) \(detail)"
             }
             return "[Spotify::Request] \(description)"
@@ -133,17 +135,18 @@ extension SpotifyRequests {
         let (responseData, responseMetadata) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = responseMetadata as? HTTPURLResponse else {
-            throw SpotifyRequests.Error.response(detail: "unable to parse response metadata as HTTP")
+            throw SpotifyRequests.Error.parsing(detail: "unable to parse response metadata as HTTP")
         }
         guard HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
             // TODO: auto log out on error code 401?
             // TODO: handle rate limiting gracefully / notify user
-            let errorDescription = """
-                failed with status code \(httpResponse.statusCode) - retry after \
-                \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")
-                """
-            print(errorDescription)
-            throw SpotifyRequests.Error.response(detail: errorDescription)
+            if httpResponse.statusCode == 429 {
+                print("SPOTIFY RATE LIMITED - RETRY AFTER \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")")
+            }
+            throw SpotifyRequests.Error.response(
+                httpStatusCode: httpResponse.statusCode,
+                retryAfter: Int(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "-1")
+            )
         }
         
         return responseData
@@ -156,7 +159,7 @@ extension SpotifyRequests {
             documentAttributes: nil
         )
         guard let attributedString = attributedString else {
-            throw Error.misc(detail: "failed to convert html to plaintext")
+            throw Error.parsing(detail: "failed to convert html to plaintext")
         }
         return attributedString.string
     }
@@ -336,7 +339,7 @@ extension SpotifyRequests.Read {
     static func image(url: URL) async throws -> UIImage {
         let data = try await SpotifyRequests.makeRequest(type: .GET, url: url)
         guard let image = UIImage(data: data) else {
-            throw SpotifyRequests.Error.response(detail: "failed to init UIImage from response data")
+            throw SpotifyRequests.Error.parsing(detail: "failed to init UIImage from response data")
         }
         return image
     }

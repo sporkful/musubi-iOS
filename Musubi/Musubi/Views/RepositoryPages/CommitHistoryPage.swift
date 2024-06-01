@@ -121,7 +121,7 @@ struct CommitHistoryPage: View {
                 showSheet = false
             } catch {
                 print("[Musubi::NewCommitPage] failed to commit")
-                print(error)
+                print(error.localizedDescription)
                 showAlertErrorCheckout = true
             }
         }
