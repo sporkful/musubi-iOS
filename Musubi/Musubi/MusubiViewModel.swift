@@ -11,6 +11,7 @@ extension Musubi {
 
 protocol AudioTrackListContext {
     var id: String { get } // TODO: check that IDs are unique across types
+    var uri: String { get }
     var name: String { get }
     var formattedDescription: String? { get }
     var coverImageURLString: String? { get }
@@ -21,6 +22,7 @@ protocol AudioTrackListContext {
 
 // TODO: make more explicit that this context represents a clone's staging area?
 extension Musubi.RepositoryReference: AudioTrackListContext {
+    var uri: String { "musubi:repository:\(self.id)" }
     var name: String { self.externalMetadata?.name ?? "(Loading local clone...)" }
     var formattedDescription: String? { self.externalMetadata?.formattedDescription }
     var coverImageURLString: String? { self.externalMetadata?.images?.first?.url }
@@ -36,6 +38,7 @@ extension Musubi.RepositoryReference: AudioTrackListContext {
 }
 
 extension Musubi.RepositoryCommit: AudioTrackListContext {
+    var uri: String { "musubi:commit:\(self.id)" }
     @MainActor var name: String { "[COMMIT] \(self.repositoryReference.name)" }
     var formattedDescription: String? { "[COMMIT MESSAGE] \(self.commit.message)" }
     @MainActor var coverImageURLString: String? { self.repositoryReference.coverImageURLString }
@@ -66,11 +69,19 @@ extension Spotify.PlaylistMetadata: AudioTrackListContext {
     var type: String { "Spotify Playlist" }
 }
 
+extension Spotify.ArtistMetadata: AudioTrackListContext {
+    var formattedDescription: String? { nil }
+    var coverImageURLString: String? { self.images?.first?.url }
+    var associatedPeople: [any SpotifyPerson] { [] }
+    var associatedDate: String? { nil }
+    var type: String { "Spotify Artist" }
+}
+
 extension Spotify.AudioTrack: AudioTrackListContext {
     var formattedDescription: String? { nil }
     var coverImageURLString: String? { self.images?.first?.url }
     var associatedPeople: [any SpotifyPerson] { self.artists }
-    var associatedDate: String? { self.album?.release_date }  // TODO: last modified from Spotify API?
+    var associatedDate: String? { self.album?.release_date }
     var type: String { "Spotify Track" }
 }
 

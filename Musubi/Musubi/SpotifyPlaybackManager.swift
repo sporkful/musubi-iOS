@@ -20,15 +20,20 @@ class SpotifyPlaybackManager {
     
     let POSITION_MS_SLIDER_MIN = 10.0
     
+    // TODO: better way to manage this? note adding as assoc-value to Context.local hurts UI (extra rerendering)
+    // Used if the current context is .local and `self.currentTrack` gets concurrently removed from
+    // the associated audioTrackList.
+    private var backupCurrentIndex: Int?
+    
     enum Context: Equatable {
-        case local(context: (any AudioTrackListContext)?)
+        case local(audioTrackList: Musubi.ViewModel.AudioTrackList)
         case remote(uri: String?)
         
         static func == (lhs: SpotifyPlaybackManager.Context, rhs: SpotifyPlaybackManager.Context) -> Bool {
             // Avoid using `default` so cases added in the future will be forced to be implemented.
             switch (lhs, rhs) {
-            case (let .local(lhsContext), let .local(rhsContext)):
-                lhsContext?.id == rhsContext?.id
+            case (let .local(lhsAudioTrackList), let .local(rhsAudioTrackList)):
+                lhsAudioTrackList.context.id == rhsAudioTrackList.context.id
             case (let .remote(lhsURI), let .remote(rhsURI)):
                 lhsURI == rhsURI
             case (.local, .remote):
@@ -74,6 +79,7 @@ class SpotifyPlaybackManager {
         self.repeatState = .context
         self.positionMilliseconds = 0
         self.isRequestingRemoteSeek = false
+        self.backupCurrentIndex = nil
         
         Task {
             await startRemoteDevicesPoller()
@@ -173,7 +179,7 @@ class SpotifyPlaybackManager {
             self.isPlaying = remoteState.is_playing
             
             switch self.context {
-            case .remote(uri: let uri):
+            case let .remote(uri):
                 if uri != remoteState.context?.uri {
                     self.context = .remote(uri: remoteState.context?.uri)
                 }
@@ -188,17 +194,18 @@ class SpotifyPlaybackManager {
                     self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
                 }
             
-            case .local(context: let context):
+            case .local:
                 if remoteState.repeat_state == .off && remoteState.context == nil {
                     // Remote state reflects that local control is currently being maintained,
                     // so we don't need to do anything other than play the next track in the local
                     // context at the appropriate time.
                     if !remoteState.is_playing && (remoteState.progress_ms ?? 0) == 0 {
-                        await playNextInLocalContext()
+                        try await playNextInLocalContext()
                     }
                 } else {
                     // Remote has taken the reins from local control.
                     self.context = .remote(uri: remoteState.context?.uri)
+                    self.backupCurrentIndex = nil
                     if let remoteAudioTrack = remoteState.item {
                         self.currentTrack = .init(audioTrack: remoteAudioTrack)
                     } else {
@@ -225,8 +232,90 @@ class SpotifyPlaybackManager {
         }
     }
     
-    private func playNextInLocalContext() async {
+    private func playNextInLocalContext() async throws {
+        guard case .local(let audioTrackList) = self.context else {
+            throw CustomError.DEV(detail: "(playNextInLocalContext) called when current context is remote")
+        }
         
+        // TODO: better typing to encode what counts as a local context
+        switch audioTrackList.context {
+        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata, is Spotify.AudioTrack:
+            throw CustomError.DEV(detail: "(playNextInLocalContext) local audioTrackList context should be remote")
+        case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
+            break
+        default:
+            throw CustomError.DEV(detail: "(playNextInLocalContext) unrecognized AudioTrackListContext type")
+        }
+        
+        guard let currentTrack = currentTrack else {
+            throw CustomError.DEV(detail: "(playNextInLocalContext) called with nil current track")
+        }
+        
+        switch self.repeatState {
+        case .off:
+            break
+        case .track:
+            try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
+        case .context:
+            // TODO: improve perf by redesigning ViewModel::AudioTrackList?
+            let currentTrackIndex = audioTrackList.contents.firstIndex(of: currentTrack) ?? backupCurrentIndex ?? -1
+            let nextTrackIndex = min(currentTrackIndex + 1, audioTrackList.contents.count) % audioTrackList.contents.count
+            let nextTrack = audioTrackList.contents[nextTrackIndex]
+            self.currentTrack = nextTrack
+            try await Remote.startSingle(audioTrackID: nextTrack.audioTrackID)
+        }
+    }
+    
+    // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
+    // This assumption holds by further assuming the function is only called from AudioTrackListCell
+    // (as a result of direct user input/tap).
+    func play(audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement) async throws {
+        guard let audioTrackList = audioTrackListElement.parent else {
+            self.currentTrack = audioTrackListElement
+            self.context = .remote(uri: nil)
+            self.backupCurrentIndex = nil
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
+            return
+        }
+        
+        // TODO: better typing to encode what counts as a local context
+        switch audioTrackList.context {
+        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
+            self.currentTrack = audioTrackListElement
+            self.context = .remote(uri: audioTrackList.context.uri)
+            self.backupCurrentIndex = nil
+            try await Remote.startInContext(
+                contextURI: audioTrackList.context.uri,
+                contextOffset: audioTrackList.contents.firstIndex(of: audioTrackListElement) ?? 0
+            )
+        
+        case is Spotify.AudioTrack:
+            self.currentTrack = audioTrackListElement
+            self.context = .remote(uri: nil)
+            self.backupCurrentIndex = nil
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
+        
+        case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
+            let index = audioTrackList.contents.firstIndex(of: audioTrackListElement)!
+            self.currentTrack = audioTrackListElement
+            self.context = .local(audioTrackList: audioTrackList)
+            self.backupCurrentIndex = index
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
+        
+        default:
+            throw CustomError.DEV(detail: "(play) unrecognized AudioTrackListContext type")
+        }
+    }
+    
+    enum CustomError: LocalizedError {
+        case DEV(detail: String)
+
+        var errorDescription: String? {
+            let description = switch self {
+                case let .DEV(detail): "(DEV) \(detail)"
+            }
+            return "[Spotify::PlaybackManager] \(description)"
+        }
     }
 }
 
