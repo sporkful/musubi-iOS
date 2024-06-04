@@ -13,12 +13,13 @@ class SpotifyPlaybackManager {
     private(set) var currentTrack: Musubi.ViewModel.AudioTrackList.UniquifiedElement?
     private(set) var context: Context
     private(set) var repeatState: LocalRepeatState
+    private(set) var shuffle: Bool
     private(set) var positionMilliseconds: Double // needs to be double type for SwiftUI Slider
     
-    // Used to prevent conflicting concurrent remote-seek-requests when user is scrubbing.
-    var isRequestingRemoteSeek: Bool
-    
     let POSITION_MS_SLIDER_MIN = 10.0
+    
+    // Used to prevent remote state poller from updating position/slider with stale info.
+    private var isRequestingRemoteSeek: Bool
     
     // TODO: better way to manage this? note adding as assoc-value to Context.local hurts UI (extra rerendering)
     // Used if the current context is .local and `self.currentTrack` gets concurrently removed from
@@ -46,6 +47,14 @@ class SpotifyPlaybackManager {
     
     enum LocalRepeatState: Equatable {
         case off, track, context
+        
+        var nextInToggle: LocalRepeatState {
+            switch self {
+                case .off: .context
+                case .context: .track
+                case .track: .off
+            }
+        }
         
         fileprivate init(remoteRepeatState: Remote.PlaybackState.RepeatState) {
             self = switch remoteRepeatState {
@@ -77,6 +86,7 @@ class SpotifyPlaybackManager {
         self.currentTrack = nil
         self.context = .remote(uri: nil)
         self.repeatState = .context
+        self.shuffle = false
         self.positionMilliseconds = 0
         self.isRequestingRemoteSeek = false
         self.backupCurrentIndex = nil
@@ -180,6 +190,7 @@ class SpotifyPlaybackManager {
             
             switch self.context {
             case let .remote(uri):
+                // Avoid unnecessarily rerendering heavyweight view components.
                 if uri != remoteState.context?.uri {
                     self.context = .remote(uri: remoteState.context?.uri)
                 }
@@ -190,9 +201,8 @@ class SpotifyPlaybackManager {
                 } else {
                     self.currentTrack = nil
                 }
-                if self.repeatState != .init(remoteRepeatState: remoteState.repeat_state) {
-                    self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
-                }
+                self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
+                self.shuffle = remoteState.shuffle_state
             
             case .local:
                 if remoteState.repeat_state == .off && remoteState.context == nil {
@@ -212,6 +222,7 @@ class SpotifyPlaybackManager {
                         self.currentTrack = nil
                     }
                     self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
+                    self.shuffle = remoteState.shuffle_state
                 }
             }
             
@@ -252,59 +263,145 @@ class SpotifyPlaybackManager {
         }
         
         switch self.repeatState {
-        case .off:
-            break
         case .track:
             try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
-        case .context:
-            // TODO: improve perf by redesigning ViewModel::AudioTrackList?
-            let currentTrackIndex = audioTrackList.contents.firstIndex(of: currentTrack) ?? backupCurrentIndex ?? -1
-            let nextTrackIndex = min(currentTrackIndex + 1, audioTrackList.contents.count) % audioTrackList.contents.count
+        case .context, .off:
+            let nextTrackIndex: Int
+            if self.shuffle {
+                nextTrackIndex = Int.random(in: audioTrackList.contents.indices)
+            } else {
+                // TODO: improve perf by redesigning ViewModel::AudioTrackList?
+                let currentTrackIndex = audioTrackList.contents.firstIndex(of: currentTrack) ?? backupCurrentIndex ?? -1
+                nextTrackIndex = min(currentTrackIndex + 1, audioTrackList.contents.count) % audioTrackList.contents.count
+                if self.repeatState == .off && currentTrackIndex == (audioTrackList.contents.endIndex - 1) {
+                    break
+                }
+            }
             let nextTrack = audioTrackList.contents[nextTrackIndex]
-            self.currentTrack = nextTrack
             try await Remote.startSingle(audioTrackID: nextTrack.audioTrackID)
+            self.currentTrack = nextTrack
+            self.backupCurrentIndex = nextTrackIndex
         }
     }
+    
+    // MARK: - user-accessible functions
     
     // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
     // This assumption holds by further assuming the function is only called from AudioTrackListCell
     // (as a result of direct user input/tap).
     func play(audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement) async throws {
         guard let audioTrackList = audioTrackListElement.parent else {
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
             self.context = .remote(uri: nil)
             self.backupCurrentIndex = nil
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             return
         }
         
         // TODO: better typing to encode what counts as a local context
         switch audioTrackList.context {
         case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
-            self.currentTrack = audioTrackListElement
-            self.context = .remote(uri: audioTrackList.context.uri)
-            self.backupCurrentIndex = nil
             try await Remote.startInContext(
                 contextURI: audioTrackList.context.uri,
                 contextOffset: audioTrackList.contents.firstIndex(of: audioTrackListElement) ?? 0
             )
+            self.currentTrack = audioTrackListElement
+            self.context = .remote(uri: audioTrackList.context.uri)
+            self.backupCurrentIndex = nil
         
         case is Spotify.AudioTrack:
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
             self.context = .remote(uri: nil)
             self.backupCurrentIndex = nil
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
+            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             let index = audioTrackList.contents.firstIndex(of: audioTrackListElement)!
             self.currentTrack = audioTrackListElement
             self.context = .local(audioTrackList: audioTrackList)
             self.backupCurrentIndex = index
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
         
         default:
             throw CustomError.DEV(detail: "(play) unrecognized AudioTrackListContext type")
         }
+    }
+    
+    func pause() async throws {
+        try await Remote.pause()
+    }
+    
+    func skipToNext() async throws {
+        switch self.context {
+        case .remote:
+            try await Remote.skipToNext()
+        case .local:
+            if self.repeatState == .track {
+                self.repeatState = .context
+            }
+            try await playNextInLocalContext()
+        }
+    }
+    
+    func skipToPrevious() async throws {
+        switch self.context {
+        case .remote:
+            try await Remote.skipToPrevious()
+            
+        case let .local(audioTrackList):
+            guard let currentTrack = currentTrack else {
+                throw CustomError.DEV(detail: "(skipToPrevious) called with nil current track")
+            }
+            
+            if self.repeatState == .track {
+                self.repeatState = .context
+            }
+            
+            let previousTrackIndex: Int
+            if self.shuffle {
+                // TODO: use recently played? (note no need to distinguish between duplicate tracks if in shuffle)
+                previousTrackIndex = Int.random(in: audioTrackList.contents.indices)
+            } else {
+                // TODO: improve perf by redesigning ViewModel::AudioTrackList?
+                let currentTrackIndex = audioTrackList.contents.firstIndex(of: currentTrack) ?? backupCurrentIndex ?? 0
+                if currentTrackIndex == 0 {
+                    if self.repeatState == .off {
+                        previousTrackIndex = currentTrackIndex
+                    } else {
+                        previousTrackIndex = audioTrackList.contents.endIndex - 1
+                    }
+                } else {
+                    previousTrackIndex = currentTrackIndex - 1
+                }
+            }
+            let previousTrack = audioTrackList.contents[previousTrackIndex]
+            try await Remote.startSingle(audioTrackID: previousTrack.audioTrackID)
+            self.currentTrack = previousTrack
+            self.backupCurrentIndex = previousTrackIndex
+        }
+    }
+    
+    func toggleRepeatState() async throws {
+        let setState = self.repeatState.nextInToggle
+        if case .remote = self.context {
+            try await Remote.setRepeatMode(state: .init(localRepeatState: setState))
+        }
+        self.repeatState = setState
+    }
+    
+    func toggleShuffle() async throws {
+        let setState = !self.shuffle
+        if case .remote = self.context {
+            try await Remote.setShuffle(state: setState)
+        }
+        self.shuffle = setState
+    }
+    
+    // Assumes UI has already updated `self.positionMilliseconds`.
+    func seek(toPositionMilliseconds: Double) async throws {
+        self.isRequestingRemoteSeek = true
+        try await Remote.seek(toPositionMilliseconds: Int(toPositionMilliseconds))
+        self.isRequestingRemoteSeek = false
     }
     
     enum CustomError: LocalizedError {
@@ -338,6 +435,14 @@ private extension SpotifyPlaybackManager {
             
             enum RepeatState: String, Decodable {
                 case off, track, context
+                
+                init(localRepeatState: LocalRepeatState) {
+                    self = switch localRepeatState {
+                        case .off: .off
+                        case .track: .track
+                        case .context: .context
+                    }
+                }
             }
             
             struct Context: Decodable {
@@ -452,10 +557,10 @@ private extension SpotifyPlaybackManager {
         
         // TODO: clean up rest of these
         
-        static func seek(positionMilliseconds: Int) async throws {
+        static func seek(toPositionMilliseconds: Int) async throws {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/seek?position_ms=\(positionMilliseconds)")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/seek?position_ms=\(toPositionMilliseconds)")!
             )
         }
         
