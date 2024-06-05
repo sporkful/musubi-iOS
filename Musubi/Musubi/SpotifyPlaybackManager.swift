@@ -7,8 +7,9 @@ import Foundation
 @Observable
 @MainActor
 class SpotifyPlaybackManager {
-    private(set) var availableDevices: [AvailableDeviceInfo: String] // value = deviceID (volatile)
-    private(set) var activeDevice: AvailableDeviceInfo?
+    var activeDeviceIndex: Int? // index into `self.availableDevices`
+    
+    private(set) var availableDevices: [AvailableDevice]
     private(set) var isPlaying: Bool
     private(set) var currentTrack: Musubi.ViewModel.AudioTrackList.UniquifiedElement?
     private(set) var context: Context
@@ -65,23 +66,30 @@ class SpotifyPlaybackManager {
         }
     }
     
-    struct AvailableDeviceInfo: Equatable, Hashable {
+    // TODO: enumify type? need to handle unknown cases though
+    struct AvailableDevice: Decodable, Equatable {
+        let id: String?
+//        let is_active: Bool // defer to polling playback state
+//        let is_private_session: Bool
         let is_restricted: Bool
         let name: String
-        let type: String // e.g. "computer", "smartphone", "speaker", etc.
+        let type: String // e.g. "Computer", "Smartphone", "Speaker", etc.
+//        let volume_percent: Int?
+//        let supports_volume: Bool
         
-        // TODO: enumify type? need to handle unknown cases though
-        
-        fileprivate init(availableDevice: Remote.AvailableDevice) {
-            self.is_restricted = availableDevice.is_restricted
-            self.name = availableDevice.name
-            self.type = availableDevice.type
+        var sfSymbolName: String {
+            switch self.type {
+                case "Smartphone": "smartphone"
+                case "Computer": "desktopcomputer"
+                case "Speaker": "hifispeaker"
+                default: "speaker.square"
+            }
         }
     }
     
     init() {
-        self.availableDevices = [:]
-        self.activeDevice = nil
+        self.activeDeviceIndex = nil
+        self.availableDevices = []
         self.isPlaying = false
         self.currentTrack = nil
         self.context = .remote(uri: nil)
@@ -92,18 +100,15 @@ class SpotifyPlaybackManager {
         self.backupCurrentIndex = nil
         
         Task {
-            await startRemoteDevicesPoller()
             await startRemotePlaybackPoller()
             await startLocalPlaybackPoller()
         }
     }
     
-    private var remoteDevicesPoller: Timer? = nil // polls Spotify for available devices
     private var remotePlaybackPoller: Timer? = nil // polls Spotify for actual current playback state
     private var localPlaybackPoller: Timer? = nil // interpolates self.position between remotePlaybackPoller firings
     
     // in seconds
-    private let REMOTE_DEVICES_POLLER_INTERVAL: TimeInterval = 5 * 60.0
     private let REMOTE_PLAYBACK_POLLER_INTERVAL: TimeInterval = 5.0 // kept high to stay within Spotify rate limits
     private let LOCAL_PLAYBACK_POLLER_INTERVAL: TimeInterval = 1.0
     
@@ -119,15 +124,6 @@ class SpotifyPlaybackManager {
         RunLoop.current.add(timer, forMode: .common)
         timer.fire()
         return timer
-    }
-    
-    func startRemoteDevicesPoller() async {
-        if self.remoteDevicesPoller == nil {
-            self.remoteDevicesPoller = startPoller(
-                timeInterval: REMOTE_DEVICES_POLLER_INTERVAL,
-                action: remoteDevicesPollerAction
-            )
-        }
     }
     
     func startLocalPlaybackPoller() async {
@@ -152,17 +148,6 @@ class SpotifyPlaybackManager {
     
     // TODO: account for actor re-entrancy / enforce ordering of concurrent requests
     // (practically, should be okay since all poll rates are low)
-    
-    private func remoteDevicesPollerAction() async {
-        do {
-            for availableDevice in try await Remote.fetchAvailableDevices().devices {
-                let info = AvailableDeviceInfo(availableDevice: availableDevice)
-                self.availableDevices[info] = availableDevice.id
-            }
-        } catch {
-            print("[Spotify::PlaybackManager] (remote devices poller) failed to fetch available devices")
-        }
-    }
     
     // TODO: account for redundant increment whenever this runs immediately after a `remotePlaybackPollerAction`
     private func localPlaybackPollerAction() async {
@@ -226,15 +211,21 @@ class SpotifyPlaybackManager {
                 }
             }
             
-            let activeDeviceInfo = AvailableDeviceInfo(availableDevice: remoteState.device)
-            if self.activeDevice != activeDeviceInfo {
-                self.activeDevice = activeDeviceInfo
+            guard let updatedActiveDeviceIndex = self.availableDevices.firstIndex(of: remoteState.device) else {
+                try await updateAvailableDevices()
+                return
+                // `self.activeDeviceIndex` will be updated on next firing.
             }
-            self.availableDevices[activeDeviceInfo] = remoteState.device.id
+            if self.activeDeviceIndex != updatedActiveDeviceIndex {
+                self.activeDeviceIndex = updatedActiveDeviceIndex
+            }
         }
-        catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 204 {
+//        catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 204 {
+        catch is DecodingError {
+            print("[\(Date.now.formatted())] detected playback not active")
+            
             self.isPlaying = false
-            self.activeDevice = nil
+            self.activeDeviceIndex = nil
             // TODO: clear entirety of this view model?
         }
         catch {
@@ -404,6 +395,19 @@ class SpotifyPlaybackManager {
         self.isRequestingRemoteSeek = false
     }
     
+    func updateAvailableDevices() async throws {
+        let updatedAvailableDevices = try await Remote.fetchAvailableDevices().devices
+        if self.availableDevices != updatedAvailableDevices {
+            self.activeDeviceIndex = nil
+            self.availableDevices = updatedAvailableDevices
+            self.remotePlaybackPoller?.fire() // to update `self.activeDeviceIndex`
+        }
+    }
+    
+    func transferPlaybackTo(deviceID: String) async throws {
+        try await Remote.transferPlaybackTo(deviceID: deviceID)
+    }
+    
     enum CustomError: LocalizedError {
         case DEV(detail: String)
 
@@ -456,17 +460,6 @@ private extension SpotifyPlaybackManager {
             enum CurrentlyPlayingType: String, Decodable {
                 case track, episode, ad, unknown
             }
-        }
-        
-        struct AvailableDevice: Decodable {
-            let id: String?
-//            let is_active: Bool // defer to polling playback state
-//            let is_private_session: Bool
-            let is_restricted: Bool
-            let name: String
-            let type: String
-//            let volume_percent: Int?
-//            let supports_volume: Bool
         }
         
         struct AllAvailableDevices: Decodable {
@@ -584,6 +577,17 @@ private extension SpotifyPlaybackManager {
                     url: URL(string: "https://api.spotify.com/v1/me/player/shuffle?state=false")!
                 )
             }
+        }
+        
+        static func transferPlaybackTo(deviceID: String) async throws {
+            struct DeviceIDs: Encodable {
+                let device_ids: [String]
+            }
+            let _ = try await SpotifyRequests.makeRequest(
+                type: .PUT,
+                url: URL(string: "https://api.spotify.com/v1/me/player")!,
+                jsonBody: JSONEncoder().encode(DeviceIDs(device_ids: [deviceID]))
+            )
         }
     }
 }

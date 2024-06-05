@@ -52,6 +52,7 @@ struct LoginView: View {
         .fullScreenCover(item: currentUser) { currentUser in
             HomeView(
                 currentUser: currentUser,
+                spotifyPlaybackManager: SpotifyPlaybackManager(),
                 homeViewCoordinator: HomeViewCoordinator()
             )
             .interactiveDismissDisabled()

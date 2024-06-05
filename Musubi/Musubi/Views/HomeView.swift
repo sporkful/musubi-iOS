@@ -33,6 +33,7 @@ class HomeViewCoordinator {
 struct HomeView: View {
     var currentUser: Musubi.User
     
+    @State var spotifyPlaybackManager: SpotifyPlaybackManager
     @State var homeViewCoordinator: HomeViewCoordinator
     
     var body: some View {
@@ -83,6 +84,7 @@ struct HomeView: View {
         }
         .listStyle(.plain)
         .environment(currentUser)
+        .environment(spotifyPlaybackManager)
         .environment(homeViewCoordinator)
         .withCustomDisablingOverlay(isDisabled: $homeViewCoordinator.disableUI)
         // TODO: overlay with floating playback card

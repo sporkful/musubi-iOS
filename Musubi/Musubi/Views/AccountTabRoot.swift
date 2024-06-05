@@ -18,6 +18,18 @@ struct AccountTabRoot: View {
                         Text("Log out")
                     }
                 }
+                Section {
+                    PlaybackDevicePicker(outerLabelStyle: .textOnly)
+                } header: {
+                    Text("Playback")
+                } footer: {
+                    Text(
+                        """
+                        In order for a device to show up as an option here, the device \
+                        must have the official Spotify app or web-player open in the background.
+                        """
+                    )
+                }
             }
     }
 }
