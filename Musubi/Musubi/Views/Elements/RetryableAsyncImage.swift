@@ -38,7 +38,7 @@ struct RetryableAsyncImage: View {
 //                print("[Musubi::RetryableAsyncImage] retrying...")
             }
             do {
-                try await Task.sleep(until: .now + .seconds(1), clock: .continuous)
+                try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
             } catch {
 //                print("[Musubi::RetryableAsyncImage] giving up")
                 break // task was cancelled

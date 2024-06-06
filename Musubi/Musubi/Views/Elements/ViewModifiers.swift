@@ -27,6 +27,10 @@ extension View {
             )
         )
     }
+    
+    func withMiniPlayerOverlay() -> some View {
+        modifier(MiniPlayerOverlay())
+    }
 }
 
 private struct WithCustomDisablingOverlay: ViewModifier {
@@ -137,5 +141,116 @@ struct CustomSheetNavbar: ViewModifier {
                     }
                 }
             }
+    }
+}
+
+private struct MiniPlayerOverlay: ViewModifier {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
+    @State private var thumbnail: UIImage? = nil
+    
+    private var backgroundHighlightColor: UIColor { thumbnail?.meanColor()?.muted() ?? .gray }
+    
+    let THUMBNAIL_SIZE = Musubi.UI.ImageDimension.cellThumbnail.rawValue
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+            if let currentTrack = spotifyPlaybackManager.currentTrack {
+                VStack(alignment: .center, spacing: 0) {
+                    VStack(spacing: 0) {
+                        HStack {
+                            if let thumbnail = thumbnail {
+                                Image(uiImage: thumbnail)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
+                                    .clipped()
+                            } else {
+                                ProgressView()
+                                    .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
+                            }
+                            VStack(alignment: .leading) {
+                                Text(currentTrack.audioTrack.name)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                                    .padding(.bottom, 0.0127)
+                                Text(currentTrack.audioTrack.caption ?? "")
+                                    .font(.caption)
+                                    .lineLimit(1)
+                                    .opacity(0.9)
+                            }
+                            Spacer()
+                            if spotifyPlaybackManager.isPlaying {
+                                Button(
+                                    action: {
+                                        Task { try await spotifyPlaybackManager.pause() }
+                                    },
+                                    label: {
+                                        Image(systemName: "pause.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: THUMBNAIL_SIZE * 0.420, height: THUMBNAIL_SIZE * 0.420)
+                                            .clipped()
+                                            .padding(.trailing, 6.30)
+                                    }
+                                )
+                            } else {
+                                Button(
+                                    action: {
+                                        Task { try await spotifyPlaybackManager.resume() }
+                                    },
+                                    label: {
+                                        Image(systemName: "play.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: THUMBNAIL_SIZE * 0.420, height: THUMBNAIL_SIZE * 0.420)
+                                            .clipped()
+                                            .padding(.trailing, 6.30)
+                                    }
+                                )
+                            }
+                        }
+                        .frame(maxHeight: THUMBNAIL_SIZE)
+                        .padding(6.30)
+                        ProgressView(
+                            value: Double(spotifyPlaybackManager.positionMilliseconds),
+                            total: Double(currentTrack.audioTrack.duration_ms)
+                        )
+                        .tint(.white)
+                        .background(.white.opacity(0.630))
+                        .scaleEffect(x: 1, y: 0.630, anchor: .center)
+                    }
+                    .background(Color(backgroundHighlightColor))
+                    .clipShape(.rect(cornerRadius: 9.87))
+                    .padding([.horizontal], 3)
+                    .shadow(color: .black, radius: 33)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            }
+        }
+        .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
+            loadThumbnail()
+        }
+    }
+    
+    // TODO: share logic with RetryableAsyncImage?
+    private func loadThumbnail() {
+        Task { @MainActor in
+            while true {
+                if let thumbnailURLString = spotifyPlaybackManager.currentTrack?.audioTrack.thumbnailURLString,
+                   let thumbnailURL = URL(string: thumbnailURLString),
+                   let thumbnail = try? await SpotifyRequests.Read.image(url: thumbnailURL)
+                {
+                    self.thumbnail = thumbnail
+                    return
+                }
+                do {
+                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
+                } catch {
+                    return // task was cancelled
+                }
+            }
+        }
     }
 }

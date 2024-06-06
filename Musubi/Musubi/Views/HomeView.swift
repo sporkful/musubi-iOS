@@ -53,17 +53,10 @@ struct HomeView: View {
                     .withSpotifyNavigationDestinations(path: $homeViewCoordinator.myReposNavPath)
                     .navigationTitle("My Repositories")
             }
+            .withMiniPlayerOverlay()
             .tabItem { Label("My Repositories", systemImage: "books.vertical") }
             .tag(HomeViewCoordinator.Tab.myRepos)
 //                .badge("!") // TODO: notifications?
-            
-            // MARK: - "My Forks" tab
-            NavigationStack(path: $homeViewCoordinator.myForksNavPath) {
-                // TODO: new view and navigationDestination modifier for forks
-                VStack { }
-            }
-            .tabItem { Label("My forks", systemImage: "arrow.triangle.branch") }
-            .tag(HomeViewCoordinator.Tab.myForks)
             
             // MARK: - "Spotify Search" tab
             NavigationStack(path: $homeViewCoordinator.spotifySearchNavPath) {
@@ -71,6 +64,7 @@ struct HomeView: View {
                     .withSpotifyNavigationDestinations(path: $homeViewCoordinator.spotifySearchNavPath)
                     .navigationTitle("Search Spotify")
             }
+            .withMiniPlayerOverlay()
             .tabItem { Label("Search Spotify", systemImage: "magnifyingglass") }
             .tag(HomeViewCoordinator.Tab.spotifySearch)
             
@@ -79,6 +73,7 @@ struct HomeView: View {
                 AccountTabRoot()
                     .navigationTitle("My Account")
             }
+            .withMiniPlayerOverlay()
             .tabItem { Label("My Account", systemImage: "person.crop.circle.fill") }
             .tag(HomeViewCoordinator.Tab.myAccount)
         }

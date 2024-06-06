@@ -320,12 +320,20 @@ class SpotifyPlaybackManager {
     
     func pause() async throws {
         try await Remote.pause()
+        self.isPlaying = false
+    }
+    
+    func resume() async throws {
+        try await Remote.resume()
+        self.isPlaying = true
     }
     
     func skipToNext() async throws {
         switch self.context {
         case .remote:
             try await Remote.skipToNext()
+            self.remotePlaybackPoller?.fire()
+            
         case .local:
             if self.repeatState == .track {
                 self.repeatState = .context
@@ -338,6 +346,7 @@ class SpotifyPlaybackManager {
         switch self.context {
         case .remote:
             try await Remote.skipToPrevious()
+            self.remotePlaybackPoller?.fire()
             
         case let .local(audioTrackList):
             guard let currentTrack = currentTrack else {

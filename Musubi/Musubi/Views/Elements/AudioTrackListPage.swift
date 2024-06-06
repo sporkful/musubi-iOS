@@ -122,7 +122,7 @@ struct AudioTrackListPage: View {
     
     var body: some View {
         ZStack {
-            VStack {
+            VStack(alignment: .center) {
                 LinearGradient(
                     stops: [
                         Gradient.Stop(color: Color(backgroundHighlightColor), location: 0),
@@ -136,8 +136,8 @@ struct AudioTrackListPage: View {
                 .opacity(gradientOpacity)
             }
             .ignoresSafeArea(.all, edges: [.horizontal, .top])
-            .frame(maxHeight: .infinity, alignment: .topLeading)
-            VStack {
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            VStack(alignment: .center) {
                 if let image = coverImage {
                     Image(uiImage: image)
                         .resizable()
@@ -149,7 +149,7 @@ struct AudioTrackListPage: View {
                 }
             }
             .ignoresSafeArea(.all, edges: [.horizontal])
-            .frame(maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             ScrollView {
                 LazyVStack(alignment: .leading) {
                     if coverImage != nil {
