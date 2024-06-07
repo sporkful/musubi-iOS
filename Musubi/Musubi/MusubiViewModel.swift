@@ -349,7 +349,9 @@ extension Musubi.ViewModel {
             }
         }
         
-        func removeAll() async {
+        func removeAll() async throws {
+            try await self.initialHydrationTask.value
+            
             self._removeAll()
         }
         
@@ -429,6 +431,8 @@ extension Musubi.ViewModel {
         }
         
         func refreshContentsIfNeeded(newContents: [Spotify.AudioTrack]) async throws {
+            try await self.initialHydrationTask.value
+            
             guard let _ = self.context as? Spotify.PlaylistMetadata else {
                 throw CustomError.DEV(detail: "called refreshContentsIfNeeded on non-playlist")
             }
