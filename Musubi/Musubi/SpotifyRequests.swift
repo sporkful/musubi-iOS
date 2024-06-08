@@ -310,7 +310,7 @@ extension SpotifyRequests.Read {
     }
     
     // TODO: why does this require market query
-    static func artistTopTracks(artistID: String) async throws -> [Spotify.ID] {
+    static func artistTopTracks(artistID: String) async throws -> [Spotify.AudioTrack] {
         let topTracks: Spotify.ArtistTopTracks = try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID + "/top-tracks",
@@ -321,7 +321,7 @@ extension SpotifyRequests.Read {
                 )
             ]
         )
-        return topTracks.tracks.map({ $0.id })
+        return topTracks.tracks
     }
     
     static func search(query: String) async throws -> Spotify.SearchResults {

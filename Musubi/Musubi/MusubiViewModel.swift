@@ -307,6 +307,25 @@ extension Musubi.ViewModel {
             }
         }
         
+        init(artistMetadata: Spotify.ArtistMetadata) {
+            self.context = artistMetadata
+            self.contents = []
+            self.audioTrackCounter = [:]
+            self.initialHydrationTask = Task {}
+            
+            self.initialHydrationTask = Task {
+                do {
+                    let artistTopTracks = try await SpotifyRequests.Read.artistTopTracks(artistID: artistMetadata.id)
+                    try await self.initialHydrationAppend(audioTracks: artistTopTracks)
+                } catch {
+                    print("[Musubi::AudioTrackList] failed to hydrate for Spotify artist")
+                    print(error.localizedDescription)
+                    self.initialHydrationError = error
+                    throw error
+                }
+            }
+        }
+        
         init(audioTrack: Spotify.AudioTrack) {
             self.context = audioTrack
             self.contents = []

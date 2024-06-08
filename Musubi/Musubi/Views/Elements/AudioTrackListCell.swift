@@ -6,6 +6,8 @@ import SwiftUI
 // TODO: rename to Playable...?
 
 struct AudioTrackListCell: View {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
     // TODO: better way to do this?
     let isNavigable: Bool
     @Binding var navigationPath: NavigationPath
@@ -27,12 +29,14 @@ struct AudioTrackListCell: View {
                 ListCellWrapper(
                     item: audioTrack,
                     showThumbnail: showThumbnail,
-                    customTextStyle: customTextStyle
+                    customTextStyle: customTextStyle,
+                    isPlaying: spotifyPlaybackManager.isPlaying && spotifyPlaybackManager.currentTrack == audioTrackListElement
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    // TODO: implement playback through audioTrackListElement.parent
-                    print("playing \(audioTrack.name)")
+                    Task {
+                        try await spotifyPlaybackManager.play(audioTrackListElement: self.audioTrackListElement)
+                    }
                 }
             } else {
                 ListCell(

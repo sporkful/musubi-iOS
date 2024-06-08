@@ -29,15 +29,15 @@ class SpotifyPlaybackManager {
     
     enum Context: Equatable {
         case local(audioTrackList: Musubi.ViewModel.AudioTrackList)
-        case remote(uri: String?)
+        case remote(audioTrackList: Musubi.ViewModel.AudioTrackList?)
         
         static func == (lhs: SpotifyPlaybackManager.Context, rhs: SpotifyPlaybackManager.Context) -> Bool {
             // Avoid using `default` so cases added in the future will be forced to be implemented.
             switch (lhs, rhs) {
             case (let .local(lhsAudioTrackList), let .local(rhsAudioTrackList)):
                 lhsAudioTrackList.context.id == rhsAudioTrackList.context.id
-            case (let .remote(lhsURI), let .remote(rhsURI)):
-                lhsURI == rhsURI
+            case (let .remote(lhsAudioTrackList), let .remote(rhsAudioTrackList)):
+                lhsAudioTrackList?.context.id == rhsAudioTrackList?.context.id
             case (.local, .remote):
                 false
             case (.remote, .local):
@@ -92,7 +92,7 @@ class SpotifyPlaybackManager {
         self.availableDevices = []
         self.isPlaying = false
         self.currentTrack = nil
-        self.context = .remote(uri: nil)
+        self.context = .remote(audioTrackList: nil)
         self.repeatState = .context
         self.shuffle = false
         self.positionMilliseconds = 0
@@ -174,18 +174,57 @@ class SpotifyPlaybackManager {
             self.isPlaying = remoteState.is_playing
             
             switch self.context {
-            case let .remote(uri):
+            case let .remote(audioTrackList):
                 // Avoid unnecessarily rerendering heavyweight view components.
-                if uri != remoteState.context?.uri {
-                    self.context = .remote(uri: remoteState.context?.uri)
+                // TODO: clean these up
+                var wasContextUpdated = false
+                if audioTrackList?.context.uri != remoteState.context?.uri {
+                    if let remoteContext = remoteState.context,
+                       let contextID = Optional(String(remoteContext.uri.split(separator: ":")[2])),
+                       let newAudioTrackList: Musubi.ViewModel.AudioTrackList = switch remoteContext.type {
+                           case "album": .init(albumMetadata: try await SpotifyRequests.Read.albumMetadata(albumID: contextID))
+                           case "playlist": .init(playlistMetadata: try await SpotifyRequests.Read.playlistMetadata(playlistID: contextID))
+                           case "artist": .init(artistMetadata: try await SpotifyRequests.Read.artistMetadata(artistID: contextID))
+                           default: nil
+                       }
+                    {
+                        self.context = .remote(audioTrackList: newAudioTrackList)
+                    } else {
+                        self.context = .remote(audioTrackList: nil)
+                    }
+                    wasContextUpdated = true
                 }
+                
                 if let remoteAudioTrack = remoteState.item {
-                    if self.currentTrack != .init(audioTrack: remoteAudioTrack) {
-                        self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                    if self.currentTrack?.audioTrackID != remoteAudioTrack.id {
+                        if !wasContextUpdated,
+                           let audioTrackList = audioTrackList,
+                           let currentTrack = self.currentTrack,
+                           let currentTrackIndex = audioTrackList.contents.firstIndex(of: currentTrack)
+                        {
+                            let expectedNextTrackIndex = min(currentTrackIndex + 1, audioTrackList.contents.count) % audioTrackList.contents.count
+                            if audioTrackList.contents[expectedNextTrackIndex].audioTrackID == remoteAudioTrack.id {
+                                self.currentTrack = audioTrackList.contents[expectedNextTrackIndex]
+                            } else {
+                                self.currentTrack = audioTrackList.contents.first(where: { $0.audioTrackID == remoteAudioTrack.id })
+                                    ?? .init(audioTrack: remoteAudioTrack)
+                            }
+                        }
+                        else {
+                            if case .remote(let audioTrackList) = self.context,
+                               let audioTrackList = audioTrackList
+                            {
+                                self.currentTrack = audioTrackList.contents.first(where: { $0.audioTrackID == remoteAudioTrack.id })
+                                    ?? .init(audioTrack: remoteAudioTrack)
+                            } else {
+                                self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                            }
+                        }
                     }
                 } else {
                     self.currentTrack = nil
                 }
+                
                 self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
                 self.shuffle = remoteState.shuffle_state
             
@@ -199,13 +238,32 @@ class SpotifyPlaybackManager {
                     }
                 } else {
                     // Remote has taken the reins from local control.
-                    self.context = .remote(uri: remoteState.context?.uri)
-                    self.backupCurrentIndex = nil
+                    if let remoteContext = remoteState.context,
+                       let contextID = Optional(String(remoteContext.uri.split(separator: ":")[2])),
+                       let newAudioTrackList: Musubi.ViewModel.AudioTrackList = switch remoteContext.type {
+                           case "album": .init(albumMetadata: try await SpotifyRequests.Read.albumMetadata(albumID: contextID))
+                           case "playlist": .init(playlistMetadata: try await SpotifyRequests.Read.playlistMetadata(playlistID: contextID))
+                           case "artist": .init(artistMetadata: try await SpotifyRequests.Read.artistMetadata(artistID: contextID))
+                           default: nil
+                       }
+                    {
+                        self.context = .remote(audioTrackList: newAudioTrackList)
+                    } else {
+                        self.context = .remote(audioTrackList: nil)
+                    }
                     if let remoteAudioTrack = remoteState.item {
-                        self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                        if case .remote(let audioTrackList) = self.context,
+                           let audioTrackList = audioTrackList
+                        {
+                            self.currentTrack = audioTrackList.contents.first(where: { $0.audioTrackID == remoteAudioTrack.id })
+                                ?? .init(audioTrack: remoteAudioTrack)
+                        } else {
+                            self.currentTrack = .init(audioTrack: remoteAudioTrack)
+                        }
                     } else {
                         self.currentTrack = nil
                     }
+                    self.backupCurrentIndex = nil
                     self.repeatState = .init(remoteRepeatState: remoteState.repeat_state)
                     self.shuffle = remoteState.shuffle_state
                 }
@@ -284,7 +342,7 @@ class SpotifyPlaybackManager {
         guard let audioTrackList = audioTrackListElement.parent else {
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
-            self.context = .remote(uri: nil)
+            self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             return
         }
@@ -297,13 +355,13 @@ class SpotifyPlaybackManager {
                 contextOffset: audioTrackList.contents.firstIndex(of: audioTrackListElement) ?? 0
             )
             self.currentTrack = audioTrackListElement
-            self.context = .remote(uri: audioTrackList.context.uri)
+            self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
         
         case is Spotify.AudioTrack:
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
-            self.context = .remote(uri: nil)
+            self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:

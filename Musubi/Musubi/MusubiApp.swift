@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+// TODO: tint vs foregroundColor?
+
 @main
 struct MusubiApp: App {
     var body: some Scene {

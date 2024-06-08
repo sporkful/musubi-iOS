@@ -63,6 +63,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
     let item: Item
     let showThumbnail: Bool
     let customTextStyle: ListCell.CustomTextStyle
+    var isPlaying: Bool = false
     
     var body: some View {
         ListCell(
@@ -70,7 +71,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
             caption: item.caption,
             thumbnailURLString: item.thumbnailURLString,
             showThumbnail: showThumbnail,
-            customTextStyle: customTextStyle
+            customTextStyle: customTextStyle,
+            isPlaying: isPlaying
         )
     }
 }
@@ -81,6 +83,7 @@ struct ListCell: View {
     let thumbnailURLString: String?
     let showThumbnail: Bool
     let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
+    var isPlaying: Bool = false
     
     struct CustomTextStyle: Equatable {
         var color: CustomColor
@@ -127,8 +130,15 @@ struct ListCell: View {
                 }
             }
             VStack(alignment: .leading) {
-                Text(title)
-                    .lineLimit(1)
+                HStack {
+                    if isPlaying {
+                        Image(systemName: "chart.bar.fill")
+                            .symbolEffect(.variableColor.cumulative.hideInactiveLayers.reversing, options: .repeating, isActive: true)
+                    }
+                    Text(title)
+                        .lineLimit(1)
+                }
+                .foregroundStyle(isPlaying ? .green : .white)
                 if let caption = self.caption {
                     Text(caption)
                         .font(.caption)
