@@ -112,6 +112,8 @@ class SpotifyPlaybackManager {
     private let REMOTE_PLAYBACK_POLLER_INTERVAL: TimeInterval = 5.0 // kept high to stay within Spotify rate limits
     private let LOCAL_PLAYBACK_POLLER_INTERVAL: TimeInterval = 1.0
     
+    private var ignoreRemoteStateBefore: Date = Date.distantPast
+    
     // TODO: proper ARC management
     // (current iteration should be fine for MVP since this object is global wrt user)
     
@@ -166,6 +168,11 @@ class SpotifyPlaybackManager {
     private func remotePlaybackPollerAction() async {
         do {
             let remoteState = try await Remote.fetchState()
+            
+            if Date.now < self.ignoreRemoteStateBefore {
+                print("[SpotifyPlaybackManager] note intentionally ignored remote playback state")
+                return
+            }
             
             if !self.isRequestingRemoteSeek {
                 self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), POSITION_MS_SLIDER_MIN)
@@ -319,9 +326,12 @@ class SpotifyPlaybackManager {
             throw CustomError.DEV(detail: "(playNextInLocalContext) called with nil current track")
         }
         
+        self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
+        
         switch self.repeatState {
         case .track:
             try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
+            self.positionMilliseconds = 0
         case .context, .off:
             let nextTrackIndex: Int
             if self.shuffle {
@@ -338,6 +348,7 @@ class SpotifyPlaybackManager {
             try await Remote.startSingle(audioTrackID: nextTrack.audioTrackID)
             self.currentTrack = nextTrack
             self.backupCurrentIndex = nextTrackIndex
+            self.positionMilliseconds = 0
         }
     }
     
@@ -347,11 +358,14 @@ class SpotifyPlaybackManager {
     // This assumption holds by further assuming the function is only called from AudioTrackListCell
     // (as a result of direct user input/tap).
     func play(audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement) async throws {
+        self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
+        
         guard let audioTrackList = audioTrackListElement.parent else {
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
+            self.positionMilliseconds = 0
             return
         }
         
@@ -365,12 +379,14 @@ class SpotifyPlaybackManager {
             self.currentTrack = audioTrackListElement
             self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
+            self.positionMilliseconds = 0
         
         case is Spotify.AudioTrack:
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             self.currentTrack = audioTrackListElement
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
+            self.positionMilliseconds = 0
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
@@ -378,6 +394,7 @@ class SpotifyPlaybackManager {
             self.currentTrack = audioTrackListElement
             self.context = .local(audioTrackList: audioTrackList)
             self.backupCurrentIndex = index
+            self.positionMilliseconds = 0
         
         default:
             throw CustomError.DEV(detail: "(play) unrecognized AudioTrackListContext type")
@@ -419,6 +436,8 @@ class SpotifyPlaybackManager {
                 throw CustomError.DEV(detail: "(skipToPrevious) called with nil current track")
             }
             
+            self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
+            
             if self.repeatState == .track {
                 self.repeatState = .context
             }
@@ -444,6 +463,7 @@ class SpotifyPlaybackManager {
             try await Remote.startSingle(audioTrackID: previousTrack.audioTrackID)
             self.currentTrack = previousTrack
             self.backupCurrentIndex = previousTrackIndex
+            self.positionMilliseconds = 0
         }
     }
     
@@ -506,7 +526,7 @@ private extension SpotifyPlaybackManager {
             let repeat_state: RepeatState
             let shuffle_state: Bool
             let context: Context?
-//            let timestamp: Int // timestamp of data fetch
+//            let timestamp: Int // Spotify's timestamp of last modification of non-progress_ms playback state
             let progress_ms: Int?
             let is_playing: Bool
             let item: Spotify.AudioTrack?
