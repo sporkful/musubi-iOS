@@ -189,6 +189,7 @@ class SpotifyPlaybackManager {
                        }
                     {
                         self.context = .remote(audioTrackList: newAudioTrackList)
+                        try await newAudioTrackList.initialHydrationTask.value
                     } else {
                         self.context = .remote(audioTrackList: nil)
                     }
@@ -248,6 +249,7 @@ class SpotifyPlaybackManager {
                        }
                     {
                         self.context = .remote(audioTrackList: newAudioTrackList)
+                        try await newAudioTrackList.initialHydrationTask.value
                     } else {
                         self.context = .remote(audioTrackList: nil)
                     }
@@ -268,6 +270,12 @@ class SpotifyPlaybackManager {
                     self.shuffle = remoteState.shuffle_state
                 }
             }
+            
+            print()
+            print("currentTrack as UniquifiedElement:")
+            print("name: \(String(describing: self.currentTrack?.audioTrack.name))")
+            print("occurrence: \(String(describing: self.currentTrack?.occurrence))")
+            print("context: \(String(describing: self.currentTrack?.parent?.context.name))")
             
             guard let updatedActiveDeviceIndex = self.availableDevices.firstIndex(of: remoteState.device) else {
                 try await updateAvailableDevices()
