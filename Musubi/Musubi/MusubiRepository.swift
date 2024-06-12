@@ -2,6 +2,7 @@
 
 import Foundation
 
+// TODO: find and conform to error specification standards instead of ad-hoc localization
 // TODO: add `nonisolated let`s in MainActor classes as appropriate
 
 // namespaces

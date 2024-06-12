@@ -232,6 +232,17 @@ private struct MiniPlayerOverlay: ViewModifier {
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadThumbnail()
         }
+        .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: false) {
+            Task { @MainActor in
+                if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex,
+                   let activeDeviceID = spotifyPlaybackManager.availableDevices[activeDeviceIndex].id
+                {
+                    return
+                } else {
+                    try await spotifyPlaybackManager.resetOnLossOfActiveDevice()
+                }
+            }
+        }
     }
     
     // TODO: share logic with RetryableAsyncImage?

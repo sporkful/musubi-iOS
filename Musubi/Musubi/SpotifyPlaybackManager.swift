@@ -2,6 +2,7 @@
 
 import Foundation
 
+// TODO: remember playback state at quit?
 // TODO: resolve redundant/conflicting notions of context between AudioTrackList and PlaybackManager
 
 @Observable
@@ -332,6 +333,7 @@ class SpotifyPlaybackManager {
         case .track:
             try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
             self.positionMilliseconds = 0
+            self.isPlaying = true
         case .context, .off:
             let nextTrackIndex: Int
             if self.shuffle {
@@ -349,10 +351,27 @@ class SpotifyPlaybackManager {
             self.currentTrack = nextTrack
             self.backupCurrentIndex = nextTrackIndex
             self.positionMilliseconds = 0
+            self.isPlaying = true
         }
     }
     
     // MARK: - user-accessible functions
+    
+    static var PLAY_ERROR_MESSAGE: String {
+        if Musubi.UserManager.shared.currentUser?.spotifyInfo.product == "premium" {
+            """
+            Select a device to use for playback in the "My Account" tab. Note that a device must have \
+            the official Spotify app or web-player open in the background in order to be considered \
+            available for playback.
+            """
+        } else {
+            """
+            Unfortunately, Spotify's API does not support playback control for non-premium users \
+            at this time. Note that you can still control playback in the official Spotify apps and \
+            view the currently-playing track in the Musubi app.
+            """
+        }
+    }
     
     // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
     // This assumption holds by further assuming the function is only called from AudioTrackListCell
@@ -366,6 +385,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.isPlaying = true
             return
         }
         
@@ -380,6 +400,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.isPlaying = true
         
         case is Spotify.AudioTrack:
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
@@ -387,6 +408,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.isPlaying = true
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
@@ -395,6 +417,7 @@ class SpotifyPlaybackManager {
             self.context = .local(audioTrackList: audioTrackList)
             self.backupCurrentIndex = index
             self.positionMilliseconds = 0
+            self.isPlaying = true
         
         default:
             throw CustomError.DEV(detail: "(play) unrecognized AudioTrackListContext type")
@@ -464,6 +487,7 @@ class SpotifyPlaybackManager {
             self.currentTrack = previousTrack
             self.backupCurrentIndex = previousTrackIndex
             self.positionMilliseconds = 0
+            self.isPlaying = true
         }
     }
     
@@ -501,6 +525,24 @@ class SpotifyPlaybackManager {
     
     func transferPlaybackTo(deviceID: String) async throws {
         try await Remote.transferPlaybackTo(deviceID: deviceID)
+    }
+    
+    func resetOnLossOfActiveDevice() async throws {
+        // Note this function is attached to onChange listeners for `self.activeDeviceIndex = nil`,
+        // so avoid setting it in infinite recursion.
+        
+        self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
+        
+//        self.activeDeviceIndex = nil
+//        self.availableDevices = []
+        self.isPlaying = false
+        self.currentTrack = nil
+        self.context = .remote(audioTrackList: nil)
+        self.repeatState = .context
+        self.shuffle = false
+        self.positionMilliseconds = 0
+        self.isRequestingRemoteSeek = false
+        self.backupCurrentIndex = nil
     }
     
     enum CustomError: LocalizedError {

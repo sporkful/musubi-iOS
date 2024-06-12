@@ -21,6 +21,7 @@ struct AudioTrackListCell: View {
     
     @State private var showSheetAddToSelectableClones = false
     
+    @State private var showAlertErrorStartPlayback = false
     @State private var showAlertUnsupportedAction = false
     
     var body: some View {
@@ -30,12 +31,20 @@ struct AudioTrackListCell: View {
                     item: audioTrack,
                     showThumbnail: showThumbnail,
                     customTextStyle: customTextStyle,
-                    isPlaying: spotifyPlaybackManager.isPlaying && spotifyPlaybackManager.currentTrack == audioTrackListElement
+                    isActive: spotifyPlaybackManager.currentTrack == audioTrackListElement,
+                    isPlaying: spotifyPlaybackManager.isPlaying
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
                     Task {
-                        try await spotifyPlaybackManager.play(audioTrackListElement: self.audioTrackListElement)
+                        do {
+                            try await spotifyPlaybackManager.play(audioTrackListElement: self.audioTrackListElement)
+                        } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                            showAlertErrorStartPlayback = true
+                        } catch {
+                            // TODO: handle
+                            print(error)
+                        }
                     }
                 }
             } else {
@@ -135,7 +144,15 @@ struct AudioTrackListCell: View {
             }
             // TODO: handle else case better?
         }
-        .alert("Musubi - unsupported action", isPresented: $showAlertUnsupportedAction, actions: {})
+        .alert(
+            "Error when starting playback",
+            isPresented: $showAlertErrorStartPlayback,
+            actions: {},
+            message: {
+                Text(SpotifyPlaybackManager.PLAY_ERROR_MESSAGE)
+            }
+        )
+        .alert("Action not supported yet", isPresented: $showAlertUnsupportedAction, actions: {})
         .onChange(of: self.audioTrack, initial: true) { _, audioTrack in
             if !hasInitialLoaded || audioTrack == nil {
                 Task { @MainActor in

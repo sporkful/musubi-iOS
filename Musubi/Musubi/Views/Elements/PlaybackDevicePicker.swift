@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+// TODO: try custom menu, which might allow detecting when menu is expanded/retracted (finer-grained polling)
+
 struct PlaybackDevicePicker: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
@@ -35,9 +37,9 @@ struct PlaybackDevicePicker: View {
                     }
                     .tag(Optional(index))
                 }
-                Text("None").tag(nil as Int?)
-                    .onAppear(perform: startPoller)
-                    .onDisappear(perform: stopPoller)
+                if spotifyPlaybackManager.activeDeviceIndex == nil {
+                    Text("None").tag(nil as Int?)
+                }
             },
             label: {
                 if outerLabelStyle == .textOnly {
@@ -57,9 +59,13 @@ struct PlaybackDevicePicker: View {
                    let activeDeviceID = spotifyPlaybackManager.availableDevices[activeDeviceIndex].id
                 {
                     try await spotifyPlaybackManager.transferPlaybackTo(deviceID: activeDeviceID)
+                } else {
+                    try await spotifyPlaybackManager.resetOnLossOfActiveDevice()
                 }
             }
         }
+        .onAppear(perform: startPoller)
+        .onDisappear(perform: stopPoller)
     }
     
     private func startPoller() {

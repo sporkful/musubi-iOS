@@ -63,6 +63,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
     let item: Item
     let showThumbnail: Bool
     let customTextStyle: ListCell.CustomTextStyle
+    var isActive: Bool = false
     var isPlaying: Bool = false
     
     var body: some View {
@@ -72,6 +73,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
             thumbnailURLString: item.thumbnailURLString,
             showThumbnail: showThumbnail,
             customTextStyle: customTextStyle,
+            isActive: isActive,
             isPlaying: isPlaying
         )
     }
@@ -83,6 +85,7 @@ struct ListCell: View {
     let thumbnailURLString: String?
     let showThumbnail: Bool
     let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
+    var isActive: Bool = false
     var isPlaying: Bool = false
     
     struct CustomTextStyle: Equatable {
@@ -131,14 +134,23 @@ struct ListCell: View {
             }
             VStack(alignment: .leading) {
                 HStack {
-                    if isPlaying {
-                        Image(systemName: "chart.bar.fill")
-                            .symbolEffect(.variableColor.cumulative.hideInactiveLayers.reversing, options: .repeating, isActive: true)
+                    if isActive {
+                        if isPlaying {
+                            Image(systemName: "waveform")
+                                .symbolEffect(
+                                    .variableColor.cumulative.reversing.dimInactiveLayers,
+                                    options: .repeating.speed(1.70),
+                                    isActive: true
+                                )
+                        } else {
+                            Image(systemName: "waveform")
+                                .opacity(0.5)
+                        }
                     }
                     Text(title)
                         .lineLimit(1)
                 }
-                .foregroundStyle(isPlaying ? .green : .white)
+                .foregroundStyle(isActive ? .green : .white)
                 if let caption = self.caption {
                     Text(caption)
                         .font(.caption)
