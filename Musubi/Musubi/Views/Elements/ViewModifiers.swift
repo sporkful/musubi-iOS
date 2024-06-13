@@ -153,6 +153,8 @@ private struct MiniPlayerOverlay: ViewModifier {
     
     let THUMBNAIL_SIZE = Musubi.UI.ImageDimension.cellThumbnail.rawValue
     
+    @State private var showSheetPlayer = false
+    
     func body(content: Content) -> some View {
         ZStack {
             content
@@ -160,6 +162,7 @@ private struct MiniPlayerOverlay: ViewModifier {
                 VStack(alignment: .center, spacing: 0) {
                     VStack(spacing: 0) {
                         HStack {
+                            HStack {
                             if let thumbnail = thumbnail {
                                 Image(uiImage: thumbnail)
                                     .resizable()
@@ -181,6 +184,9 @@ private struct MiniPlayerOverlay: ViewModifier {
                                     .opacity(0.9)
                             }
                             Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture(perform: { showSheetPlayer = true })
                             if spotifyPlaybackManager.isPlaying {
                                 Button(
                                     action: {
@@ -228,6 +234,9 @@ private struct MiniPlayerOverlay: ViewModifier {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
+        }
+        .sheet(isPresented: $showSheetPlayer) {
+            PlayerSheet(showSheet: $showSheetPlayer)
         }
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadThumbnail()

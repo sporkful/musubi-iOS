@@ -39,6 +39,8 @@
 		794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D982B797F22008DE992 /* ViewModifiers.swift */; };
 		794C8D9D2B7C4281008DE992 /* SpotifyPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */; };
 		795345512B7EA7EE005EE430 /* PlaybackDevicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345502B7EA7EE005EE430 /* PlaybackDevicePicker.swift */; };
+		795345552B8010F5005EE430 /* PlayerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345542B8010F5005EE430 /* PlayerSheet.swift */; };
+		795345572B807C89005EE430 /* SingleAudioTrackMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */; };
 		7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA102B55ADDB00650775 /* UIColor+.swift */; };
 		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA162B56510B00650775 /* MusubiRepository.swift */; };
@@ -108,6 +110,8 @@
 		794C8D982B797F22008DE992 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyPlaybackManager.swift; sourceTree = "<group>"; };
 		795345502B7EA7EE005EE430 /* PlaybackDevicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDevicePicker.swift; sourceTree = "<group>"; };
+		795345542B8010F5005EE430 /* PlayerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSheet.swift; sourceTree = "<group>"; };
+		795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleAudioTrackMenu.swift; sourceTree = "<group>"; };
 		7961DA102B55ADDB00650775 /* UIColor+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+.swift"; sourceTree = "<group>"; };
 		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7961DA162B56510B00650775 /* MusubiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiRepository.swift; sourceTree = "<group>"; };
@@ -261,9 +265,11 @@
 				794733A62B4D15BD001C3FEB /* AudioTrackListCell.swift */,
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
 				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
+				795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */,
 				79F556C12B7605A3000304B9 /* SelectableListSection.swift */,
 				794C8D982B797F22008DE992 /* ViewModifiers.swift */,
 				795345502B7EA7EE005EE430 /* PlaybackDevicePicker.swift */,
+				795345542B8010F5005EE430 /* PlayerSheet.swift */,
 			);
 			path = Elements;
 			sourceTree = "<group>";
@@ -439,6 +445,7 @@
 				7947337E2B4931F7001C3FEB /* NotSoSecretSecrets.swift in Sources */,
 				7947336F2B46758F001C3FEB /* MusubiViewModel.swift in Sources */,
 				794733AC2B4E01E3001C3FEB /* ListCell.swift in Sources */,
+				795345572B807C89005EE430 /* SingleAudioTrackMenu.swift in Sources */,
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
 				7961DA1B2B5998CF00650775 /* StaticUserPage.swift in Sources */,
 				794733942B4CE08B001C3FEB /* LocalClonesTabRoot.swift in Sources */,
@@ -446,6 +453,7 @@
 				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */,
 				794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */,
+				795345552B8010F5005EE430 /* PlayerSheet.swift in Sources */,
 				7947338E2B4BBF05001C3FEB /* MusubiUserManager.swift in Sources */,
 				794C8D9D2B7C4281008DE992 /* SpotifyPlaybackManager.swift in Sources */,
 				79223A112B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift in Sources */,

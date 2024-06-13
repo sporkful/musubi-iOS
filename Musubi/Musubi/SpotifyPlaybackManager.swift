@@ -411,6 +411,7 @@ class SpotifyPlaybackManager {
             self.isPlaying = true
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
+            try await Remote.setRepeatMode(state: .off)
             try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
             let index = audioTrackList.contents.firstIndex(of: audioTrackListElement)!
             self.currentTrack = audioTrackListElement

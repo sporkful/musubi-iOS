@@ -14,9 +14,8 @@ struct LocalCloneEditorPage: View {
             List {
                 ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { element in
                     AudioTrackListCell(
-                        isNavigable: false,
-                        navigationPath: Binding.constant(NavigationPath()),
                         audioTrackListElement: element,
+                        showMenu: false,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle
                     )

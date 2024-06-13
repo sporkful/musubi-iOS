@@ -31,9 +31,8 @@ struct AddToSelectableLocalClonesSheet: View {
                 selectableList: audioTrackList.contents,
                 listCellBuilder: { element in
                     AudioTrackListCell(
-                        isNavigable: false,
-                        navigationPath: Binding.constant(NavigationPath()),
                         audioTrackListElement: element,
+                        showMenu: false,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle
                     )
@@ -180,9 +179,8 @@ fileprivate struct ConfirmationPage: View {
                     id: \.0
                 ) { index, audioTrack in
                     AudioTrackListCell(
-                        isNavigable: false,
-                        navigationPath: Binding.constant(NavigationPath()),
                         audioTrackListElement: .init(audioTrack: audioTrack),
+                        showMenu: false,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle
                     )

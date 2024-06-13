@@ -33,26 +33,23 @@ struct NewCommitPage: View {
                                 switch visualChange.change {
                                 case .none:
                                     AudioTrackListCell(
-                                        isNavigable: false,
-                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
+                                        showMenu: false,
                                         showThumbnail: true,
                                         customTextStyle: .defaultStyle
                                     )
                                 case .inserted(associatedWith: let associatedWith):
                                     AudioTrackListCell(
-                                        isNavigable: false,
-                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
+                                        showMenu: false,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .green, bold: true)
                                     )
                                     .listRowBackground(Color.green.opacity(0.180))
                                 case .removed(associatedWith: let associatedWith):
                                     AudioTrackListCell(
-                                        isNavigable: false,
-                                        navigationPath: Binding.constant(NavigationPath()),
                                         audioTrackListElement: visualChange.element,
+                                        showMenu: false,
                                         showThumbnail: true,
                                         customTextStyle: .init(color: .red, bold: true)
                                     )

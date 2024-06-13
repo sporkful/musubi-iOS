@@ -43,11 +43,8 @@ struct SearchTabRoot: View {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
                                 AudioTrackListCell(
-                                    isNavigable: true,
-                                    navigationPath: $homeViewCoordinator.spotifySearchNavPath,
-                                    audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement(
-                                        audioTrack: audioTrack
-                                    ),
+                                    audioTrackListElement: .init(audioTrack: audioTrack),
+                                    showMenu: true,
                                     showThumbnail: true,
                                     customTextStyle: .defaultStyle
                                 )

@@ -26,6 +26,7 @@ extension Spotify.OtherUser: CustomPreviewable {
     var thumbnailURLString: String? { self.images?.last?.url }
 }
 
+// TODO: change to UniquifiedElement and display custom caption without redundant info from context
 extension Spotify.AudioTrack: CustomPreviewable {
     var title: String { self.name }
     
@@ -58,6 +59,8 @@ extension Spotify.PlaylistMetadata: CustomPreviewable {
     var caption: String? { self.descriptionTextFromHTML }
     var thumbnailURLString: String? { self.images?.last?.url }
 }
+
+// TODO: abstract away isActive/isPlaying
 
 struct ListCellWrapper<Item: CustomPreviewable>: View {
     let item: Item

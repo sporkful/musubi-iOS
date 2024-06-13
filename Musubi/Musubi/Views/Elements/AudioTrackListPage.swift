@@ -202,9 +202,8 @@ struct AudioTrackListPage: View {
                     ForEach(audioTrackList.contents, id: \.self) { element in
                         Divider()
                         AudioTrackListCell(
-                            isNavigable: true,
-                            navigationPath: $navigationPath,
                             audioTrackListElement: element,
+                            showMenu: true,
                             showThumbnail: showAudioTrackThumbnails,
                             customTextStyle: .defaultStyle
                         )
