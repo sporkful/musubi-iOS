@@ -2,9 +2,12 @@
 
 import SwiftUI
 
+// TODO: fix glitchy tabbar when going Search -> Track -> View Album
 // TODO: use Labels to construct CustomToolbarItems (and elsewhere)
 
 struct AudioTrackListPage: View {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
     @Binding var navigationPath: NavigationPath
     
     // TODO: is @Bindable necessary?
@@ -135,7 +138,7 @@ struct AudioTrackListPage: View {
                 .frame(height: gradientDimension)
                 .opacity(gradientOpacity)
             }
-            .ignoresSafeArea(.all, edges: [.horizontal, .top])
+            .ignoresSafeArea(.all, edges: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             VStack(alignment: .center) {
                 if let image = coverImage {
@@ -148,7 +151,6 @@ struct AudioTrackListPage: View {
                         .opacity(coverImageOpacity)
                 }
             }
-            .ignoresSafeArea(.all, edges: [.horizontal])
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             ScrollView {
                 LazyVStack(alignment: .leading) {
@@ -207,6 +209,12 @@ struct AudioTrackListPage: View {
                             customTextStyle: .defaultStyle
                         )
                     }
+                    if spotifyPlaybackManager.currentTrack != nil {
+                        Rectangle()
+                            .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                            .padding(6.30 + 3.30)
+                            .hidden()
+                    }
                 }
                 .padding([.horizontal, .bottom])
                 .background(
@@ -220,7 +228,6 @@ struct AudioTrackListPage: View {
                     }
                 )
             }
-            .ignoresSafeArea(.all, edges: [.horizontal])
             .scrollContentBackground(.hidden)
             .coordinateSpace(name: "\(viewID.uuidString)::ScrollView")
             VStack {
@@ -228,7 +235,7 @@ struct AudioTrackListPage: View {
                     // TODO: this seems unreliable
                     // Note behavior changes depending on order of the following two modifiers.
                     // By calling frame after, we don't need to add any offset for safe area / navbar.
-                    .ignoresSafeArea(.all, edges: [.horizontal, .top])
+                    .ignoresSafeArea(.all, edges: .top)
                     .frame(height: 1)
                     .opacity(0.81)
                     .background(.ultraThinMaterial)

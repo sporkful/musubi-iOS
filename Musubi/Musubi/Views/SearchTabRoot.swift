@@ -4,6 +4,7 @@ import SwiftUI
 import AsyncAlgorithms
 
 struct SearchTabRoot: View {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
     @State private var searchText = ""
@@ -91,6 +92,12 @@ struct SearchTabRoot: View {
                                 }
                             }
                         }
+                    }
+                    if spotifyPlaybackManager.currentTrack != nil {
+                        Rectangle()
+                            .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                            .padding(6.30 + 3.30)
+                            .hidden()
                     }
                 }
             }
