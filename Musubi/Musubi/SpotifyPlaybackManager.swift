@@ -12,7 +12,7 @@ class SpotifyPlaybackManager {
     
     private(set) var availableDevices: [AvailableDevice]
     private(set) var isPlaying: Bool
-    private(set) var currentTrack: Musubi.ViewModel.AudioTrackList.UniquifiedElement?
+    private(set) var currentTrack: Musubi.ViewModel.AudioTrack?
     private(set) var context: Context
     private(set) var repeatState: LocalRepeatState
     private(set) var shuffle: Bool
@@ -280,7 +280,7 @@ class SpotifyPlaybackManager {
             }
             
             print()
-            print("currentTrack as UniquifiedElement:")
+            print("currentTrack:")
             print("name: \(String(describing: self.currentTrack?.audioTrack.name))")
             print("occurrence: \(String(describing: self.currentTrack?.occurrence))")
             print("context: \(String(describing: self.currentTrack?.parent?.context.name))")
@@ -376,7 +376,7 @@ class SpotifyPlaybackManager {
     // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
     // This assumption holds by further assuming the function is only called from AudioTrackListCell
     // (as a result of direct user input/tap).
-    func play(audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement) async throws {
+    func play(audioTrackListElement: Musubi.ViewModel.AudioTrack) async throws {
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
         
         guard let audioTrackList = audioTrackListElement.parent else {

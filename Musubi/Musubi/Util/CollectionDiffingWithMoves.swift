@@ -4,55 +4,10 @@ import Foundation
 
 // TODO: improve memory/perf - current asymptotics are atrocious but should be fine for MVP
 
-/*
-// namespaces
-extension Musubi {
-    struct Diffing {
-        private init() {}
-        
-        enum Error: LocalizedError {
-            case misc(detail: String)
-            case DEV(detail: String)
-
-            var errorDescription: String? {
-                let description = switch self {
-                    case let .misc(detail): "(misc) \(detail)"
-                    case let .DEV(detail): "(DEV) \(detail)"
-                }
-                return "[Musubi::Diffing] \(description)"
-            }
-        }
-    }
-}
-
-extension Musubi.Diffing {
-    struct DiffableList<RepeatableItem: Hashable> {
-        struct UniquifiedElement: Hashable, Equatable {
-            let item: RepeatableItem
-            let occurrence: Int  // per-item-value counter starting at 1
-        }
-        
-        let uniquifiedList: [UniquifiedElement]  // TODO: rename this to e.g. `contents`
-        
-        init(rawList: [RepeatableItem]) throws {
-            var counter: [RepeatableItem : Int] = [:]
-            var uniquifiedList: [UniquifiedElement] = []
-            for item in rawList {
-                counter[item] = (counter[item] ?? 0) + 1
-                uniquifiedList.append(UniquifiedElement(item: item, occurrence: counter[item]!))
-            }
-            self.uniquifiedList = uniquifiedList
-            
-            if Set(self.uniquifiedList).count != self.uniquifiedList.count {
-                throw Error.DEV(detail: "failed to uniquify raw list")
-            }
-        }
- */
-
 extension Musubi.ViewModel.AudioTrackList {
         func differenceCanonical(
             from other: Musubi.ViewModel.AudioTrackList
-        ) async throws -> CollectionDifference<UniquifiedElement> {
+        ) async throws -> CollectionDifference<Musubi.ViewModel.AudioTrack> {
             try await self.initialHydrationTask.value
             try await other.initialHydrationTask.value
             
@@ -66,11 +21,11 @@ extension Musubi.ViewModel.AudioTrackList {
         
         func differenceWithLiveMoves(
             from other: Musubi.ViewModel.AudioTrackList
-        ) async throws -> [CollectionDifference<UniquifiedElement>.Change] {
+        ) async throws -> [CollectionDifference<Musubi.ViewModel.AudioTrack>.Change] {
             try await self.initialHydrationTask.value
             try await other.initialHydrationTask.value
             
-            typealias Change = CollectionDifference<UniquifiedElement>.Change
+            typealias Change = CollectionDifference<Musubi.ViewModel.AudioTrack>.Change
             
             var differenceWithLiveMoves: [Change] = []
             
@@ -78,7 +33,7 @@ extension Musubi.ViewModel.AudioTrackList {
             
             // to track, at any given time, which removals haven't been applied yet
             // (skipped as part of a move)
-            var unremovedElements: [UniquifiedElement] = []
+            var unremovedElements: [Musubi.ViewModel.AudioTrack] = []
             
             // to calculate the correct offsets for a move when it occurs and to verify final result
             var oldListCopy = other.contents
@@ -176,7 +131,7 @@ extension Musubi.ViewModel.AudioTrackList {
         }
         
         struct VisualChange: Equatable, Hashable {
-            let element: UniquifiedElement
+            let element: Musubi.ViewModel.AudioTrack
             var change: Change
             
             enum Change: Equatable, Hashable {
@@ -215,7 +170,7 @@ extension Musubi.ViewModel.AudioTrackList {
             
             let canonicalDifference = try await self.differenceCanonical(from: other)
             
-            var unremovedElements: [UniquifiedElement] = []
+            var unremovedElements: [Musubi.ViewModel.AudioTrack] = []
             
             for removal in canonicalDifference.removals.reversed() {
                 switch removal {

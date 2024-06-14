@@ -85,19 +85,91 @@ extension Spotify.AudioTrack: AudioTrackListContext {
     var type: String { "Spotify Track" }
 }
 
-// TODO: figure out better abstraction/composition that can support private(set) semantics for e.g. remote playlists
 extension Musubi.ViewModel {
+    struct AudioTrack: Equatable, Hashable, CustomStringConvertible {
+        let audioTrackID: Spotify.ID  // note redundancy with self.audioTrack is for legacy reasons.
+        
+        weak var parent: AudioTrackList?
+        let occurrence: Int  // per-value counter starting at 1
+        
+        let audioTrack: Spotify.AudioTrack
+        
+        init(audioTrackID: Spotify.ID, parent: AudioTrackList, occurrence: Int, audioTrack: Spotify.AudioTrack) {
+            self.audioTrackID = audioTrackID
+            self.parent = parent
+            self.occurrence = occurrence
+            self.audioTrack = audioTrack
+        }
+        
+        init(audioTrack: Spotify.AudioTrack) {
+            self.audioTrackID = audioTrack.id
+            self.parent = nil
+            self.occurrence = 1
+            self.audioTrack = audioTrack
+        }
+        
+        /*
+         // TODO: revisit this if memory efficiency needed, e.g. with global shared cache of track data.
+        
+        // for audio tracks with no parent, e.g. from search
+        private var _audioTrack: Spotify.AudioTrack?
+        
+        var audioTrack: Spotify.AudioTrack? {
+            get async {
+                if let _audioTrack = _audioTrack {
+                    return _audioTrack
+                } else {
+                    return await self.parent?.audioTrackData[audioTrackID]
+                }
+            }
+        }
+        
+        init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList) {
+            self.audioTrackID = audioTrackID
+            self.occurrence = occurrence
+            self.parent = parent
+            self._audioTrack = nil
+        }
+        
+        init(audioTrack: Spotify.AudioTrack) {
+            self.audioTrackID = audioTrack.id
+            self.occurrence = 1
+            self.parent = nil
+            self._audioTrack = audioTrack
+        }
+         
+         */
+        
+        var description: String { "(\"\(audioTrackID)\", \(occurrence))" }
+        
+        static func == (
+            lhs: Musubi.ViewModel.AudioTrack,
+            rhs: Musubi.ViewModel.AudioTrack
+        ) -> Bool {
+            return lhs.audioTrackID == rhs.audioTrackID
+                && lhs.occurrence == rhs.occurrence
+                && lhs.parent?.context.id == rhs.parent?.context.id
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(audioTrackID)
+            hasher.combine(occurrence)
+            hasher.combine(parent?.context.id ?? "")
+        }
+    }
+    
+    // TODO: figure out better abstraction/composition that can support private(set) semantics for e.g. remote playlists
     @Observable
     @MainActor
     class AudioTrackList {
         nonisolated let context: any AudioTrackListContext
         
-        private(set) var contents: [UniquifiedElement]
+        private(set) var contents: [AudioTrack]
         
         private(set) var audioTrackCounter: [Spotify.ID : Int]
 //        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
         
-        // temporary placeholder for above - see UniquifiedElement defn below for origin
+        // temporary placeholder for above - see AudioTrack definition above for origin
         func audioTrackData() async -> [Spotify.ID : Spotify.AudioTrack] {
             Dictionary(
                 self.contents.map { ($0.audioTrackID, $0.audioTrack) },
@@ -116,78 +188,6 @@ extension Musubi.ViewModel {
         // TODO: alerts
         // For tying SwiftUI alerts onto.
         private(set) var initialHydrationError: Error? = nil
-        
-        struct UniquifiedElement: Equatable, Hashable, CustomStringConvertible {
-            let audioTrackID: Spotify.ID  // note redundancy with self.audioTrack is for legacy reasons.
-            let occurrence: Int  // per-value counter starting at 1
-            
-            weak var parent: AudioTrackList?
-            
-            let audioTrack: Spotify.AudioTrack
-            
-            init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList? = nil, audioTrack: Spotify.AudioTrack) {
-                self.audioTrackID = audioTrackID
-                self.occurrence = occurrence
-                self.parent = parent
-                self.audioTrack = audioTrack
-            }
-            
-            init(audioTrack: Spotify.AudioTrack) {
-                self.audioTrackID = audioTrack.id
-                self.occurrence = 1
-                self.parent = nil
-                self.audioTrack = audioTrack
-            }
-            
-            /*
-             // TODO: revisit this if memory efficiency needed, e.g. with global shared cache of track data.
-            
-            // for audio tracks with no parent, e.g. from search
-            private var _audioTrack: Spotify.AudioTrack?
-            
-            var audioTrack: Spotify.AudioTrack? {
-                get async {
-                    if let _audioTrack = _audioTrack {
-                        return _audioTrack
-                    } else {
-                        return await self.parent?.audioTrackData[audioTrackID]
-                    }
-                }
-            }
-            
-            init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList) {
-                self.audioTrackID = audioTrackID
-                self.occurrence = occurrence
-                self.parent = parent
-                self._audioTrack = nil
-            }
-            
-            init(audioTrack: Spotify.AudioTrack) {
-                self.audioTrackID = audioTrack.id
-                self.occurrence = 1
-                self.parent = nil
-                self._audioTrack = audioTrack
-            }
-             
-             */
-            
-            var description: String { "(\"\(audioTrackID)\", \(occurrence))" }
-            
-            static func == (
-                lhs: Musubi.ViewModel.AudioTrackList.UniquifiedElement,
-                rhs: Musubi.ViewModel.AudioTrackList.UniquifiedElement
-            ) -> Bool {
-                return lhs.audioTrackID == rhs.audioTrackID
-                    && lhs.occurrence == rhs.occurrence
-                    && lhs.parent?.context.id == rhs.parent?.context.id
-            }
-            
-            func hash(into hasher: inout Hasher) {
-                hasher.combine(audioTrackID)
-                hasher.combine(occurrence)
-                hasher.combine(parent?.context.id ?? "")
-            }
-        }
         
         init(repositoryReference: Musubi.RepositoryReference) {
             self.context = repositoryReference
@@ -354,10 +354,10 @@ extension Musubi.ViewModel {
 //                }
                 self.audioTrackCounter[audioTrack.id] = (self.audioTrackCounter[audioTrack.id] ?? 0) + 1
                 self.contents.append(
-                    UniquifiedElement(
+                    AudioTrack(
                         audioTrackID: audioTrack.id,
-                        occurrence: self.audioTrackCounter[audioTrack.id]!,
                         parent: self,
+                        occurrence: self.audioTrackCounter[audioTrack.id]!,
                         audioTrack: audioTrack
                     )
                 )
@@ -407,10 +407,10 @@ extension Musubi.ViewModel {
                 if self.contents[i].audioTrackID == removedElement.audioTrackID
                     && self.contents[i].occurrence > removedElement.occurrence
                 {
-                    self.contents[i] = UniquifiedElement(
+                    self.contents[i] = AudioTrack(
                         audioTrackID: self.contents[i].audioTrackID,
-                        occurrence: self.contents[i].occurrence - 1,
                         parent: self,
+                        occurrence: self.contents[i].occurrence - 1,
                         audioTrack: self.contents[i].audioTrack
                     )
                 }
@@ -432,10 +432,10 @@ extension Musubi.ViewModel {
             for (i, element) in self.contents.enumerated() {
                 recounter[element.audioTrackID] = (recounter[element.audioTrackID] ?? 0) + 1
                 if element.occurrence != recounter[element.audioTrackID]! {
-                    self.contents[i] = UniquifiedElement(
+                    self.contents[i] = AudioTrack(
                         audioTrackID: element.audioTrackID,
-                        occurrence: recounter[element.audioTrackID]!,
                         parent: self,
+                        occurrence: recounter[element.audioTrackID]!,
                         audioTrack: element.audioTrack
                     )
                 }
@@ -521,49 +521,3 @@ extension Musubi.ViewModel {
         }
     }
 }
-
-/*
-
-extension Musubi.ViewModel {
-    typealias AudioTrackList = [UIDableAudioTrack]
-    
-    struct UIDableAudioTrack: Identifiable, Hashable {
-        let audioTrack: Spotify.AudioTrack
-        
-        // Unique identifier to allow [UIDableAudioTrack] to be presentable as an editable SwiftUI
-        // List. This is necessary since there may be repeated audio tracks within e.g. a playlist.
-        // Keep in mind that this id is intended to only be stable for the (temporary) lifetime of
-        // the SwiftUI List it backs.
-        let id: Int
-    }
-}
-
-//extension Array where Element == Musubi.ViewModel.UIDableAudioTrack {
-extension Musubi.ViewModel.AudioTrackList {
-    mutating func append(audioTrack: Spotify.AudioTrack) {
-        self.append(Musubi.ViewModel.UIDableAudioTrack(audioTrack: audioTrack, id: self.count))
-    }
-    
-    mutating func append(audioTrackList: [Spotify.AudioTrack]) {
-        let origCount = self.count
-        self.append(
-            contentsOf: audioTrackList.enumerated().map { item in
-                Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset + origCount)
-            }
-        )
-    }
-    
-    static func from(audioTrackList: [Spotify.AudioTrack]) -> Self {
-        return audioTrackList.enumerated().map { item in
-            Musubi.ViewModel.UIDableAudioTrack(audioTrack: item.element, id: item.offset)
-        }
-    }
-}
-
-extension Array where Element == Spotify.AudioTrack {
-    static func from(audioTrackList: Musubi.ViewModel.AudioTrackList) -> Self {
-        return audioTrackList.map { item in item.audioTrack }
-    }
-}
-
-*/

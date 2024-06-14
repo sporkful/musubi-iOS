@@ -10,7 +10,7 @@ struct AddToSelectableLocalClonesSheet: View {
     
     @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
     
-    @State private var selectedAudioTracks = Set<Musubi.ViewModel.AudioTrackList.UniquifiedElement>()
+    @State private var selectedAudioTracks = Set<Musubi.ViewModel.AudioTrack>()
     @State private var selectedRepoReferences = Set<Musubi.RepositoryReference>()
     
     @State private var editMode = EditMode.active // intended to be always-active
@@ -152,7 +152,7 @@ fileprivate struct ConfirmationPage: View {
     
     @Binding var navigationPath: NavigationPath
     
-    @Binding var selectedAudioTracks: Set<Musubi.ViewModel.AudioTrackList.UniquifiedElement>
+    @Binding var selectedAudioTracks: Set<Musubi.ViewModel.AudioTrack>
     @Binding var selectedRepoReferences: Set<Musubi.RepositoryReference>
     
     @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList

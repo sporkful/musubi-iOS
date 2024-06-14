@@ -8,7 +8,7 @@ struct SingleAudioTrackMenu: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
-    let audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement
+    let audioTrackListElement: Musubi.ViewModel.AudioTrack
     
     // TODO: better way to do this?
     // if N/A, just pass in constant binding

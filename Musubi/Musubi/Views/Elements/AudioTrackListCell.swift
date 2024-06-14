@@ -8,7 +8,7 @@ import SwiftUI
 struct AudioTrackListCell: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
-    let audioTrackListElement: Musubi.ViewModel.AudioTrackList.UniquifiedElement
+    let audioTrackListElement: Musubi.ViewModel.AudioTrack
     
     let showMenu: Bool
     let showThumbnail: Bool
