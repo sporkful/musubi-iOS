@@ -178,7 +178,7 @@ private struct MiniPlayerOverlay: ViewModifier {
                                     .font(.subheadline)
                                     .lineLimit(1)
                                     .padding(.bottom, 0.0127)
-                                Text(currentTrack.audioTrack.caption ?? "")
+                                Text(currentTrack.fullCaption)
                                     .font(.caption)
                                     .lineLimit(1)
                                     .opacity(0.9)
@@ -258,7 +258,7 @@ private struct MiniPlayerOverlay: ViewModifier {
     private func loadThumbnail() {
         Task { @MainActor in
             while true {
-                if let thumbnailURLString = spotifyPlaybackManager.currentTrack?.audioTrack.thumbnailURLString,
+                if let thumbnailURLString = spotifyPlaybackManager.currentTrack?.thumbnailURLString,
                    let thumbnailURL = URL(string: thumbnailURLString),
                    let thumbnail = try? await SpotifyRequests.Read.image(url: thumbnailURL)
                 {

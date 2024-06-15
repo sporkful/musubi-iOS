@@ -142,6 +142,8 @@ extension Musubi.ViewModel {
         
         var description: String { "(\"\(audioTrackID)\", \(occurrence))" }
         
+        // TODO: conform AudioTrackList itself to Equatable/Hashable using context id?
+        
         static func == (
             lhs: Musubi.ViewModel.AudioTrack,
             rhs: Musubi.ViewModel.AudioTrack

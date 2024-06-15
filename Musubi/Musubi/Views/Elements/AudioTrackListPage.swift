@@ -201,11 +201,11 @@ struct AudioTrackListPage: View {
                     )
                     ForEach(audioTrackList.contents, id: \.self) { element in
                         Divider()
-                        AudioTrackListCell(
-                            audioTrackListElement: element,
-                            showMenu: true,
+                        ListCellWrapper(
+                            item: element,
                             showThumbnail: showAudioTrackThumbnails,
-                            customTextStyle: .defaultStyle
+                            customTextStyle: .defaultStyle,
+                            showAudioTrackMenu: true
                         )
                     }
                     if spotifyPlaybackManager.currentTrack != nil {

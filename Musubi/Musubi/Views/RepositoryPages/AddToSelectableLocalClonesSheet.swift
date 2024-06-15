@@ -30,11 +30,11 @@ struct AddToSelectableLocalClonesSheet: View {
             SelectableListSection(
                 selectableList: audioTrackList.contents,
                 listCellBuilder: { element in
-                    AudioTrackListCell(
-                        audioTrackListElement: element,
-                        showMenu: false,
+                    ListCellWrapper(
+                        item: element,
                         showThumbnail: true,
-                        customTextStyle: .defaultStyle
+                        customTextStyle: .defaultStyle,
+                        showAudioTrackMenu: false
                     )
                 },
                 selectedElements: $selectedAudioTracks
@@ -178,11 +178,11 @@ fileprivate struct ConfirmationPage: View {
                     Array(zip(selectedAudioTracksOrdered.indices, selectedAudioTracksOrdered)),
                     id: \.0
                 ) { index, audioTrack in
-                    AudioTrackListCell(
-                        audioTrackListElement: .init(audioTrack: audioTrack),
-                        showMenu: false,
+                    ListCellWrapper(
+                        item: Musubi.ViewModel.AudioTrack(audioTrack: audioTrack),
                         showThumbnail: true,
-                        customTextStyle: .defaultStyle
+                        customTextStyle: .defaultStyle,
+                        showAudioTrackMenu: false
                     )
                 }
             }

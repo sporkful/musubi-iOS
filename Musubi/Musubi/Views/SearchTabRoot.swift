@@ -42,11 +42,11 @@ struct SearchTabRoot: View {
                     if showAudioTrackResults {
                         Section("Tracks") {
                             ForEach(searchResults.tracks.items) { audioTrack in
-                                AudioTrackListCell(
-                                    audioTrackListElement: .init(audioTrack: audioTrack),
-                                    showMenu: true,
+                                ListCellWrapper(
+                                    item: Musubi.ViewModel.AudioTrack(audioTrack: audioTrack),
                                     showThumbnail: true,
-                                    customTextStyle: .defaultStyle
+                                    customTextStyle: .defaultStyle,
+                                    showAudioTrackMenu: true
                                 )
                             }
                         }

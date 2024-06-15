@@ -14,32 +14,24 @@ extension Musubi.RepositoryReference: CustomPreviewable {
     var thumbnailURLString: String? { self.externalMetadata?.images?.last?.url }
 }
 
-extension Spotify.LoggedInUser: CustomPreviewable {
-    var title: String { self.name }
-    var caption: String? { "Spotify User (Logged In)" }
-    var thumbnailURLString: String? { self.images?.last?.url }
-}
-
-extension Spotify.OtherUser: CustomPreviewable {
-    var title: String { self.name }
-    var caption: String? { "Spotify User" }
-    var thumbnailURLString: String? { self.images?.last?.url }
-}
-
-// TODO: change to UniquifiedElement and display custom caption without redundant info from context
-extension Spotify.AudioTrack: CustomPreviewable {
-    var title: String { self.name }
-    
+extension Musubi.ViewModel.AudioTrack: CustomPreviewable {
+    var title: String { self.audioTrack.name }
     var caption: String? {
-        let albumString = if let album = self.album {
+        if self.parent?.context is Spotify.AlbumMetadata {
+            return self.audioTrack.artists.map { $0.name }.joined(separator: ", ")
+        } else {
+            return fullCaption
+        }
+    }
+    var fullCaption: String {
+        let albumString = if let album = self.audioTrack.album {
             " • " + album.name
         } else {
             ""
         }
-        return self.artists.map { $0.name }.joined(separator: ", ") + albumString
+        return self.audioTrack.artists.map { $0.name }.joined(separator: ", ") + albumString
     }
-    
-    var thumbnailURLString: String? { self.images?.last?.url }
+    var thumbnailURLString: String? { self.audioTrack.images?.last?.url }
 }
 
 extension Spotify.ArtistMetadata: CustomPreviewable {
@@ -60,25 +52,88 @@ extension Spotify.PlaylistMetadata: CustomPreviewable {
     var thumbnailURLString: String? { self.images?.last?.url }
 }
 
-// TODO: abstract away isActive/isPlaying
+extension Spotify.LoggedInUser: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { "Spotify User (Logged In)" }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
+
+extension Spotify.OtherUser: CustomPreviewable {
+    var title: String { self.name }
+    var caption: String? { "Spotify User" }
+    var thumbnailURLString: String? { self.images?.last?.url }
+}
 
 struct ListCellWrapper<Item: CustomPreviewable>: View {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
     let item: Item
     let showThumbnail: Bool
     let customTextStyle: ListCell.CustomTextStyle
-    var isActive: Bool = false
-    var isPlaying: Bool = false
+    
+    // for if item is Musubi.ViewModel.AudioTrack
+    var showAudioTrackMenu: Bool = false
+    @State private var showAlertErrorStartPlayback = false
     
     var body: some View {
-        ListCell(
-            title: item.title,
-            caption: item.caption,
-            thumbnailURLString: item.thumbnailURLString,
-            showThumbnail: showThumbnail,
-            customTextStyle: customTextStyle,
-            isActive: isActive,
-            isPlaying: isPlaying
-        )
+        if let audioTrack = item as? Musubi.ViewModel.AudioTrack {
+            HStack {
+                ListCell(
+                    title: item.title,
+                    caption: item.caption,
+                    thumbnailURLString: item.thumbnailURLString,
+                    showThumbnail: showThumbnail,
+                    customTextStyle: customTextStyle,
+                    isActive: spotifyPlaybackManager.currentTrack == audioTrack,
+                    isPlaying: spotifyPlaybackManager.isPlaying
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    Task {
+                        do {
+                            try await spotifyPlaybackManager.play(audioTrackListElement: audioTrack)
+                        } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                            showAlertErrorStartPlayback = true
+                        } catch {
+                            // TODO: handle
+                            print(error)
+                        }
+                    }
+                }
+                if showAudioTrackMenu {
+                    SingleAudioTrackMenu(
+                        audioTrackListElement: audioTrack,
+                        showParentSheet: Binding.constant(false)
+                    )
+                }
+            }
+            .alert(
+                "Error when starting playback",
+                isPresented: $showAlertErrorStartPlayback,
+                actions: {},
+                message: {
+                    Text(SpotifyPlaybackManager.PLAY_ERROR_MESSAGE)
+                }
+            )
+        } else if let audioTrackListContext = item as? AudioTrackListContext {
+            ListCell(
+                title: item.title,
+                caption: item.caption,
+                thumbnailURLString: item.thumbnailURLString,
+                showThumbnail: showThumbnail,
+                customTextStyle: customTextStyle,
+                isActive: spotifyPlaybackManager.currentTrack?.parent?.context.id == audioTrackListContext.id,
+                isPlaying: spotifyPlaybackManager.isPlaying
+            )
+        } else {
+            ListCell(
+                title: item.title,
+                caption: item.caption,
+                thumbnailURLString: item.thumbnailURLString,
+                showThumbnail: showThumbnail,
+                customTextStyle: customTextStyle
+            )
+        }
     }
 }
 

@@ -32,26 +32,26 @@ struct NewCommitPage: View {
                             // TODO: undo by row?
                                 switch visualChange.change {
                                 case .none:
-                                    AudioTrackListCell(
-                                        audioTrackListElement: visualChange.element,
-                                        showMenu: false,
+                                    ListCellWrapper(
+                                        item: visualChange.element,
                                         showThumbnail: true,
-                                        customTextStyle: .defaultStyle
+                                        customTextStyle: .defaultStyle,
+                                        showAudioTrackMenu: false
                                     )
                                 case .inserted(associatedWith: let associatedWith):
-                                    AudioTrackListCell(
-                                        audioTrackListElement: visualChange.element,
-                                        showMenu: false,
+                                    ListCellWrapper(
+                                        item: visualChange.element,
                                         showThumbnail: true,
-                                        customTextStyle: .init(color: .green, bold: true)
+                                        customTextStyle: .init(color: .green, bold: true),
+                                        showAudioTrackMenu: false
                                     )
                                     .listRowBackground(Color.green.opacity(0.180))
                                 case .removed(associatedWith: let associatedWith):
-                                    AudioTrackListCell(
-                                        audioTrackListElement: visualChange.element,
-                                        showMenu: false,
+                                    ListCellWrapper(
+                                        item: visualChange.element,
                                         showThumbnail: true,
-                                        customTextStyle: .init(color: .red, bold: true)
+                                        customTextStyle: .init(color: .red, bold: true),
+                                        showAudioTrackMenu: false
                                     )
                                     .listRowBackground(Color.red.opacity(0.180))
                             }

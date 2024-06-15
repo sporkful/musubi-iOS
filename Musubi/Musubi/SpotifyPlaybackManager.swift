@@ -374,7 +374,7 @@ class SpotifyPlaybackManager {
     }
     
     // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
-    // This assumption holds by further assuming the function is only called from AudioTrackListCell
+    // This assumption holds by further assuming the function is only called from ListCell<ViewModel.AudioTrack>
     // (as a result of direct user input/tap).
     func play(audioTrackListElement: Musubi.ViewModel.AudioTrack) async throws {
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)

@@ -13,11 +13,11 @@ struct LocalCloneEditorPage: View {
         NavigationStack {
             List {
                 ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { element in
-                    AudioTrackListCell(
-                        audioTrackListElement: element,
-                        showMenu: false,
+                    ListCellWrapper(
+                        item: element,
                         showThumbnail: true,
-                        customTextStyle: .defaultStyle
+                        customTextStyle: .defaultStyle,
+                        showAudioTrackMenu: false
                     )
                 }
                 // TODO: any way to enforce well-defined ordering of ops?
