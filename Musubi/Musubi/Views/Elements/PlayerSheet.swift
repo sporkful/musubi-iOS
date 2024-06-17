@@ -31,7 +31,7 @@ struct PlayerSheet: View {
                         }
                         Spacer()
                         SingleAudioTrackMenu(
-                            audioTrackListElement: currentTrack,
+                            audioTrack: currentTrack,
                             showParentSheet: $showSheet
                         )
                     }

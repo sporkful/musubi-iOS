@@ -8,7 +8,7 @@ struct SingleAudioTrackMenu: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
-    let audioTrackListElement: Musubi.ViewModel.AudioTrack
+    let audioTrack: Musubi.ViewModel.AudioTrack
     
     // TODO: better way to do this?
     // if N/A, just pass in constant binding
@@ -56,8 +56,8 @@ struct SingleAudioTrackMenu: View {
                     }
                 }
             )
-            if let album = self.audioTrackListElement.audioTrack.album
-//               album != self.audioTrackListElement.parent?.context as? Spotify.AlbumMetadata
+            if let album = self.audioTrack.audioTrack.album
+//               album != self.audioTrack.parent?.context as? Spotify.AlbumMetadata
             {
                 Button(
                     action: { openRelatedPage(spotifyNavigable: album) },
@@ -69,8 +69,8 @@ struct SingleAudioTrackMenu: View {
                     }
                 )
             }
-            if let primaryArtist = self.audioTrackListElement.audioTrack.artists.first
-//               primaryArtist != self.audioTrackListElement.parent?.context as? Spotify.ArtistMetadata
+            if let primaryArtist = self.audioTrack.audioTrack.artists.first
+//               primaryArtist != self.audioTrack.parent?.context as? Spotify.ArtistMetadata
             {
                 Button(
                     action: { openRelatedPage(spotifyNavigable: primaryArtist) },
@@ -101,7 +101,7 @@ struct SingleAudioTrackMenu: View {
             // Note decoupling with parent AudioTrackList is intentional here.
             AddToSelectableLocalClonesSheet(
                 showSheet: $showSheetAddToSelectableClones,
-                audioTrackList: Musubi.ViewModel.AudioTrackList(audioTrack: self.audioTrackListElement.audioTrack)
+                audioTrackList: Musubi.ViewModel.AudioTrackList(audioTrack: self.audioTrack.audioTrack)
             )
         }
         .alert("Action not supported yet", isPresented: $showAlertUnsupportedAction, actions: {})

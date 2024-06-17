@@ -199,10 +199,10 @@ struct AudioTrackListPage: View {
                         parentAudioTrackList: audioTrackList,
                         showSheetAddToSelectableClones: $showSheetAddToSelectableClones
                     )
-                    ForEach(audioTrackList.contents, id: \.self) { element in
+                    ForEach(audioTrackList.contents, id: \.self) { audioTrack in
                         Divider()
                         ListCellWrapper(
-                            item: element,
+                            item: audioTrack,
                             showThumbnail: showAudioTrackThumbnails,
                             customTextStyle: .defaultStyle,
                             showAudioTrackMenu: true
@@ -440,7 +440,7 @@ struct AudioTrackListPage: View {
                         Task { @MainActor in
                             if !parentAudioTrackList.contents.isEmpty {
                                 do {
-                                    try await spotifyPlaybackManager.play(audioTrackListElement: parentAudioTrackList.contents[0])
+                                    try await spotifyPlaybackManager.play(audioTrack: parentAudioTrackList.contents[0])
                                 } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
                                     showAlertErrorStartPlayback = true
                                 } catch {

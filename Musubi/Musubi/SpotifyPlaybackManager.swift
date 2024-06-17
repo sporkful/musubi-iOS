@@ -373,15 +373,15 @@ class SpotifyPlaybackManager {
         }
     }
     
-    // Assumes audioTrackListElement is a valid element of its parent AudioTrackList::contents (if non-nil).
+    // Assumes audioTrack is a valid element of its parent AudioTrackList::contents (if non-nil).
     // This assumption holds by further assuming the function is only called from ListCell<ViewModel.AudioTrack>
     // (as a result of direct user input/tap).
-    func play(audioTrackListElement: Musubi.ViewModel.AudioTrack) async throws {
+    func play(audioTrack: Musubi.ViewModel.AudioTrack) async throws {
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
         
-        guard let audioTrackList = audioTrackListElement.parent else {
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
-            self.currentTrack = audioTrackListElement
+        guard let audioTrackList = audioTrack.parent else {
+            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
@@ -394,17 +394,17 @@ class SpotifyPlaybackManager {
         case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
             try await Remote.startInContext(
                 contextURI: audioTrackList.context.uri,
-                contextOffset: audioTrackList.contents.firstIndex(of: audioTrackListElement) ?? 0
+                contextOffset: audioTrackList.contents.firstIndex(of: audioTrack) ?? 0
             )
-            self.currentTrack = audioTrackListElement
+            self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
             self.isPlaying = true
         
         case is Spotify.AudioTrack:
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
-            self.currentTrack = audioTrackListElement
+            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
@@ -412,9 +412,9 @@ class SpotifyPlaybackManager {
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
             try await Remote.setRepeatMode(state: .off)
-            try await Remote.startSingle(audioTrackID: audioTrackListElement.audioTrackID)
-            let index = audioTrackList.contents.firstIndex(of: audioTrackListElement)!
-            self.currentTrack = audioTrackListElement
+            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            let index = audioTrackList.contents.firstIndex(of: audioTrack)!
+            self.currentTrack = audioTrack
             self.context = .local(audioTrackList: audioTrackList)
             self.backupCurrentIndex = index
             self.positionMilliseconds = 0

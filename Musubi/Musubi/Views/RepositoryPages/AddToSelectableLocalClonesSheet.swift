@@ -29,9 +29,9 @@ struct AddToSelectableLocalClonesSheet: View {
         NavigationStack(path: $navigationPath) {
             SelectableListSection(
                 selectableList: audioTrackList.contents,
-                listCellBuilder: { element in
+                listCellBuilder: { audioTrack in
                     ListCellWrapper(
-                        item: element,
+                        item: audioTrack,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle,
                         showAudioTrackMenu: false

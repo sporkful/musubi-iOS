@@ -164,8 +164,8 @@ extension Musubi.ViewModel.AudioTrackList {
             try await self.initialHydrationTask.value
             try await other.initialHydrationTask.value
             
-            var unifiedSummary: [VisualChange] = other.contents.map { uniquifiedElement in
-                VisualChange(element: uniquifiedElement, change: .none)
+            var unifiedSummary: [VisualChange] = other.contents.map { element in
+                VisualChange(element: element, change: .none)
             }
             
             let canonicalDifference = try await self.differenceCanonical(from: other)

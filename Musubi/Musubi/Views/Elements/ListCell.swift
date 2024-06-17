@@ -91,7 +91,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 .onTapGesture {
                     Task {
                         do {
-                            try await spotifyPlaybackManager.play(audioTrackListElement: audioTrack)
+                            try await spotifyPlaybackManager.play(audioTrack: audioTrack)
                         } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
                             showAlertErrorStartPlayback = true
                         } catch {
@@ -102,7 +102,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 }
                 if showAudioTrackMenu {
                     SingleAudioTrackMenu(
-                        audioTrackListElement: audioTrack,
+                        audioTrack: audioTrack,
                         showParentSheet: Binding.constant(false)
                     )
                 }

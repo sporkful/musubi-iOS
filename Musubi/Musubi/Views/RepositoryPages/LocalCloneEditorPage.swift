@@ -12,9 +12,9 @@ struct LocalCloneEditorPage: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { element in
+                ForEach(repositoryClone.stagedAudioTrackList.contents, id: \.self) { audioTrack in
                     ListCellWrapper(
-                        item: element,
+                        item: audioTrack,
                         showThumbnail: true,
                         customTextStyle: .defaultStyle,
                         showAudioTrackMenu: false
