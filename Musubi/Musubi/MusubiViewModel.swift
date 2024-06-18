@@ -77,6 +77,7 @@ extension Spotify.ArtistMetadata: AudioTrackListContext {
     var type: String { "Spotify Artist" }
 }
 
+// TODO: remove this for clarity (held up by SelectAddAudioTracks)
 extension Spotify.AudioTrack: AudioTrackListContext {
     var formattedDescription: String? { nil }
     var coverImageURLString: String? { self.images?.first?.url }

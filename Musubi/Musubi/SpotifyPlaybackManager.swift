@@ -16,9 +16,15 @@ class SpotifyPlaybackManager {
     private(set) var context: Context
     private(set) var repeatState: LocalRepeatState
     private(set) var shuffle: Bool
-    private(set) var positionMilliseconds: Double // needs to be double type for SwiftUI Slider
     
-    let POSITION_MS_SLIDER_MIN = 10.0
+    // TODO: better way to do this?
+    // Note if we made this private(set), we wouldn't be able to make a SwiftUI Binding to it
+    // (custom Bindings don't work either since this is an actor-isolated async property),
+    // which is necessary for the Slider component in PlayerSheet. However, we still follow
+    // private(set) semantics - edits from the Slider are routed to an isolated function in this class.
+    var positionMilliseconds: Double // needs to be type Double for SwiftUI Slider
+    
+    static let POSITION_MS_SLIDER_MIN: Double = 10.0
     
     // Used to prevent remote state poller from updating position/slider with stale info.
     private var isRequestingRemoteSeek: Bool
@@ -155,6 +161,7 @@ class SpotifyPlaybackManager {
     // TODO: account for redundant increment whenever this runs immediately after a `remotePlaybackPollerAction`
     private func localPlaybackPollerAction() async {
         if self.isPlaying,
+           !self.isRequestingRemoteSeek,
            let currentAudioTrack = self.currentTrack?.audioTrack
         {
             let intervalMilliseconds = LOCAL_PLAYBACK_POLLER_INTERVAL * 1000
@@ -176,7 +183,7 @@ class SpotifyPlaybackManager {
             }
             
             if !self.isRequestingRemoteSeek {
-                self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), POSITION_MS_SLIDER_MIN)
+                self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), SpotifyPlaybackManager.POSITION_MS_SLIDER_MIN)
             }
             
             self.isPlaying = remoteState.is_playing
@@ -508,11 +515,12 @@ class SpotifyPlaybackManager {
         self.shuffle = setState
     }
     
-    // Assumes UI has already updated `self.positionMilliseconds`.
     func seek(toPositionMilliseconds: Double) async throws {
         self.isRequestingRemoteSeek = true
+        self.positionMilliseconds = toPositionMilliseconds
         try await Remote.seek(toPositionMilliseconds: Int(toPositionMilliseconds))
         self.isRequestingRemoteSeek = false
+        self.remotePlaybackPoller?.fire()
     }
     
     func updateAvailableDevices() async throws {
