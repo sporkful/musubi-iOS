@@ -193,7 +193,9 @@ class SpotifyPlaybackManager {
                 // Avoid unnecessarily rerendering heavyweight view components.
                 // TODO: clean these up
                 var wasContextUpdated = false
-                if audioTrackList?.context.uri != remoteState.context?.uri {
+                if audioTrackList?.context.uri != remoteState.context?.uri
+                    || (remoteState.context != nil && self.currentTrack?.parent?.context == nil)
+                {
                     if let remoteContext = remoteState.context,
                        let contextID = Optional(String(remoteContext.uri.split(separator: ":")[2])),
                        let newAudioTrackList: Musubi.ViewModel.AudioTrackList = switch remoteContext.type {
@@ -212,7 +214,9 @@ class SpotifyPlaybackManager {
                 }
                 
                 if let remoteAudioTrack = remoteState.item {
-                    if self.currentTrack?.audioTrackID != remoteAudioTrack.id {
+                    if self.currentTrack?.audioTrackID != remoteAudioTrack.id
+                        || wasContextUpdated
+                    {
                         if !wasContextUpdated,
                            let audioTrackList = audioTrackList,
                            let currentTrack = self.currentTrack,
@@ -387,6 +391,8 @@ class SpotifyPlaybackManager {
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
         
         guard let audioTrackList = audioTrack.parent else {
+            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
+            try await Remote.setShuffle(state: self.shuffle)
             try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)
@@ -399,6 +405,8 @@ class SpotifyPlaybackManager {
         // TODO: better typing to encode what counts as a local context
         switch audioTrackList.context {
         case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
+            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
+            try await Remote.setShuffle(state: self.shuffle)
             try await Remote.startInContext(
                 contextURI: audioTrackList.context.uri,
                 contextOffset: audioTrackList.contents.firstIndex(of: audioTrack) ?? 0
@@ -410,6 +418,8 @@ class SpotifyPlaybackManager {
             self.isPlaying = true
         
         case is Spotify.AudioTrack:
+            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
+            try await Remote.setShuffle(state: self.shuffle)
             try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)

@@ -21,7 +21,7 @@ struct PlayerSheet: View {
         ScrollView {
             if let currentTrack = spotifyPlaybackManager.currentTrack {
                 VStack(alignment: .leading) {
-                    HStack {
+                    HStack(alignment: .center) {
                         Button(
                             action: { showSheet = false },
                             label: {
@@ -29,8 +29,12 @@ struct PlayerSheet: View {
                             }
                         )
                         Spacer()
+                        // TODO: make tappable / automate nav
                         VStack(alignment: .center) {
-                            Text(currentTrack.parent?.context.type ?? "")
+                            Text("Current Playback Context")
+                                .font(.caption2)
+                                .opacity(0.81)
+                            Text(currentTrack.parent?.context.type ?? "Single Track")
                                 .font(.caption)
                                 .lineLimit(1, reservesSpace: true)
                             Text(currentTrack.parent?.context.name ?? "")
@@ -97,10 +101,12 @@ struct PlayerSheet: View {
                         minimumValueLabel: {
                             Text(stringify(milliseconds: isScrubbing ? sliderPositionMilliseconds : spotifyPlaybackManager.positionMilliseconds))
                                 .font(.caption)
+                                .opacity(0.81)
                         },
                         maximumValueLabel: {
                             Text(stringify(milliseconds: Double(currentTrack.audioTrack.duration_ms)))
                                 .font(.caption)
+                                .opacity(0.81)
                         },
                         onEditingChanged: { newValue in
                             if isScrubbing == true && newValue == false {
@@ -111,6 +117,65 @@ struct PlayerSheet: View {
                             isScrubbing = newValue
                         }
                     )
+                    .padding(.horizontal)
+                    HStack(alignment: .center) {
+                        Button {
+                            Task { try await spotifyPlaybackManager.toggleShuffle() }
+                        } label: {
+                            Image(systemName: "shuffle")
+                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                .foregroundStyle(spotifyPlaybackManager.shuffle ? Color.green : Color.white.opacity(0.5))
+                        }
+                        Spacer()
+                        Button {
+                            Task { try await spotifyPlaybackManager.skipToPrevious() }
+                        } label: {
+                            Image(systemName: "backward.end.fill")
+                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                        }
+                        Spacer()
+                        if spotifyPlaybackManager.isPlaying {
+                            Button {
+                                Task { try await spotifyPlaybackManager.pause() }
+                            } label: {
+                                Image(systemName: "pause.circle.fill")
+                                    .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                            }
+                        } else {
+                            Button {
+                                Task { try await spotifyPlaybackManager.resume() }
+                            } label: {
+                                Image(systemName: "play.circle.fill")
+                                    .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                            }
+                        }
+                        Spacer()
+                        Button {
+                            Task { try await spotifyPlaybackManager.skipToNext() }
+                        } label: {
+                            Image(systemName: "forward.end.fill")
+                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                        }
+                        Spacer()
+                        Button {
+                            Task { try await spotifyPlaybackManager.toggleRepeatState() }
+                        } label: {
+                            if spotifyPlaybackManager.repeatState == .context {
+                                Image(systemName: "repeat")
+                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .foregroundStyle(Color.green)
+                            } else if spotifyPlaybackManager.repeatState == .track {
+                                Image(systemName: "repeat.1")
+                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .foregroundStyle(Color.green)
+                            } else {
+                                Image(systemName: "repeat")
+                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .foregroundStyle(Color.white.opacity(0.5))
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
                 }
                 .background(
                     LinearGradient(

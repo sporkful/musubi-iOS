@@ -94,7 +94,7 @@ struct SingleAudioTrackMenu: View {
         } label: {
             Image(systemName: "ellipsis")
 //                .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
-                .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+//                .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                 .contentShape(Rectangle())
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
