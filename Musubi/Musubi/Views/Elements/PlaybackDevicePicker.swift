@@ -60,7 +60,7 @@ struct PlaybackDevicePicker: View {
                 {
                     try await spotifyPlaybackManager.transferPlaybackTo(deviceID: activeDeviceID)
                 } else {
-                    try await spotifyPlaybackManager.resetOnLossOfActiveDevice()
+                    await spotifyPlaybackManager.resetOnLossOfActiveDevice()
                 }
             }
         }

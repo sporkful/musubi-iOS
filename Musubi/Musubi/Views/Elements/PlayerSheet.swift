@@ -67,7 +67,7 @@ struct PlayerSheet: View {
                     Text(currentTrack.audioTrack.name)
                         .font(.title2.leading(.tight))
                         .fontWeight(.bold)
-                        .padding(.horizontal)
+                        .padding([.horizontal, .top])
                     HStack {
                         ForEach(
                             Array(zip(

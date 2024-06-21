@@ -2,7 +2,7 @@
 
 import Foundation
 
-// TODO: remember playback state at quit?
+// TODO: remember some of playback state at quit / loss of active device?
 // TODO: resolve redundant/conflicting notions of context between AudioTrackList and PlaybackManager
 
 @Observable
@@ -121,6 +121,8 @@ class SpotifyPlaybackManager {
     
     private var ignoreRemoteStateBefore: Date = Date.distantPast
     
+    private var localPlaybackPollerLastReference: Date? = nil
+    
     // TODO: proper ARC management
     // (current iteration should be fine for MVP since this object is global wrt user)
     
@@ -158,13 +160,20 @@ class SpotifyPlaybackManager {
     // TODO: account for actor re-entrancy / enforce ordering of concurrent requests
     // (practically, should be okay since all poll rates are low)
     
-    // TODO: account for redundant increment whenever this runs immediately after a `remotePlaybackPollerAction`
     private func localPlaybackPollerAction() async {
         if self.isPlaying,
            !self.isRequestingRemoteSeek,
            let currentAudioTrack = self.currentTrack?.audioTrack
         {
-            let intervalMilliseconds = LOCAL_PLAYBACK_POLLER_INTERVAL * 1000
+            let newReference: Date = Date.now
+            let intervalMilliseconds: Double
+            if let lastReference = self.localPlaybackPollerLastReference {
+                intervalMilliseconds = newReference.timeIntervalSince(lastReference) * 1000
+            } else {
+                intervalMilliseconds = 0
+            }
+            self.localPlaybackPollerLastReference = newReference
+            
             if self.positionMilliseconds + intervalMilliseconds < Double(currentAudioTrack.duration_ms) {
                 self.positionMilliseconds += intervalMilliseconds
             } else {
@@ -176,17 +185,12 @@ class SpotifyPlaybackManager {
     private func remotePlaybackPollerAction() async {
         do {
             let remoteState = try await Remote.fetchState()
+            let responseTimestamp = Date.now
             
-            if Date.now < self.ignoreRemoteStateBefore {
+            if responseTimestamp < self.ignoreRemoteStateBefore {
                 print("[SpotifyPlaybackManager] note intentionally ignored remote playback state")
                 return
             }
-            
-            if !self.isRequestingRemoteSeek {
-                self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), SpotifyPlaybackManager.POSITION_MS_SLIDER_MIN)
-            }
-            
-            self.isPlaying = remoteState.is_playing
             
             switch self.context {
             case let .remote(audioTrackList):
@@ -296,6 +300,20 @@ class SpotifyPlaybackManager {
             print("occurrence: \(String(describing: self.currentTrack?.occurrence))")
             print("context: \(String(describing: self.currentTrack?.parent?.context.name))")
             
+            self.isPlaying = remoteState.is_playing
+            
+            if !self.isRequestingRemoteSeek {
+                self.positionMilliseconds = max(Double(remoteState.progress_ms ?? 0), SpotifyPlaybackManager.POSITION_MS_SLIDER_MIN)
+                
+                if self.isPlaying {
+                    let now: Date = Date.now
+                    self.positionMilliseconds += (now.timeIntervalSince(responseTimestamp) * 1000)
+                    self.localPlaybackPollerLastReference = now
+                } else {
+                    self.localPlaybackPollerLastReference = nil
+                }
+            }
+            
             guard let updatedActiveDeviceIndex = self.availableDevices.firstIndex(of: remoteState.device) else {
                 try await updateAvailableDevices()
                 return
@@ -309,9 +327,8 @@ class SpotifyPlaybackManager {
         catch is DecodingError {
             print("[\(Date.now.formatted())] detected playback not active")
             
-            self.isPlaying = false
             self.activeDeviceIndex = nil
-            // TODO: clear entirety of this view model?
+            await self.resetOnLossOfActiveDevice()
         }
         catch {
             print("[Spotify::PlaybackManager] (remote playback poller) unexpected error")
@@ -344,6 +361,7 @@ class SpotifyPlaybackManager {
         case .track:
             try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         case .context, .off:
             let nextTrackIndex: Int
@@ -362,6 +380,7 @@ class SpotifyPlaybackManager {
             self.currentTrack = nextTrack
             self.backupCurrentIndex = nextTrackIndex
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         }
     }
@@ -390,6 +409,11 @@ class SpotifyPlaybackManager {
     func play(audioTrack: Musubi.ViewModel.AudioTrack) async throws {
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
         
+        // TODO: check this (afaik this is Spotify's behavior)
+        if self.repeatState == .track {
+            self.repeatState = .context
+        }
+        
         guard let audioTrackList = audioTrack.parent else {
             try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
             try await Remote.setShuffle(state: self.shuffle)
@@ -398,6 +422,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
             return
         }
@@ -415,6 +440,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         
         case is Spotify.AudioTrack:
@@ -425,6 +451,7 @@ class SpotifyPlaybackManager {
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
@@ -435,6 +462,7 @@ class SpotifyPlaybackManager {
             self.context = .local(audioTrackList: audioTrackList)
             self.backupCurrentIndex = index
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         
         default:
@@ -444,12 +472,12 @@ class SpotifyPlaybackManager {
     
     func pause() async throws {
         try await Remote.pause()
-        self.isPlaying = false
+        self.remotePlaybackPoller?.fire()
     }
     
     func resume() async throws {
         try await Remote.resume()
-        self.isPlaying = true
+        self.remotePlaybackPoller?.fire()
     }
     
     func skipToNext() async throws {
@@ -459,6 +487,7 @@ class SpotifyPlaybackManager {
             self.remotePlaybackPoller?.fire()
             
         case .local:
+            // TODO: check this (afaik this is Spotify's behavior)
             if self.repeatState == .track {
                 self.repeatState = .context
             }
@@ -479,6 +508,7 @@ class SpotifyPlaybackManager {
             
             self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
             
+            // TODO: check this (afaik this is Spotify's behavior)
             if self.repeatState == .track {
                 self.repeatState = .context
             }
@@ -505,6 +535,7 @@ class SpotifyPlaybackManager {
             self.currentTrack = previousTrack
             self.backupCurrentIndex = previousTrackIndex
             self.positionMilliseconds = 0
+            self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
         }
     }
@@ -529,6 +560,7 @@ class SpotifyPlaybackManager {
         self.isRequestingRemoteSeek = true
         self.positionMilliseconds = toPositionMilliseconds
         try await Remote.seek(toPositionMilliseconds: Int(toPositionMilliseconds))
+        self.localPlaybackPollerLastReference = nil
         self.isRequestingRemoteSeek = false
         self.remotePlaybackPoller?.fire()
     }
@@ -546,7 +578,7 @@ class SpotifyPlaybackManager {
         try await Remote.transferPlaybackTo(deviceID: deviceID)
     }
     
-    func resetOnLossOfActiveDevice() async throws {
+    func resetOnLossOfActiveDevice() async {
         // Note this function is attached to onChange listeners for `self.activeDeviceIndex = nil`,
         // so avoid setting it in infinite recursion.
         
@@ -562,6 +594,8 @@ class SpotifyPlaybackManager {
         self.positionMilliseconds = 0
         self.isRequestingRemoteSeek = false
         self.backupCurrentIndex = nil
+        
+        self.localPlaybackPollerLastReference = nil
     }
     
     enum CustomError: LocalizedError {
