@@ -10,16 +10,77 @@ struct PlayerSheet: View {
     
     @State private var coverImage: UIImage? = nil
     private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .gray }
-    let COVER_IMAGE_SIZE = Musubi.UI.ImageDimension.playerCover.rawValue
     
     @State private var isScrubbing = false
     @State private var sliderPositionMilliseconds: Double = SpotifyPlaybackManager.POSITION_MS_SLIDER_MIN
     
+    @State private var isTitleMultiline = false
+    @State private var isArtistsMultiline = false
+    
+    private enum CustomScrollPosition {
+        case expandedArtistInfo
+    }
+    
     var body: some View {
         @Bindable var spotifyPlaybackManager = spotifyPlaybackManager
         
+        ScrollViewReader { scrollProxy in
         ScrollView {
             if let currentTrack = spotifyPlaybackManager.currentTrack {
+                ZStack {
+                // MARK: - hidden measurements
+                Text(currentTrack.audioTrack.name)
+                    .font(.title2.leading(.tight))
+                    .fontWeight(.bold)
+                    .padding(.horizontal)
+                    .lineLimit(1)
+                    .hidden()
+                    .background(
+                        content: {
+                            ViewThatFits(in: .vertical) {
+                                Text(currentTrack.audioTrack.name)
+                                    .font(.title2.leading(.tight))
+                                    .fontWeight(.bold)
+                                    .padding(.horizontal)
+                                    .hidden()
+                                    .onAppear {
+                                        isTitleMultiline = false
+                                    }
+                                Color.clear
+                                    .hidden()
+                                    .onAppear {
+                                        isTitleMultiline = true
+                                    }
+                            }
+                        }
+                    )
+                Text(currentTrack.audioTrack.artists.map { $0.name }.joined(separator: "   •   "))
+                    .font(.subheadline)
+                    .bold()
+                    .padding(.horizontal)
+                    .lineLimit(1)
+                    .hidden()
+                    .background(
+                        content: {
+                            ViewThatFits(in: .vertical) {
+                                Text(currentTrack.audioTrack.artists.map { $0.name }.joined(separator: "   •   "))
+                                    .font(.subheadline)
+                                    .bold()
+                                    .padding(.horizontal)
+                                    .hidden()
+                                    .onAppear {
+                                        isArtistsMultiline = false
+                                    }
+                                Color.clear
+                                    .hidden()
+                                    .onAppear {
+                                        isArtistsMultiline = true
+                                    }
+                            }
+                        }
+                    )
+                
+                // MARK: - visible view
                 VStack(alignment: .leading) {
                     HStack(alignment: .center) {
                         Button(
@@ -31,9 +92,6 @@ struct PlayerSheet: View {
                         Spacer()
                         // TODO: make tappable / automate nav
                         VStack(alignment: .center) {
-                            Text("Current Playback Context")
-                                .font(.caption2)
-                                .opacity(0.81)
                             Text(currentTrack.parent?.context.type ?? "Single Track")
                                 .font(.caption)
                                 .lineLimit(1, reservesSpace: true)
@@ -49,25 +107,30 @@ struct PlayerSheet: View {
                             showParentSheet: $showSheet
                         )
                     }
-                    .padding()
-                    HStack {
-                        Spacer()
-                        if let coverImage = coverImage {
-                            Image(uiImage: coverImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: COVER_IMAGE_SIZE, height: COVER_IMAGE_SIZE)
-                                .clipped()
-                        } else {
-                            ProgressView()
-                                .frame(width: COVER_IMAGE_SIZE, height: COVER_IMAGE_SIZE)
-                        }
-                        Spacer()
-                    }
-                    Text(currentTrack.audioTrack.name)
+                    .padding(.top)
+                    Text("balancer")
                         .font(.title2.leading(.tight))
                         .fontWeight(.bold)
-                        .padding([.horizontal, .top])
+                        .hidden()
+                    if let coverImage = coverImage {
+                        Image(uiImage: coverImage)
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .frame(height: min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 40)
+                            Spacer()
+                        }
+                    }
+                    Text("\(isTitleMultiline ? "" : "\n")\(currentTrack.audioTrack.name)")
+                        .font(.title2.leading(.tight))
+                        .fontWeight(.bold)
+                        .lineLimit(2, reservesSpace: true)
+                        .multilineTextAlignment(.leading)
+                        .padding(.top)
+                    if !isArtistsMultiline {
                     HStack {
                         ForEach(
                             Array(zip(
@@ -89,11 +152,52 @@ struct PlayerSheet: View {
                                         .font(.subheadline)
                                         .bold()
                                         .opacity(0.81)
+                                        .lineLimit(1)
                                 }
                             )
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.bottom)
+                    } else if !currentTrack.audioTrack.artists.isEmpty {
+                        HStack {
+                            Button(
+                                action: { openRelatedPage(spotifyNavigable: currentTrack.audioTrack.artists.first!) },
+                                label: {
+                                    Text(currentTrack.audioTrack.artists.first!.name)
+                                        .font(.subheadline)
+                                        .bold()
+                                        .opacity(0.81)
+                                        .lineLimit(1)
+                                }
+                            )
+                            if currentTrack.audioTrack.artists.count > 1 {
+                                Text("•")
+                                    .font(.subheadline)
+                                    .bold()
+                                    .opacity(0.81)
+                                Button(
+                                    action: {
+                                        withAnimation {
+                                            scrollProxy.scrollTo(CustomScrollPosition.expandedArtistInfo)
+                                        }
+                                    },
+                                    label: {
+                                        Text("\(currentTrack.audioTrack.artists.count - 1) more")
+                                            .font(.subheadline)
+                                            .opacity(0.81)
+                                            .lineLimit(1)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.bottom)
+                    } else {
+                        Text("placeholder")
+                            .font(.subheadline)
+                            .bold()
+                            .padding(.bottom)
+                            .hidden()
+                    }
                     Slider(
                         value: isScrubbing ? $sliderPositionMilliseconds : $spotifyPlaybackManager.positionMilliseconds,
                         in: SpotifyPlaybackManager.POSITION_MS_SLIDER_MIN...Double(currentTrack.audioTrack.duration_ms),
@@ -117,7 +221,6 @@ struct PlayerSheet: View {
                             isScrubbing = newValue
                         }
                     )
-                    .padding(.horizontal)
                     HStack(alignment: .center) {
                         Button {
                             Task { try await spotifyPlaybackManager.toggleShuffle() }
@@ -175,8 +278,12 @@ struct PlayerSheet: View {
                             }
                         }
                     }
-                    .padding(.horizontal)
+                    VStack {
+                        // TODO: expanded artist info
+                    }
+                    .id(CustomScrollPosition.expandedArtistInfo)
                 }
+                .padding(.horizontal)
                 .background(
                     LinearGradient(
                         stops: [
@@ -188,9 +295,11 @@ struct PlayerSheet: View {
                         endPoint: .bottom
                     )
                 )
+                }
             } else {
                 Text("Something went wrong, please try again.")
             }
+        }
         }
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadCoverImage()

@@ -30,7 +30,7 @@ extension Musubi.UI {
         case cellThumbnail = 42
         case audioTracklistCover = 262
         case artistCover = 162
-        case playerCover = 286
+//        case playerCover = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 52.0
     }
     
 //    static let MENU_SYMBOL_SIZE: Double = 25
