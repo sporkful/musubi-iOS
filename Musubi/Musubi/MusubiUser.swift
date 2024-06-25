@@ -47,6 +47,7 @@ extension Musubi {
             try JSONEncoder().encode(handles).write(to: self.LOCAL_CLONES_INDEX_FILE, options: .atomic)
         }
         
+        // TODO: change from handles to references
         // TODO: do we need to make this async / run on MainActor only? if so how?
         // Called from inside a navigationDestination callback (LocalClonesTabRoot)
         func openLocalClone(repositoryHandle handleToOpen: RepositoryHandle) -> RepositoryClone? {

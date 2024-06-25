@@ -13,67 +13,40 @@ struct CommitHistoryPage: View {
     @State private var commitHistory: [Musubi.RepositoryCommit] = []
     
     @State private var showAlertErrorLoadHistory = false
-    @State private var showAlertErrorCheckout = false
     
     var body: some View {
         NavigationStack {
             List {
                 ForEach(commitHistory) { commit in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(commit.commit.message)
-                            Text(commit.commit.date.formatted())
-                                .font(.caption)
-                        }
-                        Spacer()
-                        Button {
-                            checkoutCommit(commit: commit)
-                        } label: {
-                            Image(systemName: "tray.and.arrow.up")
-                                .contentShape(Rectangle())
-                        }
+                    NavigationLink(value: commit) {
+                        ListCellWrapper(
+                            item: commit,
+                            showThumbnail: false,
+                            customTextStyle: .defaultStyle
+                        )
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    VStack {
-                        Text("Commit history")
-                            .font(.caption)
-                        Text(repositoryClone.repositoryReference.name)
-                            .font(.headline)
-                    }
-                    .padding(.vertical, 5)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(
-                        role: .cancel,
-                        action: {
-                            showSheet = false
-                        },
-                        label: {
-                            Text("Done")
-                        }
-                    )
-                }
-                // balances out above
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("Done")
-                        .hidden()
-                }
+            .navigationDestination(for: Musubi.RepositoryCommit.self) { commit in
+                CommitDetailPage(
+                    commit: commit,
+                    repositoryClone: repositoryClone,
+                    showParentSheet: $showSheet,
+                    isParentSheetDisabled: $isSheetDisabled
+                )
             }
             .interactiveDismissDisabled(true)
+            .withCustomSheetNavbar(
+                caption: "Commit history",
+                title: repositoryClone.repositoryReference.name,
+                cancellationControl: .init(title: "Close", action: { showSheet = false }),
+                primaryControl: nil
+            )
             .alert(
                 "Error when loading commit history",
                 isPresented: $showAlertErrorLoadHistory,
                 actions: {
-                    Button(
-                        "OK",
-                        action: {
-                            showSheet = false
-                        }
-                    )
+                    Button("OK", action: { showSheet = false })
                 }, message: {
                     Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                 }
@@ -103,24 +76,80 @@ struct CommitHistoryPage: View {
                 )
             }
         } catch {
-            print("[Musubi::NewCommitPage] failed to diff from head")
+            print("[Musubi::CommitHistoryPage] failed to load commit history")
             print(error.localizedDescription)
             showAlertErrorLoadHistory = true
         }
     }
+}
+
+fileprivate struct CommitDetailPage: View {
+    let commit: Musubi.RepositoryCommit
     
-    private func checkoutCommit(commit: Musubi.RepositoryCommit) {
-        // TODO: warn user if they have uncommitted changes (but allow case where user checks out commits in succession)
+    @Bindable var repositoryClone: Musubi.RepositoryClone
+    
+    @Binding var showParentSheet: Bool
+    @Binding var isParentSheetDisabled: Bool
+    
+    @State private var audioTrackList: Musubi.ViewModel.AudioTrackList? = nil
+    
+    @State private var showAlertErrorCheckout = false
+    
+    var body: some View {
+        List {
+            if let audioTrackList = self.audioTrackList {
+                ForEach(audioTrackList.contents, id: \.self) { audioTrack in
+                    ListCellWrapper(
+                        item: audioTrack,
+                        showThumbnail: true,
+                        customTextStyle: .defaultStyle,
+                        showAudioTrackMenu: true
+                    )
+                }
+            }
+        }
+        .interactiveDismissDisabled(true)
+        .withCustomSheetNavbar(
+            caption: commit.repositoryReference.name,
+            title: commit.commit.message,
+            cancellationControl: nil,
+            primaryControl: .init(title: "Checkout", action: { checkoutCommit() })
+        )
+        .alert(
+            "Error when checking out commit",
+            isPresented: $showAlertErrorCheckout,
+            actions: {},
+            message: {
+                Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+            }
+        )
+        .task {
+            await loadAudioTrackList()
+        }
+    }
+    
+    private func loadAudioTrackList() async {
+        self.audioTrackList = await Musubi.ViewModel.AudioTrackList(
+            repositoryCommit: self.commit,
+            knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData()
+        )
+    }
+    
+    private func checkoutCommit() {
+        guard let audioTrackList = self.audioTrackList else {
+            return
+        }
         
-        isSheetDisabled = true
+        // TODO: warn user if they have uncommitted changes (but allow case where user checks out commits in succession)
+        isParentSheetDisabled = true
         Task {
-            defer { isSheetDisabled = false }
+            defer { isParentSheetDisabled = false }
             
             do {
-                try await repositoryClone.checkoutCommit(commit: commit.commit)
-                showSheet = false
+                try await repositoryClone.checkoutCommit(audioTrackList: audioTrackList)
+                showParentSheet = false
             } catch {
-                print("[Musubi::NewCommitPage] failed to commit")
+                print("[Musubi::CommitHistoryPage::CommitDetailPage] failed to check out commit")
                 print(error.localizedDescription)
                 showAlertErrorCheckout = true
             }

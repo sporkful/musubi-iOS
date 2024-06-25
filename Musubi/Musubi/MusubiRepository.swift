@@ -14,12 +14,14 @@ extension Musubi {
             case cloning(detail: String)
             case committing(detail: String)
             case misc(detail: String)
+            case DEV(detail: String)
 
             var errorDescription: String? {
                 let description = switch self {
                     case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
                     case let .committing(detail): "(committing) \(detail)"
                     case let .misc(detail): "\(detail)"
+                    case let .DEV(detail): "(DEV) \(detail)"
                 }
                 return "[Musubi::Repository] \(description)"
             }
@@ -100,7 +102,7 @@ extension Musubi {
         }
     }
     
-    struct RepositoryCommit: Identifiable {
+    struct RepositoryCommit: Identifiable, Hashable {
         let repositoryReference: RepositoryReference
         let commitID: String
         let commit: Musubi.Model.Commit
@@ -256,13 +258,19 @@ extension Musubi {
                 try self.saveHeadPointer()
         }
         
-        func checkoutCommit(commit: Musubi.Model.Commit) async throws {
-            let blob = try Musubi.Storage.LocalFS.loadBlob(blobID: commit.blobID)
-            try Data(blob.utf8).write(to: STAGING_AREA_FILE, options: .atomic)
+        func checkoutCommit(audioTrackList: Musubi.ViewModel.AudioTrackList) async throws {
+            guard let repositoryCommit = audioTrackList.context as? RepositoryCommit,
+                  repositoryCommit.repositoryReference.handle == self.repositoryReference.handle
+            else {
+                throw Musubi.Repository.Error.DEV(detail: "called checkoutCommit with ATL with unexpected context")
+            }
             
-            // TODO: properly dispose of previous AudioTrackList instance
-            // TODO: synchronization wrt file system?
-            self.stagedAudioTrackList = Musubi.ViewModel.AudioTrackList(repositoryReference: self.repositoryReference)
+            try await audioTrackList.initialHydrationTask.value
+            
+            try await self.stagedAudioTrackList.refreshContentsIfNeeded(
+                newContents: audioTrackList.contents.map { $0.audioTrack }
+            )
+            try! await saveStagingArea() // intentional fail-fast
         }
     }
 }

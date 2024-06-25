@@ -14,6 +14,8 @@ struct SingleAudioTrackMenu: View {
     // if N/A, just pass in constant binding
     @Binding var showParentSheet: Bool
     
+    var isInListCell: Bool = false
+    
     @State private var showSheetAddToSelectableClones = false
     
     @State private var showAlertUnsupportedAction = false
@@ -92,10 +94,15 @@ struct SingleAudioTrackMenu: View {
                 }
             )
         } label: {
-            Image(systemName: "ellipsis")
-//                .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
-//                .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                .contentShape(Rectangle())
+            if isInListCell {
+                Image(systemName: "ellipsis")
+//                    .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
+                    .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                    .contentShape(Rectangle())
+            } else {
+                Image(systemName: "ellipsis")
+                    .contentShape(Rectangle())
+            }
         }
         .sheet(isPresented: $showSheetAddToSelectableClones) {
             // Note decoupling with parent AudioTrackList is intentional here.

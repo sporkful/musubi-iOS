@@ -11,7 +11,7 @@ struct LocalClonesTabRoot: View {
         ScrollViewReader { scrollProxy in
             List {
                 ForEach(currentUser.localClonesIndex) { repositoryReference in
-                    NavigationLink(value: repositoryReference.handle) {
+                    NavigationLink(value: repositoryReference) {
                         ListCellWrapper(
                             item: repositoryReference,
                             showThumbnail: true,

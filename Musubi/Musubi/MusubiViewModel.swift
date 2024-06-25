@@ -9,6 +9,7 @@ extension Musubi {
     }
 }
 
+// TODO: extract what's necessary for AudioTrackListPage
 protocol AudioTrackListContext {
     var id: String { get } // TODO: check that IDs are unique across types
     var uri: String { get }
@@ -39,9 +40,9 @@ extension Musubi.RepositoryReference: AudioTrackListContext {
 
 extension Musubi.RepositoryCommit: AudioTrackListContext {
     var uri: String { "musubi:commit:\(self.id)" }
-    @MainActor var name: String { "[COMMIT] \(self.repositoryReference.name)" }
-    var formattedDescription: String? { "[COMMIT MESSAGE] \(self.commit.message)" }
-    @MainActor var coverImageURLString: String? { self.repositoryReference.coverImageURLString }
+    @MainActor var name: String { "\(self.repositoryReference.name)\n\"\(self.commit.message)\"" }
+    var formattedDescription: String? { nil }
+    var coverImageURLString: String? { nil }
     var associatedPeople: [any SpotifyPerson] {
         if let currentUserInfo = Musubi.UserManager.shared.currentUser?.spotifyInfo {
             [currentUserInfo]
@@ -452,12 +453,10 @@ extension Musubi.ViewModel {
             }
         }
         
+        // Note no need to use another hydration task since this is fully MainActor-isolated and is
+        // not bound by expensive I/O.
         func refreshContentsIfNeeded(newContents: [Spotify.AudioTrack]) async throws {
             try await self.initialHydrationTask.value
-            
-            guard let _ = self.context as? Spotify.PlaylistMetadata else {
-                throw CustomError.DEV(detail: "called refreshContentsIfNeeded on non-playlist")
-            }
             
             if newContents != self.contents.map({ $0.audioTrack }) {
                 self._removeAll()

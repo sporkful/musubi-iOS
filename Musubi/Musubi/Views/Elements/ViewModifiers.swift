@@ -122,6 +122,12 @@ struct CustomSheetNavbar: ViewModifier {
                             }
                         )
                     }
+                } else {
+                    // invisible balancer
+                    ToolbarItem(placement: .topBarLeading) {
+                        Text(primaryControl?.title ?? "Done")
+                            .hidden()
+                    }
                 }
                 if let primaryControl = self.primaryControl {
                     ToolbarItem(placement: .topBarTrailing) {

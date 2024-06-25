@@ -133,8 +133,13 @@ struct NewCommitPage: View {
             )
             
             // TODO: make waiting for hydration implicit (as part of ViewModel.AudioTrackList)
+            try await self.repositoryClone.stagedAudioTrackList.initialHydrationTask.value
             try await self.headAudioTrackList!.initialHydrationTask.value
-            if await self.headAudioTrackList!.contents == self.repositoryClone.stagedAudioTrackList.contents {
+            
+            if await self.headAudioTrackList!.contents.elementsEqual(
+                self.repositoryClone.stagedAudioTrackList.contents,
+                by: { ($0.audioTrackID == $1.audioTrackID) && ($0.occurrence == $1.occurrence) }
+            ) {
                 showAlertNoChangesToCommit = true
                 return
             }

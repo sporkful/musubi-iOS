@@ -41,9 +41,9 @@ struct HomeView: View {
             // MARK: - "My Repositories" tab
             NavigationStack(path: $homeViewCoordinator.myReposNavPath) {
                 LocalClonesTabRoot()
-                    .navigationDestination(for: Musubi.RepositoryHandle.self) { repositoryHandle in
+                    .navigationDestination(for: Musubi.RepositoryReference.self) { repositoryReference in
                         // TODO: better error handling?
-                        if let repositoryClone = currentUser.openLocalClone(repositoryHandle: repositoryHandle) {
+                        if let repositoryClone = currentUser.openLocalClone(repositoryHandle: repositoryReference.handle) {
                             LocalClonePage(
                                 navigationPath: $homeViewCoordinator.myReposNavPath,
                                 repositoryClone: repositoryClone

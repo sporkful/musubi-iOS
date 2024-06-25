@@ -34,6 +34,12 @@ extension Musubi.ViewModel.AudioTrack: CustomPreviewable {
     var thumbnailURLString: String? { self.audioTrack.images?.last?.url }
 }
 
+extension Musubi.RepositoryCommit: CustomPreviewable {
+    var title: String { self.commit.message }
+    var caption: String? { self.commit.date.formatted() }
+    var thumbnailURLString: String? { nil }
+}
+
 extension Spotify.ArtistMetadata: CustomPreviewable {
     var title: String { self.name }
     var caption: String? { "Artist" }
@@ -103,7 +109,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 if showAudioTrackMenu {
                     SingleAudioTrackMenu(
                         audioTrack: audioTrack,
-                        showParentSheet: Binding.constant(false)
+                        showParentSheet: Binding.constant(false),
+                        isInListCell: true
                     )
                 }
             }
