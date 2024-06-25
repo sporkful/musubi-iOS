@@ -208,7 +208,7 @@ struct ListCell: View {
                     Text(title)
                         .lineLimit(1)
                 }
-                .foregroundStyle(isActive ? .green : .white)
+                .foregroundStyle((isActive && customTextStyle.color == .none) ? .green : customTextStyle.color.color)
                 if let caption = self.caption {
                     Text(caption)
                         .font(.caption)

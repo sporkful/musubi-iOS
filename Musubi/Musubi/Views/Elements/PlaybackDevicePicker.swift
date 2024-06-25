@@ -2,15 +2,13 @@
 
 import SwiftUI
 
-// TODO: try custom menu, which might allow detecting when menu is expanded/retracted (finer-grained polling)
-
 struct PlaybackDevicePicker: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
     let outerLabelStyle: CustomOuterLabelStyle
     
     enum CustomOuterLabelStyle {
-        case iconOnly, textOnly
+        case iconOnly, fullBody, fullFootnote
     }
     
     // only runs when picker is visible
@@ -21,6 +19,7 @@ struct PlaybackDevicePicker: View {
     var body: some View {
         @Bindable var spotifyPlaybackManager = spotifyPlaybackManager
         
+        Menu {
         Picker(
             selection: $spotifyPlaybackManager.activeDeviceIndex,
             content: {
@@ -31,28 +30,55 @@ struct PlaybackDevicePicker: View {
                     )),
                     id: \.0
                 ) { index, device in
-                    HStack {
-                        Text(device.name)
-                        Image(systemName: device.sfSymbolName)
-                    }
-                    .tag(Optional(index))
+                    Label(device.name, systemImage: device.sfSymbolName)
+                        .tag(Optional(index))
                 }
                 if spotifyPlaybackManager.activeDeviceIndex == nil {
                     Text("None").tag(nil as Int?)
                 }
             },
-            label: {
-                if outerLabelStyle == .textOnly {
-                    Text("Device")
-                } else {
+            label: {}
+        )
+        } label: {
+                if outerLabelStyle == .iconOnly {
                     if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
                         Image(systemName: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName)
                     } else {
                         Image(systemName: "iphone.sizes")
                     }
+                } else if outerLabelStyle == .fullBody {
+                    HStack {
+                        if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
+                            HStack {
+                                Image(systemName: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName)
+                                Text(spotifyPlaybackManager.availableDevices[activeDeviceIndex].name)
+                            }
+                            .foregroundStyle(Color.green)
+                        } else {
+                            Text("None")
+                        }
+                        Image(systemName: "chevron.up.chevron.down")
+                    }
+                } else if outerLabelStyle == .fullFootnote {
+                    if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
+                        Label(
+                            spotifyPlaybackManager.availableDevices[activeDeviceIndex].name,
+                            systemImage: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName
+                        )
+                        .font(.caption)
+                        .foregroundStyle(Color.green)
+                    } else {
+                        Label(
+                            "Select a device",
+                            systemImage: "iphone.sizes"
+                        )
+                        .font(.caption)
+                        .opacity(0.81)
+                    }
+                } else {
+                    Text("Device")
                 }
-            }
-        )
+        }
         .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: false) {
             Task { @MainActor in
                 if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex,
@@ -64,6 +90,7 @@ struct PlaybackDevicePicker: View {
                 }
             }
         }
+        // TODO: figure out how to attach callbacks to menu expanding/collapsing (attaching to inner picker doesn't work)
         .onAppear(perform: startPoller)
         .onDisappear(perform: stopPoller)
     }

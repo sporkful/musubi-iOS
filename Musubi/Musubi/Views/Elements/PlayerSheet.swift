@@ -28,6 +28,7 @@ struct PlayerSheet: View {
         ScrollView {
             if let currentTrack = spotifyPlaybackManager.currentTrack {
                 ZStack {
+                
                 // MARK: - hidden measurements
                 Text(currentTrack.audioTrack.name)
                     .font(.title2.leading(.tight))
@@ -81,6 +82,18 @@ struct PlayerSheet: View {
                     )
                 
                 // MARK: - visible view
+                
+                LinearGradient(
+                    stops: [
+                        Gradient.Stop(color: Color(backgroundHighlightColor), location: 0),
+                        Gradient.Stop(color: Color(backgroundHighlightColor), location: 0.420),
+                        Gradient.Stop(color: .black, location: 1),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: Musubi.UI.SCREEN_HEIGHT)
+                
                 VStack(alignment: .leading) {
                     HStack(alignment: .center) {
                         Button(
@@ -92,7 +105,7 @@ struct PlayerSheet: View {
                         Spacer()
                         // TODO: make tappable / automate nav
                         VStack(alignment: .center) {
-                            Text(currentTrack.parent?.context.type ?? "Single Track")
+                            Text(currentTrack.parent?.context.type ?? "")
                                 .font(.caption)
                                 .lineLimit(1, reservesSpace: true)
                             Text(currentTrack.parent?.context.name ?? "")
@@ -278,31 +291,47 @@ struct PlayerSheet: View {
                             }
                         }
                     }
+                    HStack {
+                        PlaybackDevicePicker(outerLabelStyle: .fullFootnote)
+                        Spacer()
+                        // TODO: queue?
+                    }
+                    .padding(.vertical)
                     VStack {
                         // TODO: expanded artist info
                     }
                     .id(CustomScrollPosition.expandedArtistInfo)
+                    Spacer()
                 }
                 .padding(.horizontal)
-                .background(
-                    LinearGradient(
-                        stops: [
-                            Gradient.Stop(color: Color(backgroundHighlightColor), location: 0),
-                            Gradient.Stop(color: Color(backgroundHighlightColor), location: 0.618),
-                            Gradient.Stop(color: .black, location: 1),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
                 }
             } else {
-                Text("Something went wrong, please try again.")
+                ZStack {
+                    Color.black
+                        .frame(height: Musubi.UI.SCREEN_HEIGHT)
+                    HStack {
+                        Spacer()
+                        Text("Something went wrong, please try again.")
+                        Spacer()
+                    }
+                    .padding()
+                }
+            }
+        }
+        .background {
+            VStack(spacing: 0) {
+                Color(backgroundHighlightColor)
+                Color.black
             }
         }
         }
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadCoverImage()
+        }
+        .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: true) { _, newValue in
+            if newValue == nil {
+                showSheet = false
+            }
         }
         .interactiveDismissDisabled(false)
     }

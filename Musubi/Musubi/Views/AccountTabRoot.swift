@@ -19,7 +19,11 @@ struct AccountTabRoot: View {
                     }
                 }
                 Section {
-                    PlaybackDevicePicker(outerLabelStyle: .textOnly)
+                    HStack {
+                        Text("Device")
+                        Spacer()
+                        PlaybackDevicePicker(outerLabelStyle: .fullBody)
+                    }
                 } header: {
                     Text("Playback")
                 } footer: {
