@@ -12,11 +12,12 @@ extension Musubi.ViewModel.AudioTrackList {
             try await other.initialHydrationTask.value
             
             return self.contents
-                .difference(
-                    from: other.contents,
-                    by: { ($0.audioTrackID == $1.audioTrackID) && ($0.occurrence == $1.occurrence) }
-                )
-                .inferringMoves()
+//                .difference(
+//                    from: other.contents,
+//                    by: { ($0.audioTrackID == $1.audioTrackID) && ($0.occurrence == $1.occurrence) }
+//                )
+                .difference(from: other.contents)
+                .inferringMoves() // MARK: note that inferringMoves wouldn't take custom `by` comparator into account.
         }
         
         func differenceWithLiveMoves(

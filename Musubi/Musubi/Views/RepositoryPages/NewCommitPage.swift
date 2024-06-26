@@ -38,21 +38,51 @@ struct NewCommitPage: View {
                                         customTextStyle: .defaultStyle,
                                         showAudioTrackMenu: false
                                     )
+                                
                                 case .inserted(associatedWith: let associatedWith):
-                                    ListCellWrapper(
-                                        item: visualChange.element,
-                                        showThumbnail: true,
-                                        customTextStyle: .init(color: .green, bold: true),
-                                        showAudioTrackMenu: false
-                                    )
+                                    HStack {
+                                        if associatedWith != nil {
+                                            Image(systemName: "arrow.right")
+                                                .foregroundStyle(Color.green)
+                                                .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                        } else {
+                                            Image(systemName: "plus")
+                                                .foregroundStyle(Color.green)
+                                                .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                        }
+                                        ListCellWrapper(
+                                            item: visualChange.element,
+                                            showThumbnail: true,
+                                            customTextStyle: .init(color: .green, bold: true),
+                                            showAudioTrackMenu: false
+                                        )
+                                    }
                                     .listRowBackground(Color.green.opacity(0.180))
+                                
                                 case .removed(associatedWith: let associatedWith):
-                                    ListCellWrapper(
-                                        item: visualChange.element,
-                                        showThumbnail: true,
-                                        customTextStyle: .init(color: .red, bold: true),
-                                        showAudioTrackMenu: false
-                                    )
+                                    HStack {
+                                        if let associatedWith = associatedWith {
+                                            if associatedWith < visualDiffFromHead.firstIndex(of: visualChange)! {
+                                                Image(systemName: "arrow.up")
+                                                    .foregroundStyle(Color.red)
+                                                    .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                            } else {
+                                                Image(systemName: "arrow.down")
+                                                    .foregroundStyle(Color.red)
+                                                    .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                            }
+                                        } else {
+                                            Image(systemName: "minus")
+                                                .foregroundStyle(Color.red)
+                                                .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                        }
+                                        ListCellWrapper(
+                                            item: visualChange.element,
+                                            showThumbnail: true,
+                                            customTextStyle: .init(color: .red, bold: true),
+                                            showAudioTrackMenu: false
+                                        )
+                                    }
                                     .listRowBackground(Color.red.opacity(0.180))
                             }
                         }

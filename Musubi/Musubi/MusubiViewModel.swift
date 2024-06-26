@@ -9,7 +9,7 @@ extension Musubi {
     }
 }
 
-// TODO: extract what's necessary for AudioTrackListPage
+// TODO: extract what's necessary for AudioTrackListPage vs PlayerSheet
 protocol AudioTrackListContext {
     var id: String { get } // TODO: check that IDs are unique across types
     var uri: String { get }
@@ -88,6 +88,9 @@ extension Spotify.AudioTrack: AudioTrackListContext {
 }
 
 extension Musubi.ViewModel {
+    // TODO: rethink design - currently `parent` isn't included in `==` of `AudioTrack`s since
+    // that breaks assumptions that were made when developing diffing functionality.
+    // However, this behavior can be unexpected and undesirable down the road.
     struct AudioTrack: Equatable, Hashable, CustomStringConvertible {
         let audioTrackID: Spotify.ID  // note redundancy with self.audioTrack is for legacy reasons.
         
@@ -152,13 +155,13 @@ extension Musubi.ViewModel {
         ) -> Bool {
             return lhs.audioTrackID == rhs.audioTrackID
                 && lhs.occurrence == rhs.occurrence
-                && lhs.parent?.context.id == rhs.parent?.context.id
+//                && lhs.parent?.context.id == rhs.parent?.context.id
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(audioTrackID)
             hasher.combine(occurrence)
-            hasher.combine(parent?.context.id ?? "")
+//            hasher.combine(parent?.context.id ?? "")
         }
     }
     

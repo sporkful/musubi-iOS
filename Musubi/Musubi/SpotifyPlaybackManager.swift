@@ -259,6 +259,7 @@ class SpotifyPlaybackManager {
                     // context at the appropriate time.
                     if !remoteState.is_playing && (remoteState.progress_ms ?? 0) == 0 {
                         try await playNextInLocalContext()
+                        return
                     }
                 } else {
                     // Remote has taken the reins from local control.
