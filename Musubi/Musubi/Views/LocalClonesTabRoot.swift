@@ -33,6 +33,14 @@ struct LocalClonesTabRoot: View {
                     scrollProxy.scrollTo(newState)
                 }
             }
+            .task {
+                // TODO: check for races
+                // staggered refresh to stay within rate limit // TODO: tune / organize this
+                for repositoryReference in currentUser.localClonesIndex {
+                    try? await repositoryReference.refreshExternalMetadata()
+                    try? await Task.sleep(until: .now + .seconds(2), clock: .continuous)
+                }
+            }
         }
     }
 }

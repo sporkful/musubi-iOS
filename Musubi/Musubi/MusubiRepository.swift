@@ -48,48 +48,29 @@ extension Musubi {
         
         private(set) var externalMetadata: Spotify.PlaylistMetadata?
         
-        private var refreshTimer: Timer?
-        private let REFRESH_INTERVAL: TimeInterval = 3 * 60.0 // TODO: tune this for Spotify's rate limit
-        
         nonisolated var id: String { handle.id }
+        
+        private var lastAttemptedRefresh: Date = Date.distantPast
+        private let REFRESH_COOLDOWN: TimeInterval = 60.0 // TODO: tune this for Spotify's rate limit
         
         // TODO: enforce that only MusubiUser can call this constructor
         init(handle: RepositoryHandle) {
             self.handle = handle
             
-            Task {
-                await startPeriodicRefresh()
-            }
+            Task { try await refreshExternalMetadata() }
         }
         
-        private func refresh() async throws {
+        func refreshExternalMetadata() async throws {
+            if Date.now.timeIntervalSince(lastAttemptedRefresh) < REFRESH_COOLDOWN {
+                return
+            }
+            lastAttemptedRefresh = Date.now
+            
             let newMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.handle.playlistID)
             
             // Avoid triggering unnecessary SwiftUI updates.
             if newMetadata != self.externalMetadata {
                 self.externalMetadata = newMetadata
-            }
-        }
-        
-        private func startPeriodicRefresh() async {
-            if self.refreshTimer == nil {
-                self.refreshTimer = Timer.scheduledTimer(withTimeInterval: REFRESH_INTERVAL, repeats: true) {
-                    [weak self] (_) in
-                    Task { [weak self] in
-                        try await self?.refresh()
-                    }
-                }
-                self.refreshTimer?.fire()
-            }
-        }
-        
-        func pausePeriodicRefresh(forTimeInSeconds seconds: TimeInterval) async {
-            self.refreshTimer?.invalidate()
-            self.refreshTimer = nil
-            
-            Task {
-                try await Task.sleep(until: .now + .seconds(seconds), clock: .continuous)
-                await startPeriodicRefresh()
             }
         }
         

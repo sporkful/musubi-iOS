@@ -47,16 +47,15 @@ extension Musubi {
             try JSONEncoder().encode(handles).write(to: self.LOCAL_CLONES_INDEX_FILE, options: .atomic)
         }
         
-        // TODO: change from handles to references
         // TODO: do we need to make this async / run on MainActor only? if so how?
         // Called from inside a navigationDestination callback (LocalClonesTabRoot)
-        func openLocalClone(repositoryHandle handleToOpen: RepositoryHandle) -> RepositoryClone? {
-            if handleToOpen == self.openedLocalClone?.repositoryReference.handle {
+        func openLocalClone(repositoryReference referenceToOpen: RepositoryReference) -> RepositoryClone? {
+            if referenceToOpen == self.openedLocalClone?.repositoryReference {
                 return self.openedLocalClone
             }
             
-            if let repositoryReferenceToOpen = self.localClonesIndex.first(where: { $0.handle == handleToOpen }) {
-                self.openedLocalClone = try? Musubi.RepositoryClone(repositoryReference: repositoryReferenceToOpen)
+            if self.localClonesIndex.contains(referenceToOpen) {
+                self.openedLocalClone = try? Musubi.RepositoryClone(repositoryReference: referenceToOpen)
             } else {
                 self.openedLocalClone = nil
             }
@@ -95,7 +94,7 @@ extension Musubi {
         }
         
         // TODO: clean up reference-spaghetti between User and UserManager?
-        func initOrClone(repositoryHandle: Musubi.RepositoryHandle) async throws {
+        func initOrClone(repositoryHandle: Musubi.RepositoryHandle) async throws -> Musubi.RepositoryReference {
             if localClonesIndex.contains(where: { $0.handle == repositoryHandle }) {
                 throw Musubi.Repository.Error.cloning(detail: "called initOrClone on already cloned repo")
             }
@@ -111,9 +110,12 @@ extension Musubi {
             
             try saveClone(repositoryHandle: repositoryHandle, cloudResponse: cloudResponse)
             
-            self.localClonesIndex.append(Musubi.RepositoryReference(handle: repositoryHandle))
+            let newRepositoryReference = Musubi.RepositoryReference(handle: repositoryHandle)
+            self.localClonesIndex.append(newRepositoryReference)
             // TODO: better error handling here?
             try? await saveClonesIndex()
+            
+            return newRepositoryReference
         }
         
         // TODO: impl

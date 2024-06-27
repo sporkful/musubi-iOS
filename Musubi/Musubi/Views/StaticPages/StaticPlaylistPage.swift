@@ -88,6 +88,12 @@ struct StaticPlaylistPage: View {
             homeViewCoordinator.disableUI = true
             defer { homeViewCoordinator.disableUI = false }
             
+            guard let repositoryReference = self.currentUser.localClonesIndex.first(where: { $0.handle == self.associatedRepositoryHandle }) else {
+                print("[Musubi::StaticPlaylistPage] called openExistingClone when clone doesn't exist")
+                showAlertCloneError = true
+                return
+            }
+            
             homeViewCoordinator.myReposNavPath.removeLast(homeViewCoordinator.myReposNavPath.count)
             try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
             homeViewCoordinator.openTab = .myRepos
@@ -100,7 +106,7 @@ struct StaticPlaylistPage: View {
             
             homeViewCoordinator.disableUI = false
             try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            homeViewCoordinator.myReposNavPath.append(self.associatedRepositoryHandle)
+            homeViewCoordinator.myReposNavPath.append(repositoryReference)
         }
     }
     
@@ -119,25 +125,25 @@ struct StaticPlaylistPage: View {
                     try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
                     homeViewCoordinator.openTab = .myRepos
                 
-                    try await self.currentUser.initOrClone(
+                    let repositoryReference = try await self.currentUser.initOrClone(
                         repositoryHandle: Musubi.RepositoryHandle(
                             userID: currentUser.id,
                             playlistID: playlistMetadata.id
                         )
                     )
+                    
+                    homeViewCoordinator.myReposDesiredScrollAnchor = .bottom
+                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                    homeViewCoordinator.myReposDesiredScrollAnchor = .none
+                    homeViewCoordinator.disableUI = false
+                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                    homeViewCoordinator.myReposNavPath.append(repositoryReference)
                 } catch {
                     print("[Musubi::StaticPlaylistPage] initOrClone error")
                     print(error.localizedDescription)
                     showAlertCloneError = true
                     return
                 }
-            
-            homeViewCoordinator.myReposDesiredScrollAnchor = .bottom
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            homeViewCoordinator.myReposDesiredScrollAnchor = .none
-            homeViewCoordinator.disableUI = false
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            homeViewCoordinator.myReposNavPath.append(self.associatedRepositoryHandle)
         }
     }
     
