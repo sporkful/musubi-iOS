@@ -328,12 +328,23 @@ struct PlayerSheet: View {
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadCoverImage()
         }
-        .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: true) { _, newValue in
-            if newValue == nil {
-                showSheet = false
-            }
-        }
         .interactiveDismissDisabled(false)
+        .alert(
+            "Error when starting playback",
+            isPresented: $spotifyPlaybackManager.showAlertNoDevice,
+            actions: {},
+            message: {
+                Text(spotifyPlaybackManager.NO_DEVICE_ERROR_MESSAGE)
+            }
+        )
+        .alert(
+            "Please open the official Spotify app to complete your action",
+            isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
+            actions: {},
+            message: {
+                Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
+            }
+        )
     }
     
     // TODO: consolidate in HomeViewCoordinator

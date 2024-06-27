@@ -162,6 +162,8 @@ private struct MiniPlayerOverlay: ViewModifier {
     @State private var showSheetPlayer = false
     
     func body(content: Content) -> some View {
+        @Bindable var spotifyPlaybackManager = spotifyPlaybackManager
+        
         ZStack {
             content
             if let currentTrack = spotifyPlaybackManager.currentTrack {
@@ -247,17 +249,22 @@ private struct MiniPlayerOverlay: ViewModifier {
         .onChange(of: spotifyPlaybackManager.currentTrack, initial: true) {
             loadThumbnail()
         }
-        .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: false) {
-            Task { @MainActor in
-                if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex,
-                   let activeDeviceID = spotifyPlaybackManager.availableDevices[activeDeviceIndex].id
-                {
-                    return
-                } else {
-                    try await spotifyPlaybackManager.resetOnLossOfActiveDevice()
-                }
+        .alert(
+            "Error when starting playback",
+            isPresented: $spotifyPlaybackManager.showAlertNoDevice,
+            actions: {},
+            message: {
+                Text(spotifyPlaybackManager.NO_DEVICE_ERROR_MESSAGE)
             }
-        }
+        )
+        .alert(
+            "Please open the official Spotify app to complete your action",
+            isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
+            actions: {},
+            message: {
+                Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
+            }
+        )
     }
     
     // TODO: share logic with RetryableAsyncImage?

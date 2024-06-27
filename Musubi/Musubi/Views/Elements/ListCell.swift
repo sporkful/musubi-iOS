@@ -82,6 +82,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
     @State private var showAlertErrorStartPlayback = false
     
     var body: some View {
+        @Bindable var spotifyPlaybackManager = spotifyPlaybackManager
+        
         if let audioTrack = item as? Musubi.ViewModel.AudioTrack {
             HStack {
                 ListCell(
@@ -100,11 +102,10 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                     Task {
                         do {
                             try await spotifyPlaybackManager.play(audioTrack: audioTrack)
-                        } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
-                            showAlertErrorStartPlayback = true
                         } catch {
                             // TODO: handle
                             print(error)
+                            showAlertErrorStartPlayback = true
                         }
                     }
                 }
@@ -118,10 +119,26 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
             }
             .alert(
                 "Error when starting playback",
+                isPresented: $spotifyPlaybackManager.showAlertNoDevice,
+                actions: {},
+                message: {
+                    Text(spotifyPlaybackManager.NO_DEVICE_ERROR_MESSAGE)
+                }
+            )
+            .alert(
+                "Please open the official Spotify app to complete your action",
+                isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
+                actions: {},
+                message: {
+                    Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
+                }
+            )
+            .alert(
+                "Error when starting playback",
                 isPresented: $showAlertErrorStartPlayback,
                 actions: {},
                 message: {
-                    Text(SpotifyPlaybackManager.PLAY_ERROR_MESSAGE)
+                    Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                 }
             )
         } else if let audioTrackListContext = item as? AudioTrackListContext {

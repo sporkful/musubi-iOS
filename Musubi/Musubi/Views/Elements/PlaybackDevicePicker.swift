@@ -21,37 +21,31 @@ struct PlaybackDevicePicker: View {
         
         Menu {
         Picker(
-            selection: $spotifyPlaybackManager.activeDeviceIndex,
+            selection: $spotifyPlaybackManager.desiredActiveDevice,
             content: {
-                ForEach(
-                    Array(zip(
-                        spotifyPlaybackManager.availableDevices.indices,
-                        spotifyPlaybackManager.availableDevices
-                    )),
-                    id: \.0
-                ) { index, device in
+                ForEach(spotifyPlaybackManager.availableDevices, id: \.self) { device in
                     Label(device.name, systemImage: device.sfSymbolName)
-                        .tag(Optional(index))
+                        .tag(Optional(device))
                 }
-                if spotifyPlaybackManager.activeDeviceIndex == nil {
-                    Text("None").tag(nil as Int?)
+                if spotifyPlaybackManager.desiredActiveDevice == nil {
+                    Text("None").tag(nil as SpotifyPlaybackManager.AvailableDevice?)
                 }
             },
             label: {}
         )
         } label: {
                 if outerLabelStyle == .iconOnly {
-                    if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
-                        Image(systemName: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName)
+                    if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
+                        Image(systemName: desiredActiveDevice.sfSymbolName)
                     } else {
                         Image(systemName: "iphone.sizes")
                     }
                 } else if outerLabelStyle == .fullBody {
                     HStack {
-                        if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
+                        if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
                             HStack {
-                                Image(systemName: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName)
-                                Text(spotifyPlaybackManager.availableDevices[activeDeviceIndex].name)
+                                Image(systemName: desiredActiveDevice.sfSymbolName)
+                                Text(desiredActiveDevice.name)
                             }
                             .foregroundStyle(Color.green)
                         } else {
@@ -60,10 +54,10 @@ struct PlaybackDevicePicker: View {
                         Image(systemName: "chevron.up.chevron.down")
                     }
                 } else if outerLabelStyle == .fullFootnote {
-                    if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex {
+                    if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
                         Label(
-                            spotifyPlaybackManager.availableDevices[activeDeviceIndex].name,
-                            systemImage: spotifyPlaybackManager.availableDevices[activeDeviceIndex].sfSymbolName
+                            desiredActiveDevice.name,
+                            systemImage: desiredActiveDevice.sfSymbolName
                         )
                         .font(.caption)
                         .foregroundStyle(Color.green)
@@ -78,17 +72,6 @@ struct PlaybackDevicePicker: View {
                 } else {
                     Text("Device")
                 }
-        }
-        .onChange(of: spotifyPlaybackManager.activeDeviceIndex, initial: false) {
-            Task { @MainActor in
-                if let activeDeviceIndex = spotifyPlaybackManager.activeDeviceIndex,
-                   let activeDeviceID = spotifyPlaybackManager.availableDevices[activeDeviceIndex].id
-                {
-                    try await spotifyPlaybackManager.transferPlaybackTo(deviceID: activeDeviceID)
-                } else {
-                    await spotifyPlaybackManager.resetOnLossOfActiveDevice()
-                }
-            }
         }
         // TODO: figure out how to attach callbacks to menu expanding/collapsing (attaching to inner picker doesn't work)
         .onAppear(perform: startPoller)

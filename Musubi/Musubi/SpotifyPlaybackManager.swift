@@ -8,7 +8,7 @@ import Foundation
 @Observable
 @MainActor
 class SpotifyPlaybackManager {
-    var activeDeviceIndex: Int? // index into `self.availableDevices`
+    var desiredActiveDevice: AvailableDevice?
     
     private(set) var availableDevices: [AvailableDevice]
     private(set) var isPlaying: Bool
@@ -64,7 +64,7 @@ class SpotifyPlaybackManager {
             }
         }
         
-        fileprivate init(remoteRepeatState: Remote.PlaybackState.RepeatState) {
+        fileprivate init(remoteRepeatState: RemotePlaybackState.RepeatState) {
             self = switch remoteRepeatState {
                 case .off: .off
                 case .track: .track
@@ -74,7 +74,7 @@ class SpotifyPlaybackManager {
     }
     
     // TODO: enumify type? need to handle unknown cases though
-    struct AvailableDevice: Decodable, Equatable {
+    struct AvailableDevice: Decodable, Equatable, Hashable {
         let id: String?
 //        let is_active: Bool // defer to polling playback state
 //        let is_private_session: Bool
@@ -94,8 +94,25 @@ class SpotifyPlaybackManager {
         }
     }
     
+    var showAlertNoDevice: Bool = false
+    var showAlertOpenSpotifyOnTargetDevice: Bool = false
+    
+    var NO_DEVICE_ERROR_MESSAGE: String {
+        if Musubi.UserManager.shared.currentUser?.spotifyInfo.product == "premium" {
+            """
+            Select a device to use for playback in the "My Account" tab.
+            """
+        } else {
+            """
+            Unfortunately, Spotify's API does not support playback control for non-premium users \
+            at this time. You can still control playback in the official Spotify apps and view the \
+            currently-playing track in the Musubi app.
+            """
+        }
+    }
+    
     init() {
-        self.activeDeviceIndex = nil
+        self.desiredActiveDevice = nil
         self.availableDevices = []
         self.isPlaying = false
         self.currentTrack = nil
@@ -184,7 +201,7 @@ class SpotifyPlaybackManager {
     
     private func remotePlaybackPollerAction() async {
         do {
-            let remoteState = try await Remote.fetchState()
+            let remoteState = try await remoteFetchState()
             let responseTimestamp = Date.now
             
             if responseTimestamp < self.ignoreRemoteStateBefore {
@@ -295,12 +312,6 @@ class SpotifyPlaybackManager {
                 }
             }
             
-            print()
-            print("currentTrack:")
-            print("name: \(String(describing: self.currentTrack?.audioTrack.name))")
-            print("occurrence: \(String(describing: self.currentTrack?.occurrence))")
-            print("context: \(String(describing: self.currentTrack?.parent?.context.name))")
-            
             self.isPlaying = remoteState.is_playing
             
             if !self.isRequestingRemoteSeek {
@@ -315,21 +326,31 @@ class SpotifyPlaybackManager {
                 }
             }
             
-            guard let updatedActiveDeviceIndex = self.availableDevices.firstIndex(of: remoteState.device) else {
+            // remove stale device IDs
+            self.availableDevices.removeAll(
+                where: {
+                    $0.name == remoteState.device.name
+                        && $0.type == remoteState.device.type
+                        && $0.id != remoteState.device.id
+                }
+            )
+            
+            if !self.availableDevices.contains(remoteState.device) {
                 try await updateAvailableDevices()
-                return
-                // `self.activeDeviceIndex` will be updated on next firing.
             }
-            if self.activeDeviceIndex != updatedActiveDeviceIndex {
-                self.activeDeviceIndex = updatedActiveDeviceIndex
+            
+            if self.desiredActiveDevice != remoteState.device {
+                self.desiredActiveDevice = remoteState.device
             }
         }
 //        catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 204 {
         catch is DecodingError {
             print("[\(Date.now.formatted())] detected playback not active")
             
-            self.activeDeviceIndex = nil
-            await self.resetOnLossOfActiveDevice()
+            // Since Spotify's playback API doesn't work on iOS if Spotify is in the background, we
+            // don't invalidate desiredActiveDevice.
+//            self.desiredActiveDevice = nil
+//            await self.resetOnLossOfActiveDevice()
         }
         catch {
             print("[Spotify::PlaybackManager] (remote playback poller) unexpected error")
@@ -338,6 +359,11 @@ class SpotifyPlaybackManager {
     }
     
     private func playNextInLocalContext() async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         guard case .local(let audioTrackList) = self.context else {
             throw CustomError.DEV(detail: "(playNextInLocalContext) called when current context is remote")
         }
@@ -360,7 +386,7 @@ class SpotifyPlaybackManager {
         
         switch self.repeatState {
         case .track:
-            try await Remote.startSingle(audioTrackID: currentTrack.audioTrackID)
+            try await remoteStartSingle(audioTrackID: currentTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             self.positionMilliseconds = 0
             self.localPlaybackPollerLastReference = Date.now
             self.isPlaying = true
@@ -377,7 +403,7 @@ class SpotifyPlaybackManager {
                 }
             }
             let nextTrack = audioTrackList.contents[nextTrackIndex]
-            try await Remote.startSingle(audioTrackID: nextTrack.audioTrackID)
+            try await remoteStartSingle(audioTrackID: nextTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             self.currentTrack = nextTrack
             self.backupCurrentIndex = nextTrackIndex
             self.positionMilliseconds = 0
@@ -388,26 +414,15 @@ class SpotifyPlaybackManager {
     
     // MARK: - user-accessible functions
     
-    static var PLAY_ERROR_MESSAGE: String {
-        if Musubi.UserManager.shared.currentUser?.spotifyInfo.product == "premium" {
-            """
-            Select a device to use for playback in the "My Account" tab. Note that a device must have \
-            the official Spotify app or web-player open in the background in order to be considered \
-            available for playback.
-            """
-        } else {
-            """
-            Unfortunately, Spotify's API does not support playback control for non-premium users \
-            at this time. Note that you can still control playback in the official Spotify apps and \
-            view the currently-playing track in the Musubi app.
-            """
-        }
-    }
-    
     // Assumes audioTrack is a valid element of its parent AudioTrackList::contents (if non-nil).
     // This assumption holds by further assuming the function is only called from ListCell<ViewModel.AudioTrack>
     // (as a result of direct user input/tap).
     func play(audioTrack: Musubi.ViewModel.AudioTrack) async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
         
         // TODO: check this (afaik this is Spotify's behavior)
@@ -416,9 +431,9 @@ class SpotifyPlaybackManager {
         }
         
         guard let audioTrackList = audioTrack.parent else {
-            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
-            try await Remote.setShuffle(state: self.shuffle)
-            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteStartSingle(audioTrackID: audioTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
@@ -431,11 +446,11 @@ class SpotifyPlaybackManager {
         // TODO: better typing to encode what counts as a local context
         switch audioTrackList.context {
         case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
-            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
-            try await Remote.setShuffle(state: self.shuffle)
-            try await Remote.startInContext(
+            try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteStartInContext(
                 contextURI: audioTrackList.context.uri,
-                contextOffset: audioTrackList.contents.firstIndex(of: audioTrack) ?? 0
+                contextOffset: audioTrackList.contents.firstIndex(of: audioTrack) ?? 0, desiredActiveDeviceID: desiredActiveDeviceID
             )
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: audioTrackList)
@@ -445,9 +460,9 @@ class SpotifyPlaybackManager {
             self.isPlaying = true
         
         case is Spotify.AudioTrack:
-            try await Remote.setRepeatMode(state: .init(localRepeatState: self.repeatState))
-            try await Remote.setShuffle(state: self.shuffle)
-            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteStartSingle(audioTrackID: audioTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: nil)
             self.backupCurrentIndex = nil
@@ -456,8 +471,8 @@ class SpotifyPlaybackManager {
             self.isPlaying = true
         
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
-            try await Remote.setRepeatMode(state: .off)
-            try await Remote.startSingle(audioTrackID: audioTrack.audioTrackID)
+            try await remoteSetRepeatMode(state: .off, desiredActiveDeviceID: desiredActiveDeviceID)
+            try await remoteStartSingle(audioTrackID: audioTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             let index = audioTrackList.contents.firstIndex(of: audioTrack)!
             self.currentTrack = audioTrack
             self.context = .local(audioTrackList: audioTrackList)
@@ -472,19 +487,34 @@ class SpotifyPlaybackManager {
     }
     
     func pause() async throws {
-        try await Remote.pause()
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
+        try await remotePause(desiredActiveDeviceID: desiredActiveDeviceID)
         self.remotePlaybackPoller?.fire()
     }
     
     func resume() async throws {
-        try await Remote.resume()
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
+        try await remoteResume(desiredActiveDeviceID: desiredActiveDeviceID)
         self.remotePlaybackPoller?.fire()
     }
     
     func skipToNext() async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         switch self.context {
         case .remote:
-            try await Remote.skipToNext()
+            try await remoteSkipToNext(desiredActiveDeviceID: desiredActiveDeviceID)
             self.remotePlaybackPoller?.fire()
             
         case .local:
@@ -497,9 +527,14 @@ class SpotifyPlaybackManager {
     }
     
     func skipToPrevious() async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         switch self.context {
         case .remote:
-            try await Remote.skipToPrevious()
+            try await remoteSkipToPrevious(desiredActiveDeviceID: desiredActiveDeviceID)
             self.remotePlaybackPoller?.fire()
             
         case let .local(audioTrackList):
@@ -532,7 +567,7 @@ class SpotifyPlaybackManager {
                 }
             }
             let previousTrack = audioTrackList.contents[previousTrackIndex]
-            try await Remote.startSingle(audioTrackID: previousTrack.audioTrackID)
+            try await remoteStartSingle(audioTrackID: previousTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
             self.currentTrack = previousTrack
             self.backupCurrentIndex = previousTrackIndex
             self.positionMilliseconds = 0
@@ -542,45 +577,74 @@ class SpotifyPlaybackManager {
     }
     
     func toggleRepeatState() async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         let setState = self.repeatState.nextInToggle
         if case .remote = self.context {
-            try await Remote.setRepeatMode(state: .init(localRepeatState: setState))
+            try await remoteSetRepeatMode(state: .init(localRepeatState: setState), desiredActiveDeviceID: desiredActiveDeviceID)
         }
         self.repeatState = setState
     }
     
     func toggleShuffle() async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         let setState = !self.shuffle
         if case .remote = self.context {
-            try await Remote.setShuffle(state: setState)
+            try await remoteSetShuffle(state: setState, desiredActiveDeviceID: desiredActiveDeviceID)
         }
         self.shuffle = setState
     }
     
     func seek(toPositionMilliseconds: Double) async throws {
+        guard let desiredActiveDeviceID = self.desiredActiveDevice?.id else {
+            self.showAlertNoDevice = true
+            return
+        }
+        
         self.isRequestingRemoteSeek = true
         self.positionMilliseconds = toPositionMilliseconds
-        try await Remote.seek(toPositionMilliseconds: Int(toPositionMilliseconds))
+        try await remoteSeek(toPositionMilliseconds: Int(toPositionMilliseconds), desiredActiveDeviceID: desiredActiveDeviceID)
         self.localPlaybackPollerLastReference = nil
         self.isRequestingRemoteSeek = false
         self.remotePlaybackPoller?.fire()
     }
     
     func updateAvailableDevices() async throws {
-        let updatedAvailableDevices = try await Remote.fetchAvailableDevices().devices
+        let updatedAvailableDevices = try await remoteFetchAvailableDevices().devices
         if self.availableDevices != updatedAvailableDevices {
-            self.activeDeviceIndex = nil
             self.availableDevices = updatedAvailableDevices
-            self.remotePlaybackPoller?.fire() // to update `self.activeDeviceIndex`
+        }
+        
+        // update stale device ID if needed
+        if let desiredActiveDevice = self.desiredActiveDevice,
+           let updatedActiveDevice = self.availableDevices.first(
+                where: {
+                    $0.name == desiredActiveDevice.name
+                    && $0.type == desiredActiveDevice.type
+                    && $0.id != desiredActiveDevice.id
+                }
+           )
+        {
+            self.desiredActiveDevice = updatedActiveDevice
+        }
+        
+        if let desiredActiveDevice = self.desiredActiveDevice,
+           !self.availableDevices.contains(desiredActiveDevice)
+        {
+            self.desiredActiveDevice = nil
+            await resetOnLossOfActiveDevice()
         }
     }
     
-    func transferPlaybackTo(deviceID: String) async throws {
-        try await Remote.transferPlaybackTo(deviceID: deviceID)
-    }
-    
     func resetOnLossOfActiveDevice() async {
-        // Note this function is attached to onChange listeners for `self.activeDeviceIndex = nil`,
+        // Note this function is attached to onChange listeners for `self.desiredActiveDevice = nil`,
         // so avoid setting it in infinite recursion.
         
         self.ignoreRemoteStateBefore = Date.init(timeIntervalSinceNow: 5)
@@ -588,13 +652,13 @@ class SpotifyPlaybackManager {
 //        self.activeDeviceIndex = nil
 //        self.availableDevices = []
         self.isPlaying = false
-        self.currentTrack = nil
-        self.context = .remote(audioTrackList: nil)
-        self.repeatState = .context
-        self.shuffle = false
-        self.positionMilliseconds = 0
-        self.isRequestingRemoteSeek = false
-        self.backupCurrentIndex = nil
+//        self.currentTrack = nil
+//        self.context = .remote(audioTrackList: nil)
+//        self.repeatState = .context
+//        self.shuffle = false
+//        self.positionMilliseconds = 0
+//        self.isRequestingRemoteSeek = false
+//        self.backupCurrentIndex = nil
         
         self.localPlaybackPollerLastReference = nil
     }
@@ -614,10 +678,7 @@ class SpotifyPlaybackManager {
 // MARK: - Spotify Web API interface
 
 private extension SpotifyPlaybackManager {
-    struct Remote {
-        private init() {} // namespace
-        
-        struct PlaybackState: Decodable {
+        struct RemotePlaybackState: Decodable {
             let device: AvailableDevice
             let repeat_state: RepeatState
             let shuffle_state: Bool
@@ -653,43 +714,49 @@ private extension SpotifyPlaybackManager {
             }
         }
         
-        struct AllAvailableDevices: Decodable {
+        struct RemoteAvailableDevices: Decodable {
             let devices: [AvailableDevice]
         }
         
         private typealias HTTPMethod = SpotifyRequests.HTTPMethod
         
-        static func fetchState() async throws -> PlaybackState {
+        func remoteFetchState() async throws -> RemotePlaybackState {
             return try await SpotifyRequests.makeRequest(
                 type: .GET,
                 url: URL(string: "https://api.spotify.com/v1/me/player")!
             )
         }
         
-        static func fetchAvailableDevices() async throws -> AllAvailableDevices {
+        func remoteFetchAvailableDevices() async throws -> RemoteAvailableDevices {
             return try await SpotifyRequests.makeRequest(
                 type: .GET,
                 url: URL(string: "https://api.spotify.com/v1/me/player/devices")!
             )
         }
         
-        static func startSingle(audioTrackID: String) async throws {
+        func remoteStartSingle(audioTrackID: String, desiredActiveDeviceID: String) async throws {
             struct StartSingleRequest: Encodable {
                 let uris: [String]
             }
             
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/play")!,
+                url: URL(string: "https://api.spotify.com/v1/me/player/play?device_id=\(desiredActiveDeviceID)")!,
                 jsonBody: JSONEncoder().encode(
                     StartSingleRequest(
                         uris: ["spotify:track:\(audioTrackID)"]
                     )
                 )
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func startInContext(contextURI: String, contextOffset: Int) async throws {
+        func remoteStartInContext(contextURI: String, contextOffset: Int, desiredActiveDeviceID: String) async throws {
             struct StartInContextRequest: Encodable {
                 let context_uri: String
                 let offset: Position
@@ -699,9 +766,10 @@ private extension SpotifyPlaybackManager {
                 }
             }
             
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/play")!,
+                url: URL(string: "https://api.spotify.com/v1/me/player/play?device_id=\(desiredActiveDeviceID)")!,
                 jsonBody: JSONEncoder().encode(
                     StartInContextRequest(
                         context_uri: contextURI,
@@ -709,76 +777,123 @@ private extension SpotifyPlaybackManager {
                     )
                 )
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func resume() async throws {
+        func remoteResume(desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/play")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/play?device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func pause() async throws {
+        func remotePause(desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/pause")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/pause?device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func skipToNext() async throws {
+        func remoteSkipToNext(desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .POST,
-                url: URL(string: "https://api.spotify.com/v1/me/player/next")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/next?device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func skipToPrevious() async throws {
+        func remoteSkipToPrevious(desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .POST,
-                url: URL(string: "https://api.spotify.com/v1/me/player/previous")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/previous?device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
         // TODO: clean up rest of these
         
-        static func seek(toPositionMilliseconds: Int) async throws {
+        func remoteSeek(toPositionMilliseconds: Int, desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/seek?position_ms=\(toPositionMilliseconds)")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/seek?position_ms=\(toPositionMilliseconds)&device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func setRepeatMode(state: PlaybackState.RepeatState) async throws {
+        func remoteSetRepeatMode(state: RemotePlaybackState.RepeatState, desiredActiveDeviceID: String) async throws {
+            do {
             let _ = try await SpotifyRequests.makeRequest(
                 type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player/repeat?state=\(state.rawValue)")!
+                url: URL(string: "https://api.spotify.com/v1/me/player/repeat?state=\(state.rawValue)&device_id=\(desiredActiveDeviceID)")!
             )
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
+            }
         }
         
-        static func setShuffle(state: Bool) async throws {
+        func remoteSetShuffle(state: Bool, desiredActiveDeviceID: String) async throws {
+            do {
             // lol
             if state {
                 let _ = try await SpotifyRequests.makeRequest(
                     type: .PUT,
-                    url: URL(string: "https://api.spotify.com/v1/me/player/shuffle?state=true")!
+                    url: URL(string: "https://api.spotify.com/v1/me/player/shuffle?state=true&device_id=\(desiredActiveDeviceID)")!
                 )
             } else {
                 let _ = try await SpotifyRequests.makeRequest(
                     type: .PUT,
-                    url: URL(string: "https://api.spotify.com/v1/me/player/shuffle?state=false")!
+                    url: URL(string: "https://api.spotify.com/v1/me/player/shuffle?state=false&device_id=\(desiredActiveDeviceID)")!
                 )
+            }
+            } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
+                self.showAlertOpenSpotifyOnTargetDevice = true
+            } catch {
+                throw error
             }
         }
         
-        static func transferPlaybackTo(deviceID: String) async throws {
-            struct DeviceIDs: Encodable {
-                let device_ids: [String]
-            }
-            let _ = try await SpotifyRequests.makeRequest(
-                type: .PUT,
-                url: URL(string: "https://api.spotify.com/v1/me/player")!,
-                jsonBody: JSONEncoder().encode(DeviceIDs(device_ids: [deviceID]))
-            )
-        }
-    }
+        // unstable with iOS Spotify
+//        static func remoteTransferPlaybackTo(deviceID: String) async throws {
+//            struct DeviceIDs: Encodable {
+//                let device_ids: [String]
+//            }
+//            let _ = try await SpotifyRequests.makeRequest(
+//                type: .PUT,
+//                url: URL(string: "https://api.spotify.com/v1/me/player")!,
+//                jsonBody: JSONEncoder().encode(DeviceIDs(device_ids: [deviceID]))
+//            )
+//        }
 }

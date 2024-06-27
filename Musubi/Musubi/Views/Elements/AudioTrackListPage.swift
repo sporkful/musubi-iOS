@@ -455,14 +455,6 @@ struct AudioTrackListPage: View {
                     }
                 }
             }
-            .alert(
-                "Error when starting playback",
-                isPresented: $showAlertErrorStartPlayback,
-                actions: {},
-                message: {
-                    Text(SpotifyPlaybackManager.PLAY_ERROR_MESSAGE)
-                }
-            )
         }
     }
 }
