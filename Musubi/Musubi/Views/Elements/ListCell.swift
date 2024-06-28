@@ -72,6 +72,7 @@ extension Spotify.OtherUser: CustomPreviewable {
 
 struct ListCellWrapper<Item: CustomPreviewable>: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    @Environment(\.openURL) private var openURL
     
     let item: Item
     let showThumbnail: Bool
@@ -128,7 +129,16 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
             .alert(
                 "Please open the official Spotify app to complete your action",
                 isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
-                actions: {},
+                actions: {
+                    Button(
+                        action: {
+                            openURL(URL(string: "spotify:")!)
+                        },
+                        label: {
+                            Text("Open Spotify")
+                        }
+                    )
+                },
                 message: {
                     Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
                 }

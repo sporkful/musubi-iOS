@@ -5,6 +5,7 @@ import SwiftUI
 struct PlayerSheet: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
+    @Environment(\.openURL) private var openURL
     
     @Binding var showSheet: Bool
     
@@ -340,7 +341,16 @@ struct PlayerSheet: View {
         .alert(
             "Please open the official Spotify app to complete your action",
             isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
-            actions: {},
+            actions: {
+                Button(
+                    action: {
+                        openURL(URL(string: "spotify:")!)
+                    },
+                    label: {
+                        Text("Open Spotify")
+                    }
+                )
+            },
             message: {
                 Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
             }

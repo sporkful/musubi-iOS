@@ -152,6 +152,7 @@ struct CustomSheetNavbar: ViewModifier {
 
 private struct MiniPlayerOverlay: ViewModifier {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    @Environment(\.openURL) private var openURL
     
     @State private var thumbnail: UIImage? = nil
     
@@ -260,7 +261,16 @@ private struct MiniPlayerOverlay: ViewModifier {
         .alert(
             "Please open the official Spotify app to complete your action",
             isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
-            actions: {},
+            actions: {
+                Button(
+                    action: {
+                        openURL(URL(string: "spotify:")!)
+                    },
+                    label: {
+                        Text("Open Spotify")
+                    }
+                )
+            },
             message: {
                 Text("This is due to a limitation in Spotify's API. Sorry for the inconvenience!")
             }
