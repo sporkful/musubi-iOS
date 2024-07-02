@@ -5,7 +5,6 @@ import AsyncAlgorithms
 
 struct SearchTabRoot: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
-    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
     
     @State private var searchText = ""
     @State private var searchResults: Spotify.SearchResults = Spotify.SearchResults.blank
@@ -19,8 +18,6 @@ struct SearchTabRoot: View {
     @State private var showPlaylistResults = true
     
     var body: some View {
-            @Bindable var homeViewCoordinator = homeViewCoordinator
-        
             VStack {
                 HStack {
                     Spacer()

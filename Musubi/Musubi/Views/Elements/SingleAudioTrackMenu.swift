@@ -114,16 +114,10 @@ struct SingleAudioTrackMenu: View {
         .alert("Action not supported yet", isPresented: $showAlertUnsupportedAction, actions: {})
     }
     
-    // TODO: better typing
     private func openRelatedPage(spotifyNavigable: any SpotifyNavigable) {
         Task { @MainActor in
             showParentSheet = false
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            if homeViewCoordinator.openTab != .spotifySearch {
-                homeViewCoordinator.openTab = .spotifySearch
-                try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            }
-            homeViewCoordinator.spotifySearchNavPath.append(spotifyNavigable)
+            try await homeViewCoordinator.openSpotifyNavigable(spotifyNavigable)
         }
     }
 }

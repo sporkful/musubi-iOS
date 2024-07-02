@@ -127,7 +127,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 }
             )
             .alert(
-                "Please open the official Spotify app to complete your action",
+                "Please open the official Spotify app to complete your action, then return to this app.",
                 isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
                 actions: {
                     Button(

@@ -3,15 +3,18 @@
 import SwiftUI
 
 struct LocalClonePage: View {
+    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
+    
     @Binding var navigationPath: NavigationPath
     
     @Bindable var repositoryClone: Musubi.RepositoryClone
     
     @State private var showSheetEditor = false
     @State private var showSheetNewCommit = false
-    @State private var showSheetCommitHistory = false
     
     var body: some View {
+        @Bindable var homeViewCoordinator = homeViewCoordinator
+        
         AudioTrackListPage(
             navigationPath: $navigationPath,
             audioTrackList: repositoryClone.stagedAudioTrackList,
@@ -19,7 +22,7 @@ struct LocalClonePage: View {
             customToolbarAdditionalItems: [
                 .init(title: "Edit local clone", sfSymbolName: "pencil", action: { showSheetEditor = true }),
                 .init(title: "Create new commit", sfSymbolName: "icloud.and.arrow.up", action: { showSheetNewCommit = true }),
-                .init(title: "Show commit history", sfSymbolName: "clock.arrow.circlepath", action: { showSheetCommitHistory = true })
+                .init(title: "Show commit history", sfSymbolName: "clock.arrow.circlepath", action: { homeViewCoordinator.showSheetCommitHistory = true })
             ]
         )
         // TODO: put this on navstack so users can keep edit page open while adding tracks via search tab
@@ -36,9 +39,9 @@ struct LocalClonePage: View {
                 repositoryClone: repositoryClone
             )
         }
-        .sheet(isPresented: $showSheetCommitHistory) {
+        .sheet(isPresented: $homeViewCoordinator.showSheetCommitHistory) {
             CommitHistoryPage(
-                showSheet: $showSheetCommitHistory,
+                showSheet: $homeViewCoordinator.showSheetCommitHistory,
                 repositoryClone: repositoryClone
             )
         }

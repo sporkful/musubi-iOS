@@ -259,7 +259,7 @@ private struct MiniPlayerOverlay: ViewModifier {
             }
         )
         .alert(
-            "Please open the official Spotify app to complete your action",
+            "Please open the official Spotify app to complete your action, then return to this app.",
             isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
             actions: {
                 Button(

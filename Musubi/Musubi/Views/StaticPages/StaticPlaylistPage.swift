@@ -85,28 +85,12 @@ struct StaticPlaylistPage: View {
     
     private func openExistingClone() {
         Task { @MainActor in
-            homeViewCoordinator.disableUI = true
-            defer { homeViewCoordinator.disableUI = false }
-            
             guard let repositoryReference = self.currentUser.localClonesIndex.first(where: { $0.handle == self.associatedRepositoryHandle }) else {
                 print("[Musubi::StaticPlaylistPage] called openExistingClone when clone doesn't exist")
                 showAlertCloneError = true
                 return
             }
-            
-            homeViewCoordinator.myReposNavPath.removeLast(homeViewCoordinator.myReposNavPath.count)
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            homeViewCoordinator.openTab = .myRepos
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            
-            // TODO: scroll to correct position?
-//            homeViewCoordinator.myReposDesiredScrollAnchor =
-//            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-//            homeViewCoordinator.myReposDesiredScrollAnchor = .none
-            
-            homeViewCoordinator.disableUI = false
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            homeViewCoordinator.myReposNavPath.append(repositoryReference)
+            try await homeViewCoordinator.openMusubiNavigable(repositoryReference)
         }
     }
     
@@ -135,9 +119,9 @@ struct StaticPlaylistPage: View {
                     homeViewCoordinator.myReposDesiredScrollAnchor = .bottom
                     try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
                     homeViewCoordinator.myReposDesiredScrollAnchor = .none
-                    homeViewCoordinator.disableUI = false
                     try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
                     homeViewCoordinator.myReposNavPath.append(repositoryReference)
+                    homeViewCoordinator.disableUI = false
                 } catch {
                     print("[Musubi::StaticPlaylistPage] initOrClone error")
                     print(error.localizedDescription)

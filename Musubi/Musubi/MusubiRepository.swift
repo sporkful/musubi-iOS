@@ -29,6 +29,8 @@ extension Musubi {
     }
 }
 
+protocol MusubiNavigable: Hashable {}
+
 extension Musubi {
     struct RepositoryHandle: Codable, Identifiable, Hashable {
         let userID: Spotify.ID
@@ -43,7 +45,7 @@ extension Musubi {
     
     @Observable
     @MainActor
-    class RepositoryReference: Identifiable, Hashable {
+    class RepositoryReference: MusubiNavigable, Identifiable {
         nonisolated let handle: RepositoryHandle
         
         private(set) var externalMetadata: Spotify.PlaylistMetadata?
@@ -83,7 +85,7 @@ extension Musubi {
         }
     }
     
-    struct RepositoryCommit: Identifiable, Hashable {
+    struct RepositoryCommit: MusubiNavigable, Identifiable {
         let repositoryReference: RepositoryReference
         let commitID: String
         let commit: Musubi.Model.Commit

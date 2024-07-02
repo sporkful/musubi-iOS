@@ -104,7 +104,6 @@ struct PlayerSheet: View {
                             }
                         )
                         Spacer()
-                        // TODO: make tappable / automate nav
                         VStack(alignment: .center) {
                             Text(currentTrack.parent?.context.type ?? "")
                                 .font(.caption)
@@ -114,6 +113,9 @@ struct PlayerSheet: View {
                                 .bold()
                                 .lineLimit(2, reservesSpace: true)
                                 .multilineTextAlignment(.center)
+                        }
+                        .onTapGesture {
+                            openRelatedPage(audioTrackListContext: currentTrack.parent?.context)
                         }
                         Spacer()
                         SingleAudioTrackMenu(
@@ -339,7 +341,7 @@ struct PlayerSheet: View {
             }
         )
         .alert(
-            "Please open the official Spotify app to complete your action",
+            "Please open the official Spotify app to complete your action, then return to this app.",
             isPresented: $spotifyPlaybackManager.showAlertOpenSpotifyOnTargetDevice,
             actions: {
                 Button(
@@ -357,18 +359,24 @@ struct PlayerSheet: View {
         )
     }
     
-    // TODO: consolidate in HomeViewCoordinator
-    // TODO: activity indicator / disableUI
-    // TODO: better typing
+    // TODO: better typing and error handling
     private func openRelatedPage(spotifyNavigable: any SpotifyNavigable) {
         Task { @MainActor in
             showSheet = false
-            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-            if homeViewCoordinator.openTab != .spotifySearch {
-                homeViewCoordinator.openTab = .spotifySearch
-                try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+            try await homeViewCoordinator.openSpotifyNavigable(spotifyNavigable)
+        }
+    }
+    
+    private func openRelatedPage(audioTrackListContext: AudioTrackListContext?) {
+        if let context = audioTrackListContext {
+            if let spotifyNavigableContext = context as? any SpotifyNavigable {
+                openRelatedPage(spotifyNavigable: spotifyNavigableContext)
+            } else if let musubiNavigableContext = context as? any MusubiNavigable {
+                Task { @MainActor in
+                    showSheet = false
+                    try await homeViewCoordinator.openMusubiNavigable(musubiNavigableContext)
+                }
             }
-            homeViewCoordinator.spotifySearchNavPath.append(spotifyNavigable)
         }
     }
     

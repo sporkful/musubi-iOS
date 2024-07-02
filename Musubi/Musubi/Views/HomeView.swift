@@ -12,13 +12,11 @@ class HomeViewCoordinator {
     
     enum Tab {
         case myRepos
-        case myForks
         case spotifySearch
         case myAccount
     }
     
     var myReposNavPath = NavigationPath()
-    var myForksNavPath = NavigationPath()
     var spotifySearchNavPath = NavigationPath()
     var myAccountNavPath = NavigationPath()
     
@@ -28,6 +26,56 @@ class HomeViewCoordinator {
         case bottom
     }
     var myReposDesiredScrollAnchor: ScrollAnchor = .none
+    
+    var showSheetCommitHistory = false
+    
+    // TODO: pass in a binding to source `showSheet` and dismiss it from here
+    func openSpotifyNavigable(_ spotifyNavigable: any SpotifyNavigable) async throws {
+        self.disableUI = true
+        defer { self.disableUI = false }
+        
+        try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+        if self.openTab != .spotifySearch {
+            self.openTab = .spotifySearch
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+        }
+        self.spotifySearchNavPath.append(spotifyNavigable)
+    }
+    
+    func openMusubiNavigable(_ musubiNavigable: any MusubiNavigable) async throws {
+        self.disableUI = true
+        defer { self.disableUI = false }
+        
+        if let repositoryReference = musubiNavigable as? Musubi.RepositoryReference {
+            try await self.open(repositoryReference: repositoryReference)
+        } else if let repositoryCommit = musubiNavigable as? Musubi.RepositoryCommit {
+            if Musubi.UserManager.shared.currentUser?.openedLocalClone?.repositoryReference != repositoryCommit.repositoryReference {
+                try await self.open(repositoryReference: repositoryCommit.repositoryReference)
+            }
+            
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+            showSheetCommitHistory = true
+        }
+    }
+    
+    // MARK: The following helpers assume disableUI has already been set.
+    
+    // TODO: explicitly handle case where repositoryReference was deleted by user but kept by context
+    private func open(repositoryReference: Musubi.RepositoryReference) async throws {
+        self.myReposNavPath.removeLast(self.myReposNavPath.count)
+        try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+        if self.openTab != .myRepos {
+            self.openTab = .myRepos
+            try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+        }
+        
+        // TODO: scroll to correct position?
+//        homeViewCoordinator.myReposDesiredScrollAnchor =
+//        try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+//        homeViewCoordinator.myReposDesiredScrollAnchor = .none
+        
+        self.myReposNavPath.append(repositoryReference)
+    }
 }
 
 struct HomeView: View {
