@@ -167,7 +167,7 @@ class SpotifyPlaybackManager {
         if self.remotePlaybackPoller == nil {
             self.remotePlaybackPoller = startPoller(
                 timeInterval: REMOTE_PLAYBACK_POLLER_INTERVAL,
-                action: remotePlaybackPollerAction
+                action: { await self.remotePlaybackPollerAction() }
             )
         }
     }
@@ -199,12 +199,12 @@ class SpotifyPlaybackManager {
         }
     }
     
-    private func remotePlaybackPollerAction() async {
+    func remotePlaybackPollerAction(overrideIgnore: Bool = false) async {
         do {
             let remoteState = try await remoteFetchState()
             let responseTimestamp = Date.now
             
-            if responseTimestamp < self.ignoreRemoteStateBefore {
+            if !overrideIgnore && (responseTimestamp < self.ignoreRemoteStateBefore) {
                 print("[SpotifyPlaybackManager] note intentionally ignored remote playback state")
                 return
             }

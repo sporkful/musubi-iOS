@@ -31,6 +31,8 @@ class HomeViewCoordinator {
 }
 
 struct HomeView: View {
+    @Environment(\.scenePhase) var scenePhase
+    
     var currentUser: Musubi.User
     
     @State var spotifyPlaybackManager: SpotifyPlaybackManager
@@ -82,7 +84,13 @@ struct HomeView: View {
         .environment(spotifyPlaybackManager)
         .environment(homeViewCoordinator)
         .withCustomDisablingOverlay(isDisabled: $homeViewCoordinator.disableUI)
-        // TODO: overlay with floating playback card
+        .onChange(of: scenePhase) { _, newValue in
+            if newValue == .active {
+                Task {
+                    await spotifyPlaybackManager.remotePlaybackPollerAction(overrideIgnore: true)
+                }
+            }
+        }
     }
 }
 
