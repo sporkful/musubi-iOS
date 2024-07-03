@@ -144,8 +144,11 @@ struct NewCommitPage: View {
                         Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                     }
                 )
-                .task {
-                    await loadVisualDiffFromHead()
+                // necessary since SwiftUI caches sheets even after dismissal.
+                .onChange(of: showSheet, initial: true) { _, newValue in
+                    if newValue == true {
+                        Task { await loadVisualDiffFromHead() }
+                    }
                 }
                 .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
             }

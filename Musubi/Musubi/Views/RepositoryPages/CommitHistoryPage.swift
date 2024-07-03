@@ -5,6 +5,8 @@ import SwiftUI
 // TODO: forking history
 
 struct CommitHistoryPage: View {
+    // TODO: improve safety wrt showSheet
+    // MARK: showSheet being bound to HomeViewController means all modifications to it must be done on MainActor.
     @Binding var showSheet: Bool
     @State private var isSheetDisabled = false
     
@@ -142,7 +144,7 @@ fileprivate struct CommitDetailPage: View {
         
         // TODO: warn user if they have uncommitted changes (but allow case where user checks out commits in succession)
         isParentSheetDisabled = true
-        Task {
+        Task { @MainActor in
             defer { isParentSheetDisabled = false }
             
             do {

@@ -3,6 +3,7 @@
 import SwiftUI
 
 // TODO: chaining actions on the same navpath doesn't work unless there's a large enough sleep between them
+// TODO: can't do smart nav (e.g. skipping append if already navPath.last) with provided NavigationPath type
 @MainActor
 @Observable
 class HomeViewCoordinator {
@@ -49,9 +50,11 @@ class HomeViewCoordinator {
         if let repositoryReference = musubiNavigable as? Musubi.RepositoryReference {
             try await self.open(repositoryReference: repositoryReference)
         } else if let repositoryCommit = musubiNavigable as? Musubi.RepositoryCommit {
-            if Musubi.UserManager.shared.currentUser?.openedLocalClone?.repositoryReference != repositoryCommit.repositoryReference {
+            // Note openedLocalClone doesn't get reset when navigated away from - it only gets changed
+            // when user explicitly opens a new local clone.
+//            if Musubi.UserManager.shared.currentUser?.openedLocalClone?.repositoryReference != repositoryCommit.repositoryReference {
                 try await self.open(repositoryReference: repositoryCommit.repositoryReference)
-            }
+//            }
             
             try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
             showSheetCommitHistory = true
