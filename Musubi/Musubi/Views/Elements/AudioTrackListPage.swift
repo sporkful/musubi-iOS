@@ -147,7 +147,7 @@ struct AudioTrackListPage: View {
                         .scaledToFill()
                         .frame(width: coverImageDimension, height: coverImageDimension)
                         .clipped()
-                        .shadow(radius: COVER_IMAGE_SHADOW_RADIUS)
+                        .shadow(color: .black, radius: COVER_IMAGE_SHADOW_RADIUS)
                         .opacity(coverImageOpacity)
                 }
             }
@@ -315,11 +315,21 @@ struct AudioTrackListPage: View {
         }
         
         Task { @MainActor in
-            do {
-                self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
-            } catch {
-                print("[Musubi::AudioTrackListPage] failed to load cover image")
-                print(error.localizedDescription)
+            while true {
+                do {
+                    self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
+                    return
+                } catch {
+//                    print("[Musubi::RetryableAsyncImage] failed to load image")
+//                    print(error)
+//                    print("[Musubi::RetryableAsyncImage] retrying...")
+                }
+                do {
+                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
+                } catch {
+//                    print("[Musubi::RetryableAsyncImage] giving up")
+                    break // task was cancelled
+                }
             }
         }
     }
@@ -441,11 +451,8 @@ struct AudioTrackListPage: View {
                             if !parentAudioTrackList.contents.isEmpty {
                                 do {
                                     try await spotifyPlaybackManager.play(audioTrack: parentAudioTrackList.contents[0])
-                                } catch SpotifyRequests.Error.response(let httpStatusCode, _) where httpStatusCode == 404 {
-                                    showAlertErrorStartPlayback = true
                                 } catch {
-                                    // TODO: handle
-                                    print(error)
+                                    showAlertErrorStartPlayback = true
                                 }
                             }
                         }
@@ -455,6 +462,14 @@ struct AudioTrackListPage: View {
                     }
                 }
             }
+            .alert(
+                "Error when starting playback",
+                isPresented: $showAlertErrorStartPlayback,
+                actions: {},
+                message: {
+                    Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+                }
+            )
         }
     }
 }

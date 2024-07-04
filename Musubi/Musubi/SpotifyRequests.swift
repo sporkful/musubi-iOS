@@ -299,7 +299,16 @@ extension SpotifyRequests.Read {
         return (firstPage.items + restOfTrackList).map({ $0.track })
     }
     
-    static func artistAlbums(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
+    static func artistDiscographyPreview(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
+        let page: Spotify.ArtistAlbumPage = try await SpotifyRequests.makeRequest(
+            type: HTTPMethod.GET,
+            path: "/artists/" + artistID + "/albums",
+            queryItems: [URLQueryItem(name: "limit", value: "5")]
+        )
+        return page.items
+    }
+    
+    static func artistDiscographyFull(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
         let firstPage: Spotify.ArtistAlbumPage = try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
             path: "/artists/" + artistID + "/albums",
