@@ -345,8 +345,22 @@ extension SpotifyRequests.Read {
         )
     }
     
+    // TODO: figure out why adding auth token like in `makeRequest` above causes this to fail
     static func image(url: URL) async throws -> UIImage {
-        let data = try await SpotifyRequests.makeRequest(type: .GET, url: url)
+        let (data, responseMetadata) = try await URLSession.shared.data(for: URLRequest(url: url))
+        guard let httpResponse = responseMetadata as? HTTPURLResponse else {
+            throw SpotifyRequests.Error.parsing(detail: "unable to parse response metadata as HTTP")
+        }
+        guard SpotifyRequests.HTTP_SUCCESS_CODES.contains(httpResponse.statusCode) else {
+            // TODO: handle rate limiting gracefully / notify user
+            if httpResponse.statusCode == 429 {
+                print("SPOTIFY RATE LIMITED - RETRY AFTER \(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "")")
+            }
+            throw SpotifyRequests.Error.response(
+                httpStatusCode: httpResponse.statusCode,
+                retryAfter: Int(httpResponse.value(forHTTPHeaderField: "Retry-After") ?? "-1")
+            )
+        }
         guard let image = UIImage(data: data) else {
             throw SpotifyRequests.Error.parsing(detail: "failed to init UIImage from response data")
         }
