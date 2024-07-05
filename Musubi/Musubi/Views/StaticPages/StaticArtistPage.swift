@@ -2,7 +2,43 @@
 
 import SwiftUI
 
+// Indirection to account for SimplifiedArtistObjects (missing images/popularity/etc) in tracks and albums.
 struct StaticArtistPage: View {
+    let artistID: Spotify.ID
+    
+    @State private var artistMetadata: Spotify.ArtistMetadata? = nil
+    
+    var body: some View {
+        if let artistMetadata = self.artistMetadata {
+            HydratedStaticArtistPage(artistMetadata: artistMetadata)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear(perform: loadArtistMetadata)
+        }
+    }
+    
+    private func loadArtistMetadata() {
+        Task { @MainActor in
+            while true {
+                do {
+                    try await self.artistMetadata = SpotifyRequests.Read.artistMetadata(artistID: artistID)
+                    return
+                } catch {
+//                    print("retrying")
+                }
+                do {
+                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
+                } catch {
+//                    print("giving up")
+                    break // task was cancelled
+                }
+            }
+        }
+    }
+}
+
+fileprivate struct HydratedStaticArtistPage: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
     let artistMetadata: Spotify.ArtistMetadata

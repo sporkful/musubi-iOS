@@ -66,7 +66,7 @@ private struct WithSpotifyNavigationDestinations: ViewModifier {
     func body(content: Content) -> some View {
         content
             .navigationDestination(for: Spotify.ArtistMetadata.self) { artistMetadata in
-                StaticArtistPage(artistMetadata: artistMetadata)
+                StaticArtistPage(artistID: artistMetadata.id)
             }
             .navigationDestination(for: Spotify.AlbumMetadata.self) { albumMetadata in
                 StaticAlbumPage(

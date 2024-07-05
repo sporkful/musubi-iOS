@@ -79,7 +79,10 @@ extension Spotify {
     struct ArtistMetadata: SpotifyIdentifiable, SpotifyNavigable, SpotifyPerson {
         let id: Spotify.ID
         let name: String
+        
         let images: [Spotify.Image]?
+        let genres: [String]?
+        let popularity: Int?
         
         var uri: String { "spotify:artist:\(id)" }
     }
