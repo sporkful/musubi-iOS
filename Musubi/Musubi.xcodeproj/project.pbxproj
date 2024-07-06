@@ -11,6 +11,7 @@
 		79223A152B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */; };
 		79223A1C2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79223A1B2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift */; };
 		7930D46B2B65E90A00E8C426 /* MusubiCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */; };
+		793AFB1C2B852C0D00AB5276 /* Retry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793AFB1B2B852C0D00AB5276 /* Retry.swift */; };
 		794733352B464331001C3FEB /* MusubiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794733342B464331001C3FEB /* MusubiApp.swift */; };
 		794733392B464333001C3FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 794733382B464333001C3FEB /* Assets.xcassets */; };
 		7947333C2B464333001C3FEB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7947333B2B464333001C3FEB /* Preview Assets.xcassets */; };
@@ -44,7 +45,6 @@
 		7961DA132B55ADE200650775 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA122B55ADE200650775 /* UIImage+.swift */; };
 		7961DA172B56510B00650775 /* MusubiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA162B56510B00650775 /* MusubiRepository.swift */; };
 		7961DA1B2B5998CF00650775 /* StaticUserPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA1A2B5998CF00650775 /* StaticUserPage.swift */; };
-		7961DA1E2B59ACEE00650775 /* RetryableAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */; };
 		7978F8592B506080005D3880 /* AudioTrackListPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F8582B506080005D3880 /* AudioTrackListPage.swift */; };
 		7978F8602B51254C005D3880 /* StaticArtistPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7978F85F2B51254C005D3880 /* StaticArtistPage.swift */; };
 		79C8D5B92B6C2FC4006A8359 /* String+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8D5B82B6C2FC4006A8359 /* String+.swift */; };
@@ -78,6 +78,7 @@
 		79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDiffingWithMoves.swift; sourceTree = "<group>"; };
 		79223A1B2B71BD9F0041E8E7 /* CollectionDiffingWithMovesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDiffingWithMovesTests.swift; sourceTree = "<group>"; };
 		7930D46A2B65E90A00E8C426 /* MusubiCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiCloud.swift; sourceTree = "<group>"; };
+		793AFB1B2B852C0D00AB5276 /* Retry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Retry.swift; sourceTree = "<group>"; };
 		794733312B464331001C3FEB /* Musubi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musubi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		794733342B464331001C3FEB /* MusubiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiApp.swift; sourceTree = "<group>"; };
 		794733382B464333001C3FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -114,7 +115,6 @@
 		7961DA122B55ADE200650775 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		7961DA162B56510B00650775 /* MusubiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusubiRepository.swift; sourceTree = "<group>"; };
 		7961DA1A2B5998CF00650775 /* StaticUserPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticUserPage.swift; sourceTree = "<group>"; };
-		7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryableAsyncImage.swift; sourceTree = "<group>"; };
 		7978F8582B506080005D3880 /* AudioTrackListPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackListPage.swift; sourceTree = "<group>"; };
 		7978F85F2B51254C005D3880 /* StaticArtistPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticArtistPage.swift; sourceTree = "<group>"; };
 		79C8D5B82B6C2FC4006A8359 /* String+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+.swift"; sourceTree = "<group>"; };
@@ -248,6 +248,7 @@
 				79223A142B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift */,
 				794733712B469C01001C3FEB /* Cryptography.swift */,
 				794733772B469E11001C3FEB /* Storage.swift */,
+				793AFB1B2B852C0D00AB5276 /* Retry.swift */,
 				794733992B4CE922001C3FEB /* UI.swift */,
 				7961DA102B55ADDB00650775 /* UIColor+.swift */,
 				7961DA122B55ADE200650775 /* UIImage+.swift */,
@@ -261,7 +262,6 @@
 			children = (
 				794733AB2B4E01E3001C3FEB /* ListCell.swift */,
 				7978F8582B506080005D3880 /* AudioTrackListPage.swift */,
-				7961DA1D2B59ACEE00650775 /* RetryableAsyncImage.swift */,
 				795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */,
 				79F556C12B7605A3000304B9 /* SelectableListSection.swift */,
 				794C8D982B797F22008DE992 /* ViewModifiers.swift */,
@@ -431,7 +431,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7961DA1E2B59ACEE00650775 /* RetryableAsyncImage.swift in Sources */,
 				7947336D2B46566F001C3FEB /* SpotifyViewModel.swift in Sources */,
 				794733782B469E11001C3FEB /* Storage.swift in Sources */,
 				7947338C2B4B7955001C3FEB /* SpotifyRequests.swift in Sources */,
@@ -470,6 +469,7 @@
 				79223A152B7085DD0041E8E7 /* CollectionDiffingWithMoves.swift in Sources */,
 				795345512B7EA7EE005EE430 /* PlaybackDevicePicker.swift in Sources */,
 				79D4DF812B6CCCFD009AB97A /* MusubiUser.swift in Sources */,
+				793AFB1C2B852C0D00AB5276 /* Retry.swift in Sources */,
 				79F556C22B7605A3000304B9 /* SelectableListSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

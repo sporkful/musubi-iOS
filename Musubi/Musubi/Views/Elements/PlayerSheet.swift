@@ -380,24 +380,18 @@ struct PlayerSheet: View {
         }
     }
     
-    // TODO: share logic with RetryableAsyncImage?
     private func loadCoverImage() {
-        Task { @MainActor in
-            while true {
-                if let coverImageURLString = spotifyPlaybackManager.currentTrack?.audioTrack.coverImageURLString,
-                   let coverImageURL = URL(string: coverImageURLString),
-                   let coverImage = try? await SpotifyRequests.Read.image(url: coverImageURL)
-                {
-                    self.coverImage = coverImage
+        Musubi.Retry.run(
+            failableAction: {
+                guard let coverImageURLString = await spotifyPlaybackManager.currentTrack?.audioTrack.album?.coverImageURLString,
+                      let coverImageURL = URL(string: coverImageURLString)
+                else {
                     return
                 }
-                do {
-                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
-                } catch {
-                    return // task was cancelled
-                }
+                
+                self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
             }
-        }
+        )
     }
     
     private func stringify(milliseconds: Double) -> String {

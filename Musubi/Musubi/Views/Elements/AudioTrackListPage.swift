@@ -306,7 +306,6 @@ struct AudioTrackListPage: View {
         }
     }
     
-    // TODO: share logic with RetryableAsyncImage?
     private func loadCoverImage() {
         guard let coverImageURLString = audioTrackList.context.coverImageURLString,
               let coverImageURL = URL(string: coverImageURLString)
@@ -314,24 +313,11 @@ struct AudioTrackListPage: View {
             return
         }
         
-        Task { @MainActor in
-            while true {
-                do {
-                    self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
-                    return
-                } catch {
-//                    print("[Musubi::RetryableAsyncImage] failed to load image")
-//                    print(error)
-//                    print("[Musubi::RetryableAsyncImage] retrying...")
-                }
-                do {
-                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
-                } catch {
-//                    print("[Musubi::RetryableAsyncImage] giving up")
-                    break // task was cancelled
-                }
+        Musubi.Retry.run(
+            failableAction: {
+                self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
             }
-        }
+        )
     }
     
     struct CustomToolbar: View {

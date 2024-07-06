@@ -201,17 +201,31 @@ struct ListCell: View {
         static let defaultStyle = Self(color: .none, bold: false)
     }
     
+    @State private var thumbnail: UIImage? = nil
+    
     var body: some View {
         HStack {
             if showThumbnail {
                 if let thumbnailURLString = self.thumbnailURLString,
-                   let thumbnailURL = URL(string: thumbnailURLString)
+                   URL(string: thumbnailURLString) != nil
                 {
-                    RetryableAsyncImage(
-                        url: thumbnailURL,
-                        width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
-                        height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
-                    )
+                    if let thumbnail = self.thumbnail {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(
+                                width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
+                                height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
+                            )
+                            .clipped()
+                    } else {
+                        ProgressView()
+                            .frame(
+                                width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
+                                height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
+                            )
+                            .onAppear(perform: loadThumbnail)
+                    }
                 }
                 else {
                     ZStack {
@@ -256,6 +270,20 @@ struct ListCell: View {
         .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
         .foregroundColor(customTextStyle.color.color)
         .bold(customTextStyle.bold)
+    }
+    
+    private func loadThumbnail() {
+        guard let thumbnailURLString = self.thumbnailURLString,
+              let thumbnailURL = URL(string: thumbnailURLString)
+        else {
+            return
+        }
+        
+        Musubi.Retry.run(
+            failableAction: {
+                self.thumbnail = try await SpotifyRequests.Read.image(url: thumbnailURL)
+            }
+        )
     }
 }
 

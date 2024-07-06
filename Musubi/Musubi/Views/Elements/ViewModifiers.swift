@@ -277,23 +277,17 @@ private struct MiniPlayerOverlay: ViewModifier {
         )
     }
     
-    // TODO: share logic with RetryableAsyncImage?
     private func loadThumbnail() {
-        Task { @MainActor in
-            while true {
-                if let thumbnailURLString = spotifyPlaybackManager.currentTrack?.thumbnailURLString,
-                   let thumbnailURL = URL(string: thumbnailURLString),
-                   let thumbnail = try? await SpotifyRequests.Read.image(url: thumbnailURL)
-                {
-                    self.thumbnail = thumbnail
+        Musubi.Retry.run(
+            failableAction: {
+                guard let thumbnailURLString = await spotifyPlaybackManager.currentTrack?.thumbnailURLString,
+                      let thumbnailURL = URL(string: thumbnailURLString)
+                else {
                     return
                 }
-                do {
-                    try await Task.sleep(until: .now + .seconds(3), clock: .continuous)
-                } catch {
-                    return // task was cancelled
-                }
+                
+                self.thumbnail = try await SpotifyRequests.Read.image(url: thumbnailURL)
             }
-        }
+        )
     }
 }
