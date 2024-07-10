@@ -14,8 +14,8 @@ struct NewCommitPage: View {
     @State private var showAlertEmptyMessage = false
     @FocusState private var messageFieldIsFocused: Bool
     
-    @State private var headAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     @State private var visualDiffFromHead: [Musubi.ViewModel.AudioTrackList.VisualChange] = []
+    @State private var headAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     
     @State private var showAlertErrorDiff = false
     @State private var showAlertErrorCommit = false
@@ -156,8 +156,14 @@ struct NewCommitPage: View {
     }
     
     private func loadVisualDiffFromHead() async {
+        isSheetDisabled = true
+        defer { isSheetDisabled = false }
+        
         do {
-            self.headAudioTrackList = await Musubi.ViewModel.AudioTrackList(
+            // TODO: make waiting for hydration implicit (as part of ViewModel.AudioTrackList)
+            try await self.repositoryClone.stagedAudioTrackList.initialHydrationTask.value
+            
+            let headAudioTrackList = await Musubi.ViewModel.AudioTrackList(
                 repositoryCommit: try Musubi.RepositoryCommit(
                     repositoryReference: repositoryClone.repositoryReference,
                     commitID: repositoryClone.headCommitID
@@ -165,11 +171,9 @@ struct NewCommitPage: View {
                 knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData()
             )
             
-            // TODO: make waiting for hydration implicit (as part of ViewModel.AudioTrackList)
-            try await self.repositoryClone.stagedAudioTrackList.initialHydrationTask.value
-            try await self.headAudioTrackList!.initialHydrationTask.value
+            try await headAudioTrackList.initialHydrationTask.value
             
-            if await self.headAudioTrackList!.contents.elementsEqual(
+            if await headAudioTrackList.contents.elementsEqual(
                 self.repositoryClone.stagedAudioTrackList.contents,
                 by: { ($0.audioTrackID == $1.audioTrackID) && ($0.occurrence == $1.occurrence) }
             ) {
@@ -178,7 +182,9 @@ struct NewCommitPage: View {
             }
             
             self.visualDiffFromHead = try await self.repositoryClone.stagedAudioTrackList
-                .visualDifference(from: self.headAudioTrackList!)
+                .visualDifference(from: headAudioTrackList)
+            
+            self.headAudioTrackList = headAudioTrackList // need to keep this content alive
         } catch {
             print("[Musubi::NewCommitPage] failed to diff from head")
             print(error.localizedDescription)

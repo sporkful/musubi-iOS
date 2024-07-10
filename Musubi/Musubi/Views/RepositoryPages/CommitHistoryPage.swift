@@ -95,6 +95,7 @@ fileprivate struct CommitDetailPage: View {
     
     @State private var audioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     
+    @State private var showAlertErrorLoad = false
     @State private var showAlertErrorCheckout = false
     
     var body: some View {
@@ -118,6 +119,14 @@ fileprivate struct CommitDetailPage: View {
             primaryControl: .init(title: "Checkout", action: { checkoutCommit() })
         )
         .alert(
+            "Error when loading contents",
+            isPresented: $showAlertErrorLoad,
+            actions: {},
+            message: {
+                Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+            }
+        )
+        .alert(
             "Error when checking out commit",
             isPresented: $showAlertErrorCheckout,
             actions: {},
@@ -131,10 +140,21 @@ fileprivate struct CommitDetailPage: View {
     }
     
     private func loadAudioTrackList() async {
-        self.audioTrackList = await Musubi.ViewModel.AudioTrackList(
-            repositoryCommit: self.commit,
-            knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData()
-        )
+        isParentSheetDisabled = true
+        defer { isParentSheetDisabled = false }
+        
+        do {
+            let audioTrackList = await Musubi.ViewModel.AudioTrackList(
+                repositoryCommit: self.commit,
+                knownAudioTrackData: self.repositoryClone.stagedAudioTrackList.audioTrackData()
+            )
+            try await audioTrackList.initialHydrationTask.value
+            self.audioTrackList = audioTrackList
+        } catch {
+            print("[Musubi::CommitHistoryPage::CommitDetailPage] failed to load audioTrackList")
+            print(error.localizedDescription)
+            showAlertErrorLoad = true
+        }
     }
     
     private func checkoutCommit() {
