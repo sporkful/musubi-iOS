@@ -445,7 +445,7 @@ class SpotifyPlaybackManager {
         
         // TODO: better typing to encode what counts as a local context
         switch audioTrackList.context {
-        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata:
+        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata:
             self.currentTrack = audioTrack
             self.context = .remote(audioTrackList: audioTrackList)
             self.backupCurrentIndex = nil
@@ -458,6 +458,33 @@ class SpotifyPlaybackManager {
             )
             try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
             try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
+            
+        case is Spotify.ArtistMetadata:
+            // Spotify API doesn't support the "offset" parameter for context type "artist".
+            if audioTrackList.contents.firstIndex(of: audioTrack) == 0 {
+                self.currentTrack = audioTrack
+                self.context = .remote(audioTrackList: audioTrackList)
+                self.backupCurrentIndex = nil
+                self.positionMilliseconds = 0
+                self.localPlaybackPollerLastReference = Date.now
+                self.isPlaying = true
+                try await remoteStartInContext(
+                    contextURI: audioTrackList.context.uri,
+                    contextOffset: nil, desiredActiveDeviceID: desiredActiveDeviceID
+                )
+                try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
+                try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
+            } else {
+                self.currentTrack = .init(audioTrack: audioTrack.audioTrack)
+                self.context = .remote(audioTrackList: nil)
+                self.backupCurrentIndex = nil
+                self.positionMilliseconds = 0
+                self.localPlaybackPollerLastReference = Date.now
+                self.isPlaying = true
+                try await remoteStartSingle(audioTrackID: audioTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
+                try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
+                try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
+            }
         
         case is Spotify.AudioTrack:
             self.currentTrack = audioTrack
@@ -760,13 +787,20 @@ private extension SpotifyPlaybackManager {
             }
         }
         
-        func remoteStartInContext(contextURI: String, contextOffset: Int, desiredActiveDeviceID: String) async throws {
+        func remoteStartInContext(contextURI: String, contextOffset: Int?, desiredActiveDeviceID: String) async throws {
             struct StartInContextRequest: Encodable {
                 let context_uri: String
-                let offset: Position
+                let offset: Position?
                 
                 struct Position: Encodable {
                     let position: Int
+                    
+                    init?(position: Int?) {
+                        guard let position = position else {
+                            return nil
+                        }
+                        self.position = position
+                    }
                 }
             }
             
