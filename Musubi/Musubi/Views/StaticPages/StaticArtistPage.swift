@@ -2,35 +2,12 @@
 
 import SwiftUI
 
-// Indirection to account for SimplifiedArtistObjects (missing images/popularity/etc) in tracks and albums.
 struct StaticArtistPage: View {
-    let artistID: Spotify.ID
-    
-    @State private var artistMetadata: Spotify.ArtistMetadata? = nil
-    
-    var body: some View {
-        if let artistMetadata = self.artistMetadata {
-            HydratedStaticArtistPage(artistMetadata: artistMetadata)
-        } else {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear(perform: loadArtistMetadata)
-        }
-    }
-    
-    private func loadArtistMetadata() {
-        Musubi.Retry.run(
-            failableAction: {
-                try await self.artistMetadata = SpotifyRequests.Read.artistMetadata(artistID: artistID)
-            }
-        )
-    }
-}
-
-fileprivate struct HydratedStaticArtistPage: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
-    let artistMetadata: Spotify.ArtistMetadata
+    // Indirection to account for SimplifiedArtistObjects (missing images/popularity/etc) in tracks and albums.
+    let artistID: Spotify.ID
+    @State private var artistMetadata: Spotify.ArtistMetadata? = nil
     
     @State private var topTracks: Musubi.ViewModel.AudioTrackList? = nil
     @State private var discographyPreview: [Spotify.AlbumMetadata] = []
@@ -124,7 +101,7 @@ fileprivate struct HydratedStaticArtistPage: View {
             
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text(artistMetadata.name)
+                    Text(artistMetadata?.name ?? "")
                         .font(.largeTitle.leading(.tight))
                         .bold()
                         .shadow(color: .black, radius: 24.0)
@@ -212,7 +189,7 @@ fileprivate struct HydratedStaticArtistPage: View {
             ToolbarItem(placement: .principal) {
                 HStack {
                     Spacer()
-                    Text(artistMetadata.name)
+                    Text(artistMetadata?.name ?? "")
                         .font(.headline)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -228,19 +205,32 @@ fileprivate struct HydratedStaticArtistPage: View {
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
-            if !hasLoaded {
+            if !hasLoadedMetadata {
+                loadArtistMetadata()
+            }
+        }
+        .onChange(of: self.artistMetadata, initial: false) { _, newValue in
+            if newValue != nil {
                 loadCoverImage()
                 loadTopTracks()
                 loadDiscographyPreview()
-                hasLoaded = true
             }
         }
     }
     
-    @State private var hasLoaded = false
+    @State private var hasLoadedMetadata = false
+    
+    private func loadArtistMetadata() {
+        Musubi.Retry.run(
+            failableAction: {
+                try await self.artistMetadata = SpotifyRequests.Read.artistMetadata(artistID: artistID)
+                hasLoadedMetadata = true
+            }
+        )
+    }
     
     private func loadCoverImage() {
-        guard let coverImageURLString = artistMetadata.coverImageURLString,
+        guard let coverImageURLString = artistMetadata?.coverImageURLString,
               let coverImageURL = URL(string: coverImageURLString)
         else {
             return
@@ -256,6 +246,9 @@ fileprivate struct HydratedStaticArtistPage: View {
     private func loadTopTracks() {
         Musubi.Retry.run(
             failableAction: {
+                guard let artistMetadata = self.artistMetadata else {
+                    return
+                }
                 let topTracks = await Musubi.ViewModel.AudioTrackList(artistMetadata: artistMetadata)
                 try await topTracks.initialHydrationTask.value
                 self.topTracks = topTracks
@@ -266,6 +259,9 @@ fileprivate struct HydratedStaticArtistPage: View {
     private func loadDiscographyPreview() {
         Musubi.Retry.run(
             failableAction: {
+                guard let artistMetadata = self.artistMetadata else {
+                    return
+                }
                 self.discographyPreview = try await SpotifyRequests.Read.artistDiscographyPreview(artistID: artistMetadata.id)
             }
         )
