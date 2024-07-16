@@ -251,7 +251,7 @@ private struct MiniPlayerOverlay: ViewModifier {
             loadThumbnail()
         }
         .alert(
-            "Error when starting playback",
+            "No playback device selected",
             isPresented: $spotifyPlaybackManager.showAlertNoDevice,
             actions: {},
             message: {

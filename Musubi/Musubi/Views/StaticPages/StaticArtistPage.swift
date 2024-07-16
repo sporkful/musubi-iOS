@@ -9,7 +9,7 @@ struct StaticArtistPage: View {
     let artistID: Spotify.ID
     @State private var artistMetadata: Spotify.ArtistMetadata? = nil
     
-    @State private var topTracks: Musubi.ViewModel.AudioTrackList? = nil
+    @State private var topTracks: [Spotify.AudioTrack] = []
     @State private var discographyPreview: [Spotify.AlbumMetadata] = []
     
     @State private var coverImage: UIImage? = nil
@@ -113,25 +113,19 @@ struct StaticArtistPage: View {
                     ZStack {
                         Color.black
                         VStack(alignment: .leading) {
-                            if let topTracks = self.topTracks {
-                                VStack(alignment: .leading) {
-                                    HStack {
-                                        Text("Popular")
-                                            .font(.headline)
-                                            .padding(.top)
-                                        CustomToolbar(parentAudioTrackList: topTracks)
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                                    }
-                                    ForEach(topTracks.contents, id: \.self) { audioTrack in
-                                        Divider()
-                                        ListCellWrapper(
-                                            item: audioTrack,
-                                            showThumbnail: true,
-                                            customTextStyle: .defaultStyle,
-                                            showAudioTrackMenu: true
-                                        )
-                                    }
-                                }
+                            if !topTracks.isEmpty {
+                                Text("Popular Tracks")
+                                    .font(.headline)
+                                    .padding(.top)
+                            }
+                            ForEach(topTracks, id: \.self) { audioTrack in
+                                Divider()
+                                ListCellWrapper(
+                                    item: Musubi.ViewModel.AudioTrack(audioTrack: audioTrack),
+                                    showThumbnail: true,
+                                    customTextStyle: .defaultStyle,
+                                    showAudioTrackMenu: true
+                                )
                             }
                             if !self.discographyPreview.isEmpty {
                                 Text("Discography")
@@ -230,14 +224,13 @@ struct StaticArtistPage: View {
     }
     
     private func loadCoverImage() {
-        guard let coverImageURLString = artistMetadata?.coverImageURLString,
-              let coverImageURL = URL(string: coverImageURLString)
-        else {
-            return
-        }
-        
         Musubi.Retry.run(
             failableAction: {
+                guard let coverImageURLString = artistMetadata?.images?.first?.url,
+                      let coverImageURL = URL(string: coverImageURLString)
+                else {
+                    return
+                }
                 self.coverImage = try await SpotifyRequests.Read.image(url: coverImageURL)
             }
         )
@@ -249,9 +242,7 @@ struct StaticArtistPage: View {
                 guard let artistMetadata = self.artistMetadata else {
                     return
                 }
-                let topTracks = await Musubi.ViewModel.AudioTrackList(artistMetadata: artistMetadata)
-                try await topTracks.initialHydrationTask.value
-                self.topTracks = topTracks
+                self.topTracks = try await SpotifyRequests.Read.artistTopTracks(artistID: artistMetadata.id)
             }
         )
     }
@@ -263,84 +254,6 @@ struct StaticArtistPage: View {
                     return
                 }
                 self.discographyPreview = try await SpotifyRequests.Read.artistDiscographyPreview(artistID: artistMetadata.id)
-            }
-        )
-    }
-}
-
-fileprivate struct CustomToolbar: View {
-    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
-    
-    @Bindable var parentAudioTrackList: Musubi.ViewModel.AudioTrackList
-    
-    @State private var showAlertErrorStartPlayback = false
-    
-    var body: some View {
-        HStack {
-            Spacer()
-            // TODO: deduplicate wrt AudioTrackListPage
-            // TODO: figure out better way to extract context's audioTrackList (no need to case / repeat code)
-            if case .remote(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
-               audioTrackList?.context.id == parentAudioTrackList.context.id
-            {
-                if spotifyPlaybackManager.isPlaying {
-                    Button {
-                        Task { try await spotifyPlaybackManager.pause() }
-                    } label: {
-                        Image(systemName: "pause.circle.fill")
-                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
-                    }
-                } else {
-                    Button {
-                        Task { try await spotifyPlaybackManager.resume() }
-                    } label: {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
-                    }
-                }
-            }
-            else if case .local(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
-                    audioTrackList.context.id == parentAudioTrackList.context.id
-            {
-                if spotifyPlaybackManager.isPlaying {
-                    Button {
-                        Task { try await spotifyPlaybackManager.pause() }
-                    } label: {
-                        Image(systemName: "pause.circle.fill")
-                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
-                    }
-                } else {
-                    Button {
-                        Task { try await spotifyPlaybackManager.resume() }
-                    } label: {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
-                    }
-                }
-            }
-            else {
-                Button {
-                    Task { @MainActor in
-                        if !parentAudioTrackList.contents.isEmpty {
-                            do {
-                                try await spotifyPlaybackManager.play(audioTrack: parentAudioTrackList.contents[0])
-                            } catch {
-                                showAlertErrorStartPlayback = true
-                            }
-                        }
-                    }
-                } label: {
-                    Image(systemName: "play.circle.fill")
-                        .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
-                }
-            }
-        }
-        .alert(
-            "Error when starting playback",
-            isPresented: $showAlertErrorStartPlayback,
-            actions: {},
-            message: {
-                Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
             }
         )
     }

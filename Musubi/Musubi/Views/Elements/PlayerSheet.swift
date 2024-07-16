@@ -333,7 +333,7 @@ struct PlayerSheet: View {
         }
         .interactiveDismissDisabled(false)
         .alert(
-            "Error when starting playback",
+            "No playback device selected",
             isPresented: $spotifyPlaybackManager.showAlertNoDevice,
             actions: {},
             message: {

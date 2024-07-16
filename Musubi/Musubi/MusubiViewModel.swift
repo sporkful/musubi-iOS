@@ -70,14 +70,6 @@ extension Spotify.PlaylistMetadata: AudioTrackListContext {
     var type: String { "Spotify Playlist" }
 }
 
-extension Spotify.ArtistMetadata: AudioTrackListContext {
-    var formattedDescription: String? { nil }
-    var coverImageURLString: String? { self.images?.first?.url }
-    var associatedPeople: [any SpotifyPerson] { [] }
-    var associatedDate: String? { nil }
-    var type: String { "Spotify Artist" }
-}
-
 // TODO: remove this for clarity (held up by SelectAddAudioTracks)
 extension Spotify.AudioTrack: AudioTrackListContext {
     var formattedDescription: String? { nil }
@@ -307,25 +299,6 @@ extension Musubi.ViewModel {
                     )
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify album")
-                    print(error.localizedDescription)
-                    self.initialHydrationError = error
-                    throw error
-                }
-            }
-        }
-        
-        init(artistMetadata: Spotify.ArtistMetadata) {
-            self.context = artistMetadata
-            self.contents = []
-            self.audioTrackCounter = [:]
-            self.initialHydrationTask = Task {}
-            
-            self.initialHydrationTask = Task {
-                do {
-                    let artistTopTracks = try await SpotifyRequests.Read.artistTopTracks(artistID: artistMetadata.id)
-                    try await self.initialHydrationAppend(audioTracks: artistTopTracks)
-                } catch {
-                    print("[Musubi::AudioTrackList] failed to hydrate for Spotify artist")
                     print(error.localizedDescription)
                     self.initialHydrationError = error
                     throw error

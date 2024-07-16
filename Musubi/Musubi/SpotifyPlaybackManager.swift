@@ -222,7 +222,6 @@ class SpotifyPlaybackManager {
                        let newAudioTrackList: Musubi.ViewModel.AudioTrackList = switch remoteContext.type {
                            case "album": .init(albumMetadata: try await SpotifyRequests.Read.albumMetadata(albumID: contextID))
                            case "playlist": .init(playlistMetadata: try await SpotifyRequests.Read.playlistMetadata(playlistID: contextID))
-                           case "artist": .init(artistMetadata: try await SpotifyRequests.Read.artistMetadata(artistID: contextID))
                            default: nil
                        }
                     {
@@ -285,7 +284,6 @@ class SpotifyPlaybackManager {
                        let newAudioTrackList: Musubi.ViewModel.AudioTrackList = switch remoteContext.type {
                            case "album": .init(albumMetadata: try await SpotifyRequests.Read.albumMetadata(albumID: contextID))
                            case "playlist": .init(playlistMetadata: try await SpotifyRequests.Read.playlistMetadata(playlistID: contextID))
-                           case "artist": .init(artistMetadata: try await SpotifyRequests.Read.artistMetadata(artistID: contextID))
                            default: nil
                        }
                     {
@@ -370,7 +368,7 @@ class SpotifyPlaybackManager {
         
         // TODO: better typing to encode what counts as a local context
         switch audioTrackList.context {
-        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.ArtistMetadata, is Spotify.AudioTrack:
+        case is Spotify.AlbumMetadata, is Spotify.PlaylistMetadata, is Spotify.AudioTrack:
             throw CustomError.DEV(detail: "(playNextInLocalContext) local audioTrackList context should be remote")
         case is Musubi.RepositoryReference, is Musubi.RepositoryCommit:
             break
@@ -458,33 +456,6 @@ class SpotifyPlaybackManager {
             )
             try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
             try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
-            
-        case is Spotify.ArtistMetadata:
-            // Spotify API doesn't support the "offset" parameter for context type "artist".
-            if audioTrackList.contents.firstIndex(of: audioTrack) == 0 {
-                self.currentTrack = audioTrack
-                self.context = .remote(audioTrackList: audioTrackList)
-                self.backupCurrentIndex = nil
-                self.positionMilliseconds = 0
-                self.localPlaybackPollerLastReference = Date.now
-                self.isPlaying = true
-                try await remoteStartInContext(
-                    contextURI: audioTrackList.context.uri,
-                    contextOffset: nil, desiredActiveDeviceID: desiredActiveDeviceID
-                )
-                try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
-                try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
-            } else {
-                self.currentTrack = .init(audioTrack: audioTrack.audioTrack)
-                self.context = .remote(audioTrackList: nil)
-                self.backupCurrentIndex = nil
-                self.positionMilliseconds = 0
-                self.localPlaybackPollerLastReference = Date.now
-                self.isPlaying = true
-                try await remoteStartSingle(audioTrackID: audioTrack.audioTrackID, desiredActiveDeviceID: desiredActiveDeviceID)
-                try await remoteSetRepeatMode(state: .init(localRepeatState: self.repeatState), desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
-                try await remoteSetShuffle(state: self.shuffle, desiredActiveDeviceID: desiredActiveDeviceID, ignoreSpotifyOpenError: true)
-            }
         
         case is Spotify.AudioTrack:
             self.currentTrack = audioTrack
