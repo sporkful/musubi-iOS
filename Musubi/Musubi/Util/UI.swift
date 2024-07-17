@@ -28,8 +28,9 @@ extension Musubi.UI {
     // TODO: clip by device dimensions
     enum ImageDimension: CGFloat {
         case cellThumbnail = 42
+        case largeCellThumbnail = 77
         case audioTracklistCover = 262
-        case artistCover = 162
+//        case artistCover = 162
 //        case playerCover = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 52.0
     }
     

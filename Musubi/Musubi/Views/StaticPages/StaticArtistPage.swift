@@ -114,7 +114,7 @@ struct StaticArtistPage: View {
                         Color.black
                         VStack(alignment: .leading) {
                             if !topTracks.isEmpty {
-                                Text("Popular Tracks")
+                                Text("Top tracks")
                                     .font(.headline)
                                     .padding(.top)
                             }
@@ -133,11 +133,25 @@ struct StaticArtistPage: View {
                                     .padding(.top)
                                 ForEach(discographyPreview) { albumMetadata in
                                     NavigationLink(value: albumMetadata) {
-                                        ListCellWrapper(
-                                            item: albumMetadata,
-                                            showThumbnail: true,
-                                            customTextStyle: .defaultStyle
-                                        )
+                                        LargeAlbumCell(albumMetadata: albumMetadata)
+                                    }
+                                }
+                                if let artistMetadata = self.artistMetadata {
+                                    HStack {
+                                        Spacer()
+                                        NavigationLink(value: FullDiscographyNavValue(artistMetadata: artistMetadata)) {
+                                            Text("See full discography")
+                                                .font(.caption)
+                                                .bold()
+                                                .padding(.horizontal)
+                                                .padding(.vertical, 5)
+                                                .background(
+                                                    Capsule()
+                                                        .stroke(.white, lineWidth: 1)
+                                                        .opacity(0.5)
+                                                )
+                                        }
+                                        Spacer()
                                     }
                                 }
                             }
@@ -255,6 +269,91 @@ struct StaticArtistPage: View {
                 }
                 self.discographyPreview = try await SpotifyRequests.Read.artistDiscographyPreview(artistID: artistMetadata.id)
             }
+        )
+    }
+    
+    struct FullDiscographyNavValue: SpotifyNavigable {
+        let artistMetadata: Spotify.ArtistMetadata
+    }
+    
+    struct FullDiscographyPage: View {
+        let artistMetadata: Spotify.ArtistMetadata
+        
+        @State private var fullDiscography: [Spotify.AlbumMetadata] = []
+        
+        var body: some View {
+            ScrollView {
+                LazyVStack(alignment: .leading) {
+                    ForEach(fullDiscography) { albumMetadata in
+                        NavigationLink(value: albumMetadata) {
+                            LargeAlbumCell(albumMetadata: albumMetadata)
+                        }
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Text(artistMetadata.name)
+                                .font(.headline)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            Text("Discography")
+                                .font(.caption)
+                        }
+                        Spacer()
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    // placeholder to center title
+                    Image(systemName: "ellipsis")
+                        .hidden()
+                }
+            }
+            .onAppear(perform: loadFullDiscography)
+        }
+        
+        private func loadFullDiscography() {
+            Musubi.Retry.run(
+                failableAction: {
+                    self.fullDiscography = try await SpotifyRequests.Read.artistDiscographyFull(artistID: artistMetadata.id)
+                }
+            )
+        }
+    }
+}
+
+fileprivate struct LargeAlbumCell: View {
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
+    let albumMetadata: Spotify.AlbumMetadata
+    
+    private var thumbnailURLString: String? {
+        guard let images = albumMetadata.images,
+              !images.isEmpty
+        else {
+            return nil
+        }
+        if images.count >= 2 {
+            return images[1].url
+        } else {
+            return images[0].url
+        }
+    }
+    
+    var body: some View {
+        ListCell(
+            title: albumMetadata.name,
+            caption: "\(String(albumMetadata.release_date.prefix(4))) • \(albumMetadata.album_type.capitalized)",
+            thumbnailURLString: thumbnailURLString,
+            showThumbnail: true,
+            customTextStyle: .defaultStyle,
+            isActive: spotifyPlaybackManager.currentTrack?.parent?.context.id == albumMetadata.id,
+            isPlaying: spotifyPlaybackManager.isPlaying,
+            isLarge: true
         )
     }
 }

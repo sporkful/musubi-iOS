@@ -83,6 +83,9 @@ private struct WithSpotifyNavigationDestinations: ViewModifier {
             .navigationDestination(for: Spotify.OtherUser.self) { user in
                 StaticUserPage(user: user)
             }
+            .navigationDestination(for: StaticArtistPage.FullDiscographyNavValue.self) { value in
+                StaticArtistPage.FullDiscographyPage(artistMetadata: value.artistMetadata)
+            }
     }
 }
 

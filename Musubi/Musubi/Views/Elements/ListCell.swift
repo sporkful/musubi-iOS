@@ -78,6 +78,9 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
     let showThumbnail: Bool
     let customTextStyle: ListCell.CustomTextStyle
     
+    // e.g. albums on artist page
+    var isLarge: Bool = false
+    
     // for if item is Musubi.ViewModel.AudioTrack
     var showAudioTrackMenu: Bool = false
     @State private var showAlertErrorStartPlayback = false
@@ -96,7 +99,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                     isActive: spotifyPlaybackManager.currentTrack == audioTrack
                         // TODO: clean up this hack (refer to ViewModel.AudioTrack)
                         && spotifyPlaybackManager.currentTrack?.parent?.context.id == audioTrack.parent?.context.id,
-                    isPlaying: spotifyPlaybackManager.isPlaying
+                    isPlaying: spotifyPlaybackManager.isPlaying,
+                    isLarge: isLarge
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -159,7 +163,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 showThumbnail: showThumbnail,
                 customTextStyle: customTextStyle,
                 isActive: spotifyPlaybackManager.currentTrack?.parent?.context.id == audioTrackListContext.id,
-                isPlaying: spotifyPlaybackManager.isPlaying
+                isPlaying: spotifyPlaybackManager.isPlaying,
+                isLarge: isLarge
             )
         } else {
             ListCell(
@@ -167,7 +172,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 caption: item.caption,
                 thumbnailURLString: item.thumbnailURLString,
                 showThumbnail: showThumbnail,
-                customTextStyle: customTextStyle
+                customTextStyle: customTextStyle,
+                isLarge: isLarge
             )
         }
     }
@@ -181,6 +187,7 @@ struct ListCell: View {
     let customTextStyle: CustomTextStyle  // TODO: turn into custom view modifier?
     var isActive: Bool = false
     var isPlaying: Bool = false
+    var isLarge: Bool = false
     
     struct CustomTextStyle: Equatable {
         var color: CustomColor
@@ -202,6 +209,13 @@ struct ListCell: View {
     }
     
     @State private var thumbnail: UIImage? = nil
+    private var THUMBNAIL_DIMENSION: CGFloat {
+        if isLarge {
+            Musubi.UI.ImageDimension.largeCellThumbnail.rawValue
+        } else {
+            Musubi.UI.ImageDimension.cellThumbnail.rawValue
+        }
+    }
     
     var body: some View {
         HStack {
@@ -213,17 +227,11 @@ struct ListCell: View {
                         Image(uiImage: thumbnail)
                             .resizable()
                             .scaledToFill()
-                            .frame(
-                                width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
-                                height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
-                            )
+                            .frame(width: THUMBNAIL_DIMENSION, height: THUMBNAIL_DIMENSION)
                             .clipped()
                     } else {
                         ProgressView()
-                            .frame(
-                                width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
-                                height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
-                            )
+                            .frame(width: THUMBNAIL_DIMENSION, height: THUMBNAIL_DIMENSION)
                             .onAppear(perform: loadThumbnail)
                     }
                 }
@@ -233,10 +241,7 @@ struct ListCell: View {
                             .fill(.gray)
                         Image(systemName: "music.note")
                     }
-                    .frame(
-                        width: Musubi.UI.ImageDimension.cellThumbnail.rawValue,
-                        height: Musubi.UI.ImageDimension.cellThumbnail.rawValue
-                    )
+                    .frame(width: THUMBNAIL_DIMENSION, height: THUMBNAIL_DIMENSION)
                     .opacity(0.5)
                 }
             }
@@ -256,6 +261,8 @@ struct ListCell: View {
                         }
                     }
                     Text(title)
+                        .font(isLarge ? .title3 : .body)
+                        .bold(isLarge || customTextStyle.bold)
                         .lineLimit(1)
                 }
                 .foregroundStyle((isActive && customTextStyle.color == .none) ? .green : customTextStyle.color.color)
@@ -263,11 +270,12 @@ struct ListCell: View {
                     Text(caption)
                         .font(.caption)
                         .lineLimit(1)
+                        .opacity(0.81)
                 }
             }
             Spacer()
         }
-        .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+        .frame(height: THUMBNAIL_DIMENSION)
         .foregroundColor(customTextStyle.color.color)
         .bold(customTextStyle.bold)
     }
