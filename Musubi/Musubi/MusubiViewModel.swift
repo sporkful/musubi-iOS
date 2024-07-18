@@ -264,10 +264,9 @@ extension Musubi.ViewModel {
             
             self.initialHydrationTask = Task {
                 do {
-                    let firstPage = try await SpotifyRequests.Read.playlistFirstAudioTrackPage(playlistID: playlistMetadata.id)
-                    try await self.initialHydrationAppend(audioTracks: firstPage.items.map({ $0.track }))
-                    let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-                    try await self.initialHydrationAppend(audioTracks: restOfList.map({ $0.track }))
+                    for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: playlistMetadata.id) {
+                        try await self.initialHydrationAppend(audioTracks: sublist)
+                    }
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify playlist")
                     print(error.localizedDescription)
@@ -285,18 +284,13 @@ extension Musubi.ViewModel {
             
             self.initialHydrationTask = Task {
                 do {
-                    let firstPage = try await SpotifyRequests.Read.albumFirstAudioTrackPage(albumID: albumMetadata.id)
-                    try await self.initialHydrationAppend(
-                        audioTracks: firstPage.items.map { audioTrack in
-                            Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: albumMetadata)
-                        }
-                    )
-                    let restOfList = try await SpotifyRequests.Read.restOfList(firstPage: firstPage)
-                    try await self.initialHydrationAppend(
-                        audioTracks: restOfList.map { audioTrack in
-                            Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: albumMetadata)
-                        }
-                    )
+                    for try await sublist in SpotifyRequests.Read.albumTrackListFull(albumID: albumMetadata.id) {
+                        try await self.initialHydrationAppend(
+                            audioTracks: sublist.map { audioTrack in
+                                Spotify.AudioTrack(audioTrack: audioTrack, withAlbumMetadata: albumMetadata)
+                            }
+                        )
+                    }
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify album")
                     print(error.localizedDescription)

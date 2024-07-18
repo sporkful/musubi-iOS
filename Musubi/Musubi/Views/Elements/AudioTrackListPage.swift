@@ -295,9 +295,11 @@ struct AudioTrackListPage: View {
             print("[Musubi::AudioTrackListPage] rehydrateIfNeeded on remote playlist")
             
             do {
-                try await audioTrackList.refreshContentsIfNeeded(
-                    newContents: SpotifyRequests.Read.playlistTrackListFull(playlistID: contextPlaylist.id)
-                )
+                var newContents: [Spotify.AudioTrack] = []
+                for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: contextPlaylist.id) {
+                    newContents.append(contentsOf: sublist)
+                }
+                try await audioTrackList.refreshContentsIfNeeded(newContents: newContents)
             } catch {
                 print("[Musubi::AudioTrackListPage] failed to complete rehydrateIfNeeded")
                 print(error.localizedDescription)

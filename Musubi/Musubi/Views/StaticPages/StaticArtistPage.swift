@@ -319,7 +319,10 @@ struct StaticArtistPage: View {
         private func loadFullDiscography() {
             Musubi.Retry.run(
                 failableAction: {
-                    self.fullDiscography = try await SpotifyRequests.Read.artistDiscographyFull(artistID: artistMetadata.id)
+                    self.fullDiscography = []
+                    for try await sublist in SpotifyRequests.Read.artistDiscographyFull(artistID: artistMetadata.id) {
+                        self.fullDiscography.append(contentsOf: sublist)
+                    }
                 }
             )
         }

@@ -175,18 +175,25 @@ extension SpotifyRequests.Read {
         )
     }
     
-    // TODO: transform into AsyncStream
-    static func restOfList<Page: SpotifyListPage>(firstPage: Page) async throws -> [Page.Item] {
-        var currentPage = firstPage
-//        var items = currentPage.items
-        var items: [Page.Item] = []
-        while let nextPageURLString = currentPage.next,
-              let nextPageURL = URL(string: nextPageURLString)
-        {
-            currentPage = try await SpotifyRequests.makeRequest(type: HTTPMethod.GET, url: nextPageURL)
-            items.append(contentsOf: currentPage.items)
+    static func restOfList<Page: SpotifyListPage>(firstPage: Page) -> AsyncThrowingStream<[Page.Item], Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    var currentPage = firstPage
+                    // note intentional skipping of firstPage.items
+                    while let nextPageURLString = currentPage.next,
+                          let nextPageURL = URL(string: nextPageURLString)
+                    {
+                        currentPage = try await SpotifyRequests.makeRequest(type: HTTPMethod.GET, url: nextPageURL)
+                        continuation.yield(currentPage.items)
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
         }
-        return items
     }
     
     static func audioTrack(audioTrackID: Spotify.ID) async throws -> Spotify.AudioTrack {
@@ -279,10 +286,22 @@ extension SpotifyRequests.Read {
         )
     }
     
-    static func albumTrackListFull(albumID: Spotify.ID) async throws -> [Spotify.AudioTrack] {
-        let firstPage = try await albumFirstAudioTrackPage(albumID: albumID)
-        let restOfTrackList = try await restOfList(firstPage: firstPage)
-        return firstPage.items + restOfTrackList
+    static func albumTrackListFull(albumID: Spotify.ID) -> AsyncThrowingStream<[Spotify.AudioTrack], Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let firstPage = try await albumFirstAudioTrackPage(albumID: albumID)
+                    continuation.yield(firstPage.items)
+                    for try await nextPageItems in SpotifyRequests.Read.restOfList(firstPage: firstPage) {
+                        continuation.yield(nextPageItems)
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
+        }
     }
     
     static func playlistFirstAudioTrackPage(playlistID: Spotify.ID) async throws -> Spotify.PlaylistAudioTrackPage {
@@ -293,10 +312,22 @@ extension SpotifyRequests.Read {
         )
     }
     
-    static func playlistTrackListFull(playlistID: Spotify.ID) async throws -> [Spotify.AudioTrack] {
-        let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
-        let restOfTrackList = try await restOfList(firstPage: firstPage)
-        return (firstPage.items + restOfTrackList).map({ $0.track })
+    static func playlistTrackListFull(playlistID: Spotify.ID) -> AsyncThrowingStream<[Spotify.AudioTrack], Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let firstPage = try await playlistFirstAudioTrackPage(playlistID: playlistID)
+                    continuation.yield(firstPage.items.map({ $0.track }))
+                    for try await nextPageItems in SpotifyRequests.Read.restOfList(firstPage: firstPage) {
+                        continuation.yield(nextPageItems.map({ $0.track }))
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
+        }
     }
     
     static func artistDiscographyPreview(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
@@ -308,14 +339,26 @@ extension SpotifyRequests.Read {
         return page.items
     }
     
-    static func artistDiscographyFull(artistID: Spotify.ID) async throws -> [Spotify.AlbumMetadata] {
-        let firstPage: Spotify.ArtistAlbumPage = try await SpotifyRequests.makeRequest(
-            type: HTTPMethod.GET,
-            path: "/artists/" + artistID + "/albums",
-            queryItems: [URLQueryItem(name: "limit", value: "50")]
-        )
-        let restOfAlbumList = try await restOfList(firstPage: firstPage)
-        return firstPage.items + restOfAlbumList
+    static func artistDiscographyFull(artistID: Spotify.ID) -> AsyncThrowingStream<[Spotify.AlbumMetadata], Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let firstPage: Spotify.ArtistAlbumPage = try await SpotifyRequests.makeRequest(
+                        type: HTTPMethod.GET,
+                        path: "/artists/" + artistID + "/albums",
+                        queryItems: [URLQueryItem(name: "limit", value: "50")]
+                    )
+                    continuation.yield(firstPage.items)
+                    for try await nextPageItems in SpotifyRequests.Read.restOfList(firstPage: firstPage) {
+                        continuation.yield(nextPageItems)
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
+        }
     }
     
     // TODO: why does this require market query
