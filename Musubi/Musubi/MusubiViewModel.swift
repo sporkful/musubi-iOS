@@ -59,7 +59,13 @@ extension Spotify.AlbumMetadata: AudioTrackListContext {
     var coverImageURLString: String? { self.images?.first?.url }
     var associatedPeople: [any SpotifyPerson] { self.artists }
     var associatedDate: String? { "Release Date: \(self.release_date)" }
-    var type: String { "Spotify Album" }
+    var type: String {
+        if self.album_type.lowercased() != "album" {
+            "Spotify Album (\(self.album_type.capitalized))"
+        } else {
+            "Spotify Album"
+        }
+    }
 }
 
 extension Spotify.PlaylistMetadata: AudioTrackListContext {

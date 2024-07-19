@@ -152,6 +152,11 @@ extension Spotify {
         // TODO: make sure this computed property doesn't mess up JSON decoding
         var id: Spotify.ID { track.id }
     }
+    
+    struct UserPlaylistPage: SpotifyListPage {
+        let items: [Spotify.PlaylistMetadata]
+        let next: String?
+    }
 }
 
 extension Spotify.AudioTrack {

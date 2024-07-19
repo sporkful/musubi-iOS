@@ -376,6 +376,29 @@ extension SpotifyRequests.Read {
         return topTracks.tracks
     }
     
+    static func currentUserOwnedPlaylists() -> AsyncThrowingStream<[Spotify.PlaylistMetadata], Error> {
+        let currentUserID = Musubi.UserManager.shared.currentUser?.id
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let firstPage: Spotify.UserPlaylistPage = try await SpotifyRequests.makeRequest(
+                        type: HTTPMethod.GET,
+                        path: "/me/playlists",
+                        queryItems: [URLQueryItem(name: "limit", value: "50")]
+                    )
+                    continuation.yield(firstPage.items.filter({ $0.owner.id == currentUserID }))
+                    for try await nextPageItems in SpotifyRequests.Read.restOfList(firstPage: firstPage) {
+                        continuation.yield(nextPageItems.filter({ $0.owner.id == currentUserID }))
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                    return
+                }
+                continuation.finish()
+            }
+        }
+    }
+    
     static func search(query: String) async throws -> Spotify.SearchResults {
         return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,
