@@ -38,29 +38,64 @@ struct SearchTabRoot: View {
         @State private var showArtistResults = false
         @State private var showAlbumResults = false
         
+        struct CustomToggle: View {
+            let title: String
+            @Binding var isOn: Bool
+            
+            var body: some View {
+                Button(
+                    action: { isOn.toggle() },
+                    label: { Text(title).font(.caption).bold().padding(10) }
+                )
+                .foregroundStyle(isOn ? .black : .white)
+                .background(isOn ? .green : .gray.opacity(0.5))
+                .clipShape(Capsule())
+            }
+        }
+        
+        let FILTER_BAR_EDGE_SHADOW: CGFloat = 10
+        
         var body: some View {
             VStack {
                 if isSearching {
-                ScrollView(.horizontal, showsIndicators: true) {
-                HStack {
-                    Spacer()
-                    Toggle("My Playlists", isOn: $showMyPlaylistResults)
-                        .toggleStyle(.button)
-                    Spacer()
-                    Toggle("All Playlists", isOn: $showAllPlaylistResults)
-                        .toggleStyle(.button)
-                    Spacer()
-                    Toggle("Tracks", isOn: $showAudioTrackResults)
-                        .toggleStyle(.button)
-                    Spacer()
-                    Toggle("Artists", isOn: $showArtistResults)
-                        .toggleStyle(.button)
-                    Spacer()
-                    Toggle("Albums", isOn: $showAlbumResults)
-                        .toggleStyle(.button)
-                    Spacer()
-                }
-                }
+                    ScrollView(.horizontal) {
+                        HStack {
+                            Rectangle()
+                                .frame(width: FILTER_BAR_EDGE_SHADOW)
+                                .frame(maxHeight: .infinity)
+                                .hidden()
+                            CustomToggle(title: "My Playlists", isOn: $showMyPlaylistResults)
+                            CustomToggle(title: "All Playlists", isOn: $showAllPlaylistResults)
+                            CustomToggle(title: "Tracks", isOn: $showAudioTrackResults)
+                            CustomToggle(title: "Artists", isOn: $showArtistResults)
+                            CustomToggle(title: "Albums", isOn: $showAlbumResults)
+                            Rectangle()
+                                .frame(width: FILTER_BAR_EDGE_SHADOW)
+                                .frame(maxHeight: .infinity)
+                                .hidden()
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .scrollIndicators(.hidden)
+                    .overlay {
+                        HStack {
+                            LinearGradient(
+                                gradient: Gradient(colors: [.black, .clear]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: FILTER_BAR_EDGE_SHADOW)
+                            .frame(maxHeight: .infinity)
+                            Spacer()
+                            LinearGradient(
+                                gradient: Gradient(colors: [.clear, .black]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: FILTER_BAR_EDGE_SHADOW)
+                            .frame(maxHeight: .infinity)
+                        }
+                    }
                 }
                 List {
                     if !isSearching || showMyPlaylistResults {
