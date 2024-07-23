@@ -312,6 +312,7 @@ extension SpotifyRequests.Read {
         )
     }
     
+    // TODO: handle podcasts and local files
     static func playlistTrackListFull(playlistID: Spotify.ID) -> AsyncThrowingStream<[Spotify.AudioTrack], Error> {
         return AsyncThrowingStream { continuation in
             Task {
@@ -436,6 +437,29 @@ extension SpotifyRequests.Read {
 
 extension SpotifyRequests.Write {
     private typealias HTTPMethod = SpotifyRequests.HTTPMethod
+    
+    static func createNewPlaylist(
+        name: String,
+        description: String,
+        public: Bool
+    ) async throws -> Spotify.PlaylistMetadata {
+        struct NewPlaylistMetadata: Encodable {
+            let name: String
+            let `public`: Bool
+            let description: String
+        }
+        
+        guard let currentUserID = Musubi.UserManager.shared.currentUser?.id else {
+            throw SpotifyRequests.Error.request(detail: "createNewPlaylist called with no logged-in user")
+        }
+        return try await SpotifyRequests.makeRequest(
+            type: HTTPMethod.POST,
+            path: "/users/\(currentUserID)/playlists",
+            jsonBody: JSONEncoder().encode(
+                NewPlaylistMetadata(name: name, public: `public`, description: description)
+            )
+        )
+    }
     
     // TODO: queue operations with enforced ordering
     actor Session {
