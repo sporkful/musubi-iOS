@@ -2,7 +2,6 @@
 
 import SwiftUI
 
-// TODO: fix glitchy tabbar when going Search -> Track -> View Album
 // TODO: use Labels to construct CustomToolbarItems (and elsewhere)
 
 struct AudioTrackListPage: View {
@@ -48,7 +47,7 @@ struct AudioTrackListPage: View {
     private let NAVBAR_OFFSET: CGFloat = 52
     private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
     
-    private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .black }
+    private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .gray }
     
     private let viewID = UUID() // for scroll view coordinate space id
     
@@ -141,6 +140,9 @@ struct AudioTrackListPage: View {
             .ignoresSafeArea(.all, edges: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             VStack(alignment: .center) {
+                if let coverImageURLString = audioTrackList.context.coverImageURLString,
+                   URL(string: coverImageURLString) != nil
+                {
                 if let image = coverImage {
                     Image(uiImage: image)
                         .resizable()
@@ -149,16 +151,31 @@ struct AudioTrackListPage: View {
                         .clipped()
                         .shadow(color: .black, radius: COVER_IMAGE_SHADOW_RADIUS)
                         .opacity(coverImageOpacity)
+                } else {
+                    ProgressView()
+                        .frame(width: coverImageDimension, height: coverImageDimension)
+                        .opacity(coverImageOpacity)
+                }
+                } else {
+                    ZStack {
+                        Rectangle()
+                            .fill(.white)
+                        Rectangle()
+                            .fill(.black.opacity(0.81))
+                        Image(systemName: "music.note")
+                            .font(.largeTitle)
+                            .opacity(0.81)
+                    }
+                    .frame(width: coverImageDimension, height: coverImageDimension)
+                    .opacity(coverImageOpacity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             ScrollView {
                 LazyVStack(alignment: .leading) {
-                    if coverImage != nil {
-                        Rectangle()
-                            .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
-                            .hidden()
-                    }
+                    Rectangle()
+                        .frame(height: COVER_IMAGE_INITIAL_DIMENSION)
+                        .hidden()
                     Text(audioTrackList.context.name)
                         .font(.title.leading(.tight))
                         .fontWeight(.bold)
@@ -166,28 +183,7 @@ struct AudioTrackListPage: View {
                         Text(formattedDescription)
                             .font(.caption)
                     }
-                    HStack {
-                        ForEach(
-                            Array(
-                                zip(
-                                    audioTrackList.context.associatedPeople.indices,
-                                    audioTrackList.context.associatedPeople
-                                )
-                            ),
-                            id: \.0
-                        ) { index, person in
-                            if index != 0 {
-                                Text("•")
-                            }
-                            Button {
-                                navigationPath.append(person)
-                            } label: {
-                                Text(person.name)
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                            }
-                        }
-                    }
+                    AssociatedPeopleList(audioTrackList: audioTrackList)
                     Text(audioTrackList.context.type)
                         .font(.caption)
                     if let associatedDate = audioTrackList.context.associatedDate {
@@ -207,6 +203,23 @@ struct AudioTrackListPage: View {
                             customTextStyle: .defaultStyle,
                             showAudioTrackMenu: true
                         )
+                    }
+                    if audioTrackList.contents.isEmpty {
+                        if audioTrackList.initialHydrationCompleted {
+                            VStack(alignment: .center) {
+                                Text("(No tracks)")
+                                    .font(.headline)
+                                    .padding(.vertical)
+                                    .opacity(0.81)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        } else {
+                            VStack(alignment: .center) {
+                                ProgressView()
+                                    .padding(.vertical)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        }
                     }
                     if spotifyPlaybackManager.currentTrack != nil {
                         Rectangle()
@@ -321,11 +334,12 @@ struct AudioTrackListPage: View {
             }
         )
     }
-    
-    struct CustomToolbar: View {
+}
+
+fileprivate struct CustomToolbar: View {
         @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
         
-        let customToolbarAdditionalItems: [CustomToolbarItem]
+        let customToolbarAdditionalItems: [AudioTrackListPage.CustomToolbarItem]
         
         // TODO: is @Bindable necessary?
         @Bindable var parentAudioTrackList: Musubi.ViewModel.AudioTrackList
@@ -458,6 +472,99 @@ struct AudioTrackListPage: View {
                     Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
                 }
             )
+        }
+}
+
+fileprivate struct AssociatedPeopleList: View {
+    @Environment(HomeViewCoordinator.self) private var homeViewCoordinator
+    
+    // TODO: is @Bindable necessary?
+    @Bindable var audioTrackList: Musubi.ViewModel.AudioTrackList
+    
+    @State private var isArtistsMultiline = false
+    
+    var body: some View {
+        ZStack {
+            // MARK: - hidden measurements
+            Text(audioTrackList.context.associatedPeople.map { $0.name }.joined(separator: "   •   "))
+                .font(.caption)
+                .fontWeight(.bold)
+                .frame(maxWidth: .infinity)
+                .lineLimit(1)
+                .hidden()
+                .background(
+                    content: {
+                        ViewThatFits(in: .vertical) {
+                            Text(audioTrackList.context.associatedPeople.map { $0.name }.joined(separator: "   •   "))
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .hidden()
+                                .onAppear {
+                                    isArtistsMultiline = false
+                                }
+                            Color.clear
+                                .hidden()
+                                .onAppear {
+                                    isArtistsMultiline = true
+                                }
+                        }
+                    }
+                )
+            
+            // MARK: - visible view
+            if !isArtistsMultiline {
+                HStack {
+                    ForEach(
+                        Array(zip(
+                            audioTrackList.context.associatedPeople.indices,
+                            audioTrackList.context.associatedPeople
+                        )),
+                        id: \.0
+                    ) { index, person in
+                        if index != 0 {
+                            Text("•")
+                        }
+                        Button(
+                            action: { openRelatedPage(spotifyNavigable: person) },
+                            label: {
+                            Text(person.name)
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                            }
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(alignment: .leading) {
+                    ForEach(
+                        Array(zip(
+                            audioTrackList.context.associatedPeople.indices,
+                            audioTrackList.context.associatedPeople
+                        )),
+                        id: \.0
+                    ) { _, person in
+                        Button(
+                            action: { openRelatedPage(spotifyNavigable: person) },
+                            label: {
+                            Text(person.name)
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                            }
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    
+    private func openRelatedPage(spotifyNavigable: any SpotifyNavigable) {
+        Task { @MainActor in
+            try await homeViewCoordinator.openSpotifyNavigable(spotifyNavigable)
         }
     }
 }

@@ -109,6 +109,23 @@ fileprivate struct CommitDetailPage: View {
                         showAudioTrackMenu: true
                     )
                 }
+                if audioTrackList.contents.isEmpty {
+                    if audioTrackList.initialHydrationCompleted {
+                        VStack(alignment: .center) {
+                            Text("(No tracks)")
+                                .font(.headline)
+                                .padding(.vertical)
+                                .opacity(0.81)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    } else {
+                        VStack(alignment: .center) {
+                            ProgressView()
+                                .padding(.vertical)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    }
+                }
             }
         }
         .interactiveDismissDisabled(true)

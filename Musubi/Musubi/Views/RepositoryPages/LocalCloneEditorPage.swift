@@ -31,6 +31,23 @@ struct LocalCloneEditorPage: View {
                         try await repositoryClone.stagedAudioTracklistMove(fromOffsets: fromOffsets, toOffset: toOffset)
                     }
                 }
+                if repositoryClone.stagedAudioTrackList.contents.isEmpty {
+                    if repositoryClone.stagedAudioTrackList.initialHydrationCompleted {
+                        VStack(alignment: .center) {
+                            Text("(No tracks)")
+                                .font(.headline)
+                                .padding(.vertical)
+                                .opacity(0.81)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    } else {
+                        VStack(alignment: .center) {
+                            ProgressView()
+                                .padding(.vertical)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    }
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

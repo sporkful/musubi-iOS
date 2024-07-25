@@ -193,6 +193,7 @@ extension Musubi.ViewModel {
         // TODO: alerts
         // For tying SwiftUI alerts onto.
         private(set) var initialHydrationError: Error? = nil
+        private(set) var initialHydrationCompleted: Bool = false
         
         init(repositoryReference: Musubi.RepositoryReference) {
             self.context = repositoryReference
@@ -209,9 +210,15 @@ extension Musubi.ViewModel {
                         ),
                         encoding: .utf8
                     )
+                    if savedStagingArea.isEmpty {
+                        initialHydrationCompleted = true
+                        return
+                    }
+                    
                     for try await sublist in SpotifyRequests.Read.audioTracks(audioTrackIDs: savedStagingArea) {
                         try await self.initialHydrationAppend(audioTracks: sublist)
                     }
+                    initialHydrationCompleted = true
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for local clone")
                     print(error.localizedDescription)
@@ -233,6 +240,11 @@ extension Musubi.ViewModel {
                     var relevantAudioTrackData: [Spotify.ID : Spotify.AudioTrack] = knownAudioTrackData ?? [:]
                     
                     let blob = try Musubi.Storage.LocalFS.loadBlob(blobID: repositoryCommit.commit.blobID)
+                    if blob.isEmpty {
+                        initialHydrationCompleted = true
+                        return
+                    }
+                    
                     let blobAudioTrackIDList: [Spotify.ID] = blob.components(separatedBy: ",")
                     
                     for try await sublist in SpotifyRequests.Read.audioTracks(
@@ -253,6 +265,7 @@ extension Musubi.ViewModel {
                             return audioTrack
                         }
                     )
+                    initialHydrationCompleted = true
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for repository commit")
                     print(error.localizedDescription)
@@ -262,6 +275,7 @@ extension Musubi.ViewModel {
             }
         }
         
+        // TODO: handle podcasts and local files
         init(playlistMetadata: Spotify.PlaylistMetadata) {
             self.context = playlistMetadata
             self.contents = []
@@ -273,6 +287,7 @@ extension Musubi.ViewModel {
                     for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: playlistMetadata.id) {
                         try await self.initialHydrationAppend(audioTracks: sublist)
                     }
+                    initialHydrationCompleted = true
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify playlist")
                     print(error.localizedDescription)
@@ -297,6 +312,7 @@ extension Musubi.ViewModel {
                             }
                         )
                     }
+                    initialHydrationCompleted = true
                 } catch {
                     print("[Musubi::AudioTrackList] failed to hydrate for Spotify album")
                     print(error.localizedDescription)
@@ -313,6 +329,7 @@ extension Musubi.ViewModel {
             self.initialHydrationTask = Task {}
             
             try! self._append(audioTracks: [audioTrack])
+            initialHydrationCompleted = true
         }
         
         private func initialHydrationAppend(audioTracks: [Spotify.AudioTrack]) async throws {

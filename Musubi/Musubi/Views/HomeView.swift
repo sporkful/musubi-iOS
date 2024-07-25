@@ -142,6 +142,11 @@ struct HomeView: View {
                 }
             }
         }
+        .onAppear {
+            let tabBarAppearance = UITabBarAppearance()
+            tabBarAppearance.configureWithOpaqueBackground()
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        }
     }
 }
 
