@@ -12,7 +12,7 @@ struct StaticAlbumPage: View {
             navigationPath: $navigationPath,
             audioTrackList: audioTrackList,
             showAudioTrackThumbnails: false,
-            customToolbarAdditionalItems: []
+            customToolbarPrimaryItems: []
         )
     }
 }

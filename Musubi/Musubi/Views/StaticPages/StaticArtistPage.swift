@@ -19,7 +19,6 @@ struct StaticArtistPage: View {
     private let COVER_IMAGE_INITIAL_DIMENSION = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT)
     private let TITLE_TEXT_HEIGHT: CGFloat = 42
     private let NAVBAR_OFFSET: CGFloat = 90
-    private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
     
     private let viewID = UUID() // for scroll view coordinate space id
     

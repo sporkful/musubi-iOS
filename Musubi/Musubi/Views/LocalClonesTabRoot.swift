@@ -97,6 +97,7 @@ fileprivate struct NewPlaylistSheet: View {
     @State private var description: String = ""
     @State private var isPublic: Bool = false
     
+    @State private var showAlertEmptyName = false
     @State private var showAlertError = false
     
     var body: some View {
@@ -104,11 +105,15 @@ fileprivate struct NewPlaylistSheet: View {
         
         NavigationStack {
             Form {
-                Section("New playlist info") {
+                Section("Name") {
                     TextField("Name", text: $name)
+                }
+                Section("Description") {
                     TextField("Description", text: $description)
                         .lineLimit(nil)
-                    Toggle("Public", isOn: $isPublic)
+                }
+                Section("Public") {
+                    Toggle("Make Public on Spotify", isOn: $isPublic)
                         .toggleStyle(SwitchToggleStyle(tint: .green))
                 }
                 Section {
@@ -131,11 +136,18 @@ fileprivate struct NewPlaylistSheet: View {
             .navigationTitle("Create new playlist")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                Button(
-                    action: { showSheet = false },
-                    label: { Text("Cancel") }
-                )
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(
+                        action: { showSheet = false },
+                        label: { Text("Cancel") }
+                    )
+                }
             }
+            .alert(
+                "Please enter a name for your new playlist",
+                isPresented: $showAlertEmptyName,
+                actions: {}
+            )
             .alert(
                 "Error when creating playlist",
                 isPresented: $showAlertError,
@@ -149,6 +161,11 @@ fileprivate struct NewPlaylistSheet: View {
     }
     
     private func createNewPlaylist() {
+        if name.isEmpty {
+            showAlertEmptyName = true
+            return
+        }
+        
         Task { @MainActor in
             homeViewCoordinator.disableUI = true
             defer { homeViewCoordinator.disableUI = false }

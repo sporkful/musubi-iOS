@@ -117,8 +117,7 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                 if showAudioTrackMenu {
                     SingleAudioTrackMenu(
                         audioTrack: audioTrack,
-                        showParentSheet: Binding.constant(false),
-                        isInListCell: true
+                        showParentSheet: Binding.constant(false)
                     )
                 }
             }

@@ -34,10 +34,17 @@ extension Musubi.UI {
 //        case playerCover = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 52.0
     }
     
-//    static let MENU_SYMBOL_SIZE: Double = 25
-    static let PLAY_SYMBOL_SIZE: Double = 50
-    static let SHUFFLE_SYMBOL_SIZE: Double = 25
-    static let CHECKBOX_SYMBOL_SIZE: Double = (ImageDimension.cellThumbnail.rawValue / 2)
+    enum PrimaryPlayButtonSize {
+        case playerSheet
+        case audioTrackListPage
+        
+        var fontSize: CGFloat {
+            switch self {
+            case .playerSheet: UIFont.preferredFont(forTextStyle: .title1).pointSize * 2.27
+            case .audioTrackListPage: UIFont.preferredFont(forTextStyle: .title3).pointSize * 2.27
+            }
+        }
+    }
 }
 
 extension Musubi.UI {

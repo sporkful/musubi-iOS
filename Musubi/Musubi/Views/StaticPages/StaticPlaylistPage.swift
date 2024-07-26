@@ -42,7 +42,7 @@ struct StaticPlaylistPage: View {
             navigationPath: $navigationPath,
             audioTrackList: audioTrackList,
             showAudioTrackThumbnails: true,
-            customToolbarAdditionalItems: [
+            customToolbarPrimaryItems: [
                 (
                     // TODO: clean up (can't access localClonesIndex from computed prop)
                     !self.currentUser.localClonesIndex.contains(where: { $0.handle == self.associatedRepositoryHandle })

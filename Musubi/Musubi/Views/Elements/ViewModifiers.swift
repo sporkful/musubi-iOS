@@ -206,11 +206,9 @@ private struct MiniPlayerOverlay: ViewModifier {
                                     },
                                     label: {
                                         Image(systemName: "pause.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: THUMBNAIL_SIZE * 0.420, height: THUMBNAIL_SIZE * 0.420)
-                                            .clipped()
-                                            .padding(.trailing, 6.30)
+                                            .font(.title3)
+                                            .padding(.horizontal, 6.30)
+                                            .frame(maxHeight: .infinity, alignment: .center)
                                     }
                                 )
                             } else {
@@ -220,11 +218,9 @@ private struct MiniPlayerOverlay: ViewModifier {
                                     },
                                     label: {
                                         Image(systemName: "play.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: THUMBNAIL_SIZE * 0.420, height: THUMBNAIL_SIZE * 0.420)
-                                            .clipped()
-                                            .padding(.trailing, 6.30)
+                                            .font(.title3)
+                                            .padding(.horizontal, 6.30)
+                                            .frame(maxHeight: .infinity, alignment: .center)
                                     }
                                 )
                             }

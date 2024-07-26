@@ -2,8 +2,6 @@
 
 import SwiftUI
 
-// TODO: use Labels to construct CustomToolbarItems (and elsewhere)
-
 struct AudioTrackListPage: View {
     @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
     
@@ -14,7 +12,8 @@ struct AudioTrackListPage: View {
     
     let showAudioTrackThumbnails: Bool
     
-    let customToolbarAdditionalItems: [CustomToolbarItem]
+    let customToolbarPrimaryItems: [CustomToolbarItem]
+    var customToolbarAdditionalItems: [CustomToolbarItem] = []
     
     struct CustomToolbarItem: Hashable {
         let title: String
@@ -45,7 +44,6 @@ struct AudioTrackListPage: View {
     private let COVER_IMAGE_SHADOW_RADIUS: CGFloat = 5
     private let TITLE_TEXT_HEIGHT: CGFloat = 42
     private let NAVBAR_OFFSET: CGFloat = 52
-    private let PLAY_SYMBOL_SIZE = Musubi.UI.PLAY_SYMBOL_SIZE
     
     private var backgroundHighlightColor: UIColor { coverImage?.meanColor()?.muted() ?? .gray }
     
@@ -80,11 +78,11 @@ struct AudioTrackListPage: View {
         return Musubi.UI.lerp(
             x: scrollPosition,
             x1: 0.0,
-            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88 + NAVBAR_OFFSET,
+            y1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 6.18 + NAVBAR_OFFSET,
             x2: COVER_IMAGE_INITIAL_DIMENSION,
             y2: TITLE_TEXT_HEIGHT * 3.30 + NAVBAR_OFFSET,
             minY: 1.0,
-            maxY: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 4.20 + PLAY_SYMBOL_SIZE * 1.88 + NAVBAR_OFFSET
+            maxY: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 6.18 + NAVBAR_OFFSET
         )
     }
     private var gradientOpacity: CGFloat {
@@ -102,9 +100,9 @@ struct AudioTrackListPage: View {
     private var navTitleOpacity: Double {
         return Musubi.UI.lerp(
             x: scrollPosition,
-            x1: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 0.420,
+            x1: COVER_IMAGE_INITIAL_DIMENSION * 0.971,
             y1: 0.0,
-            x2: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 2.62,
+            x2: COVER_IMAGE_INITIAL_DIMENSION + TITLE_TEXT_HEIGHT * 1.26,
             y2: 1.0,
             minY: 0.0,
             maxY: 1.0
@@ -191,9 +189,15 @@ struct AudioTrackListPage: View {
                             .font(.caption)
                     }
                     CustomToolbar(
-                        customToolbarAdditionalItems: customToolbarAdditionalItems,
-                        parentAudioTrackList: audioTrackList,
-                        showSheetAddToSelectableClones: $showSheetAddToSelectableClones
+                        customToolbarPrimaryItems: customToolbarPrimaryItems,
+                        customToolbarAdditionalItems: customToolbarAdditionalItems + [
+                            .init(
+                                title: "Add select tracks from this collection",
+                                sfSymbolName: "plus",
+                                action: { showSheetAddToSelectableClones = true }
+                            )
+                        ],
+                        parentAudioTrackList: audioTrackList
                     )
                     ForEach(audioTrackList.contents, id: \.self) { audioTrack in
                         Divider()
@@ -339,45 +343,40 @@ struct AudioTrackListPage: View {
 fileprivate struct CustomToolbar: View {
         @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
         
+        let customToolbarPrimaryItems: [AudioTrackListPage.CustomToolbarItem]
         let customToolbarAdditionalItems: [AudioTrackListPage.CustomToolbarItem]
         
         // TODO: is @Bindable necessary?
         @Bindable var parentAudioTrackList: Musubi.ViewModel.AudioTrackList
         
-        @Binding var showSheetAddToSelectableClones: Bool
-        
         @State private var showAlertErrorStartPlayback = false
         
         var body: some View {
             HStack {
-                ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                ForEach(customToolbarPrimaryItems, id: \.self) { customToolbarItem in
                 if !customToolbarItem.isDisabledVisually {
                     Button {
                         customToolbarItem.action()
                     } label: {
                         Image(systemName: customToolbarItem.sfSymbolName)
+                            .font(.title3)
                             .contentShape(Rectangle())
+                            .padding(.trailing, 5)
                     }
                 } else {
                     Button {
                     } label: {
                         Image(systemName: customToolbarItem.sfSymbolName)
+                            .font(.title3)
                             .contentShape(Rectangle())
+                            .padding(.trailing, 5)
                     }
                     .disabled(true)
                     .onTapGesture(perform: customToolbarItem.action)
                 }
                 }
                 Menu {
-                    Button {
-                        showSheetAddToSelectableClones = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus")
-                            Text("Add tracks from this collection to")
-                        }
-                    }
-                    ForEach(customToolbarAdditionalItems, id: \.self) { customToolbarItem in
+                    ForEach(customToolbarAdditionalItems + customToolbarPrimaryItems, id: \.self) { customToolbarItem in
                     if !customToolbarItem.isDisabledVisually {
                         Button {
                             customToolbarItem.action()
@@ -395,8 +394,8 @@ fileprivate struct CustomToolbar: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
-//                        .font(.system(size: Musubi.UI.MENU_SYMBOL_SIZE))
-//                        .frame(height: Musubi.UI.MENU_SYMBOL_SIZE)
+                        .font(.title3)
+                        .frame(maxHeight: .infinity, alignment: .center)
                         .contentShape(Rectangle())
                 }
                 Spacer()
@@ -417,14 +416,14 @@ fileprivate struct CustomToolbar: View {
                             Task { try await spotifyPlaybackManager.pause() }
                         } label: {
                             Image(systemName: "pause.circle.fill")
-                                .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                         }
                     } else {
                         Button {
                             Task { try await spotifyPlaybackManager.resume() }
                         } label: {
                             Image(systemName: "play.circle.fill")
-                                .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                         }
                     }
                 }
@@ -436,14 +435,14 @@ fileprivate struct CustomToolbar: View {
                             Task { try await spotifyPlaybackManager.pause() }
                         } label: {
                             Image(systemName: "pause.circle.fill")
-                                .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                         }
                     } else {
                         Button {
                             Task { try await spotifyPlaybackManager.resume() }
                         } label: {
                             Image(systemName: "play.circle.fill")
-                                .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                         }
                     }
                 }
@@ -460,7 +459,7 @@ fileprivate struct CustomToolbar: View {
                         }
                     } label: {
                         Image(systemName: "play.circle.fill")
-                            .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                            .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                     }
                 }
             }

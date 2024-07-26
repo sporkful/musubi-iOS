@@ -16,25 +16,25 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
     @Binding var selectedElements: Set<Element>
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 if selectedElements.count == selectableList.count {
                     Image(systemName: "checkmark.square.fill")
-                        .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
+                        .font(.title3)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             selectedElements.removeAll()
                         }
                 } else if selectedElements.count == 0 {
                     Image(systemName: "square")
-                        .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
+                        .font(.title3)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             selectedElements.formUnion(selectableList)
                         }
                 } else {
                     Image(systemName: "minus.square")
-                        .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
+                        .font(.title3)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             selectedElements.removeAll()
@@ -42,7 +42,7 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
                 }
                 Spacer()
             }
-            .padding(.horizontal)
+            .padding([.horizontal, .bottom])
             Divider()
             ScrollView {
             LazyVStack(spacing: .zero) {
@@ -52,7 +52,7 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
                 HStack(spacing: .zero) {
                     if selectedElements.contains(element) {
                         Image(systemName: "checkmark.square.fill")
-                            .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
+                            .font(.title3)
                             .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -60,7 +60,7 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
                             }
                     } else {
                         Image(systemName: "square")
-                            .font(.system(size: Musubi.UI.CHECKBOX_SYMBOL_SIZE))
+                            .font(.title3)
                             .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -79,6 +79,7 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
             }
             }
         }
+        .toolbarBackground(Color.black, for: .navigationBar)
     }
 }
 

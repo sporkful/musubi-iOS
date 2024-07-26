@@ -20,6 +20,9 @@ struct AddToSelectableLocalClonesSheet: View {
     private struct ShowLocalRepoSelection: Hashable { let _b = false }
     private struct ShowConfirmation: Hashable { let _b = true }
     
+    @State private var showAlertNoTracksToSelect = false
+    @State private var showAlertNoReposToSelect = false
+    
     @State private var showAlertNoTracksSelected = false
     @State private var showAlertNoReposSelected = false
     
@@ -96,6 +99,20 @@ struct AddToSelectableLocalClonesSheet: View {
         }
         .onAppear(perform: waitForHydration)
         .alert(
+            "No tracks to add",
+            isPresented: $showAlertNoTracksToSelect,
+            actions: {
+                Button("OK", action: { showSheet = false } )
+            }
+        )
+        .alert(
+            "No repositories to add to",
+            isPresented: $showAlertNoReposToSelect,
+            actions: {
+                Button("OK", action: { showSheet = false } )
+            }
+        )
+        .alert(
             "No tracks selected",
             isPresented: $showAlertNoTracksSelected,
             actions: {
@@ -130,6 +147,15 @@ struct AddToSelectableLocalClonesSheet: View {
             
             do {
                 try await audioTrackList.initialHydrationTask.value
+                
+                if audioTrackList.contents.isEmpty && audioTrackList.initialHydrationCompleted {
+                    showAlertNoTracksToSelect = true
+                    return
+                }
+                if currentUser.localClonesIndex.isEmpty {
+                    showAlertNoReposToSelect = true
+                    return
+                }
                 
                 // default to all selected
                 if selectedAudioTracks.isEmpty {

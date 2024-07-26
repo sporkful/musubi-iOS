@@ -19,7 +19,7 @@ struct LocalClonePage: View {
             navigationPath: $navigationPath,
             audioTrackList: repositoryClone.stagedAudioTrackList,
             showAudioTrackThumbnails: true,
-            customToolbarAdditionalItems: [
+            customToolbarPrimaryItems: [
                 .init(title: "Edit local clone", sfSymbolName: "pencil", action: { showSheetEditor = true }),
                 .init(title: "Create new commit", sfSymbolName: "icloud.and.arrow.up", action: { showSheetNewCommit = true }),
                 .init(title: "Show commit history", sfSymbolName: "clock.arrow.circlepath", action: { homeViewCoordinator.showSheetCommitHistory = true })

@@ -101,6 +101,7 @@ struct PlayerSheet: View {
                             action: { showSheet = false },
                             label: {
                                 Image(systemName: "chevron.down")
+                                    .frame(maxHeight: .infinity, alignment: .center)
                             }
                         )
                         Spacer()
@@ -123,6 +124,7 @@ struct PlayerSheet: View {
                             showParentSheet: $showSheet
                         )
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top)
                     Text("balancer")
                         .font(.title2.leading(.tight))
@@ -242,7 +244,7 @@ struct PlayerSheet: View {
                             Task { try await spotifyPlaybackManager.toggleShuffle() }
                         } label: {
                             Image(systemName: "shuffle")
-                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                .font(.title2)
                                 .foregroundStyle(spotifyPlaybackManager.shuffle ? Color.green : Color.white.opacity(0.5))
                         }
                         Spacer()
@@ -250,7 +252,7 @@ struct PlayerSheet: View {
                             Task { try await spotifyPlaybackManager.skipToPrevious() }
                         } label: {
                             Image(systemName: "backward.end.fill")
-                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                .font(.title)
                         }
                         Spacer()
                         if spotifyPlaybackManager.isPlaying {
@@ -258,14 +260,14 @@ struct PlayerSheet: View {
                                 Task { try await spotifyPlaybackManager.pause() }
                             } label: {
                                 Image(systemName: "pause.circle.fill")
-                                    .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                    .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.playerSheet.fontSize))
                             }
                         } else {
                             Button {
                                 Task { try await spotifyPlaybackManager.resume() }
                             } label: {
                                 Image(systemName: "play.circle.fill")
-                                    .font(.system(size: Musubi.UI.PLAY_SYMBOL_SIZE))
+                                    .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.playerSheet.fontSize))
                             }
                         }
                         Spacer()
@@ -273,7 +275,7 @@ struct PlayerSheet: View {
                             Task { try await spotifyPlaybackManager.skipToNext() }
                         } label: {
                             Image(systemName: "forward.end.fill")
-                                .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                .font(.title)
                         }
                         Spacer()
                         Button {
@@ -281,15 +283,15 @@ struct PlayerSheet: View {
                         } label: {
                             if spotifyPlaybackManager.repeatState == .context {
                                 Image(systemName: "repeat")
-                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .font(.title2)
                                     .foregroundStyle(Color.green)
                             } else if spotifyPlaybackManager.repeatState == .track {
                                 Image(systemName: "repeat.1")
-                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .font(.title2)
                                     .foregroundStyle(Color.green)
                             } else {
                                 Image(systemName: "repeat")
-                                    .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+                                    .font(.title2)
                                     .foregroundStyle(Color.white.opacity(0.5))
                             }
                         }
