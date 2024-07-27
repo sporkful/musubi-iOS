@@ -3,26 +3,26 @@
 import Foundation
 
 /*
-// This solution causes a SwiftUI AttributeGraph cycle (still unsure why), which causes
-// StaticPlaylistPage to not be rendered properly. (Someone else ran into the same problem at
-// https://forums.developer.apple.com/forums/thread/126890?answerId=776726022#776726022.)
-// However, the alternative solution is messy, so keeping this around in case it gets fixed.
-
-extension String {
-    init?(htmlEncodedString: String) {
-        guard let data = htmlEncodedString.data(using: .utf8) else {
-            return nil
-        }
-        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
-            .documentType: NSAttributedString.DocumentType.html,
-            .characterEncoding: String.Encoding.utf8.rawValue
-        ]
-        guard let attributedString = try? NSAttributedString(data: data, options: options, documentAttributes: nil) else {
-            return nil
-        }
-        self.init(attributedString.string)
-    }
-}
+ // This solution causes a SwiftUI AttributeGraph cycle (still unsure why), which causes
+ // StaticPlaylistPage to not be rendered properly. (Someone else ran into the same problem at
+ // https://forums.developer.apple.com/forums/thread/126890?answerId=776726022#776726022.)
+ // However, the alternative solution is messy, so keeping this around in case it gets fixed.
+ 
+ extension String {
+ init?(htmlEncodedString: String) {
+ guard let data = htmlEncodedString.data(using: .utf8) else {
+ return nil
+ }
+ let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
+ .documentType: NSAttributedString.DocumentType.html,
+ .characterEncoding: String.Encoding.utf8.rawValue
+ ]
+ guard let attributedString = try? NSAttributedString(data: data, options: options, documentAttributes: nil) else {
+ return nil
+ }
+ self.init(attributedString.string)
+ }
+ }
  */
 
 // Reference: https://stackoverflow.com/a/30141700
@@ -33,16 +33,16 @@ extension String {
   func decodingHTMLEntities() -> String {
     var result = String()
     var position = startIndex
-
+    
     // Get the range to the next '&'
     while let ampRange = range(of: "&", range: position ..< endIndex) {
       result += self[position ..< ampRange.lowerBound]
       position = ampRange.lowerBound
-
+      
       // Get the range to the next ';'
       if let semiRange = range(of: ";", range: position ..< endIndex ) {
         if let nextAmpRange = range(of: "&", range: index(position, offsetBy: 1) ..< endIndex ),
-          nextAmpRange.upperBound < semiRange.upperBound {
+           nextAmpRange.upperBound < semiRange.upperBound {
           // We have an other "&" before the next ";", let's add it and step over.
           result += "&"
           position = index(ampRange.lowerBound, offsetBy: 1)
@@ -62,7 +62,7 @@ extension String {
         break
       }
     }
-
+    
     // Add remaining characters.
     result += self[position ..< endIndex]
     return result
@@ -70,7 +70,7 @@ extension String {
 }
 
 private extension String {
-
+  
   /// Convert the numeric value to the corresponding Unicode character
   ///    e.g.
   ///    decodeNumeric("64", 10) -> "@"
@@ -87,7 +87,7 @@ private extension String {
     }
     return nil
   }
-
+  
   /// Decode the HTML character entity to the corresponding
   /// Unicode character, return `nil` for invalid input.
   ///     decode("&#64;")    -> "@"
@@ -110,7 +110,7 @@ private extension String {
       return nil
     }
   }
-
+  
   // Mapping from XML/HTML character entity reference to character
   static let characterEntities: [String: Character] = [
     // Taken from http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
@@ -368,7 +368,7 @@ private extension String {
     "&clubs;": "\u{2663}",
     "&hearts;": "\u{2665}",
     "&diams;": "\u{2666}",
-
+    
     // Special cases from Windows-1252. https://en.wikipedia.org/wiki/Windows-1252
     "&#128;": "\u{20AC}",
     "&#130;": "\u{201A}",
