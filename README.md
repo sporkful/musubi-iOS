@@ -1,16 +1,17 @@
-# Musubi
+# musubi-iOS
 
-Version control and update notifications for Spotify playlists.
-
-Musubi is a full-stack application that enables Spotify users to version control playlists and get notified of updates on
-other users’ playlists.
-
-Musubi-iOS is the iOS client, featuring:
-- intuitive UI design based on the official Spotify app, including global search, playlist editing, and playback control.
-- playlist version control, i.e. the ability to log the edit history of your playlists, "time-travel" to specific versions, and safely collaborate with others on a shared playlist.
-- playlist subscriptions, i.e. the ability to get notified when a playlist you're "subscribed" to gets updated.
-
+Musubi is a prototype iOS client for Spork, a full-stack project that enables Spotify users to version control playlists and collaborate using forks.
 
 ## Usage
 
+### Option 1 - Apple App Store.
 
+Currently unavailable - coming soon!
+
+### Option 2 - Apple TestFlight.
+
+Please email musubi.developer@gmail.com for details. The process will involve downloading the official Apple TestFlight app and sharing with us the email address you use to register.
+
+### Option 3 - build from sources.
+
+This release does not contain all constants needed for the app to build correctly. Please email musubi.developer@gmail.com for additional information.
