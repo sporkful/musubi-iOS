@@ -17,6 +17,10 @@ struct NewCommitPage: View {
     @State private var visualDiffFromHead: [Musubi.ViewModel.AudioTrackList.VisualChange] = []
     @State private var headAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     
+    @State private var showSheetSpotifyDiverged = false
+    @State private var remoteSpotifyBlob: Musubi.Model.Blob = ""
+    @State private var localHeadBlob: Musubi.Model.Blob = ""
+    
     @State private var showAlertErrorDiff = false
     @State private var showAlertErrorCommit = false
     
@@ -151,6 +155,21 @@ struct NewCommitPage: View {
                     }
                 }
                 .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
+                .sheet(
+                    isPresented: $showSheetSpotifyDiverged,
+                    onDismiss: {
+                        isSheetDisabled = false
+                        showSheet = false
+                    },
+                    content: {
+                        SpotifyDivergedPage(
+                            remoteSpotifyBlob: remoteSpotifyBlob,
+                            localHeadBlob: localHeadBlob,
+                            showSheet: $showSheetSpotifyDiverged,
+                            repositoryClone: repositoryClone
+                        )
+                    }
+                )
             }
         }
     }
@@ -203,8 +222,18 @@ struct NewCommitPage: View {
             defer { isSheetDisabled = false }
             
             do {
-                try await repositoryClone.makeCommit(message: message)
-                showSheet = false
+                switch try await repositoryClone.checkIfSpotifyDiverged() {
+                case .didNotDiverge:
+                    try await repositoryClone.makeCommit(
+                        message: message,
+                        proposedCommitBlob: repositoryClone.stagedAudioTrackList.toBlob()
+                    )
+                    showSheet = false
+                case let .diverged(remoteSpotifyBlob, localHeadBlob):
+                    self.remoteSpotifyBlob = remoteSpotifyBlob
+                    self.localHeadBlob = localHeadBlob
+                    self.showSheetSpotifyDiverged = true
+                }
             } catch {
                 print("[Musubi::NewCommitPage] failed to commit")
                 print(error.localizedDescription)

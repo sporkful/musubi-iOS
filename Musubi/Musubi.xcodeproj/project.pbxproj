@@ -38,6 +38,7 @@
 		794C8D932B7855AB008DE992 /* LocalClonePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D922B7855AB008DE992 /* LocalClonePage.swift */; };
 		794C8D992B797F22008DE992 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D982B797F22008DE992 /* ViewModifiers.swift */; };
 		794C8D9D2B7C4281008DE992 /* SpotifyPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */; };
+		794F0E9B2C61CFDD00C82D75 /* SpotifyDivergedPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794F0E9A2C61CFDD00C82D75 /* SpotifyDivergedPage.swift */; };
 		795345512B7EA7EE005EE430 /* PlaybackDevicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345502B7EA7EE005EE430 /* PlaybackDevicePicker.swift */; };
 		795345552B8010F5005EE430 /* PlayerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345542B8010F5005EE430 /* PlayerSheet.swift */; };
 		795345572B807C89005EE430 /* SingleAudioTrackMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */; };
@@ -108,6 +109,7 @@
 		794C8D922B7855AB008DE992 /* LocalClonePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClonePage.swift; sourceTree = "<group>"; };
 		794C8D982B797F22008DE992 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		794C8D9C2B7C4281008DE992 /* SpotifyPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyPlaybackManager.swift; sourceTree = "<group>"; };
+		794F0E9A2C61CFDD00C82D75 /* SpotifyDivergedPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyDivergedPage.swift; sourceTree = "<group>"; };
 		795345502B7EA7EE005EE430 /* PlaybackDevicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDevicePicker.swift; sourceTree = "<group>"; };
 		795345542B8010F5005EE430 /* PlayerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSheet.swift; sourceTree = "<group>"; };
 		795345562B807C89005EE430 /* SingleAudioTrackMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleAudioTrackMenu.swift; sourceTree = "<group>"; };
@@ -279,6 +281,7 @@
 				79223A102B6FFB630041E8E7 /* AddToSelectableLocalClonesSheet.swift */,
 				79F556BD2B73F9F4000304B9 /* NewCommitPage.swift */,
 				79F556BF2B73FA02000304B9 /* CommitHistoryPage.swift */,
+				794F0E9A2C61CFDD00C82D75 /* SpotifyDivergedPage.swift */,
 			);
 			path = RepositoryPages;
 			sourceTree = "<group>";
@@ -445,6 +448,7 @@
 				794733722B469C01001C3FEB /* Cryptography.swift in Sources */,
 				7961DA1B2B5998CF00650775 /* StaticUserPage.swift in Sources */,
 				794733942B4CE08B001C3FEB /* LocalClonesTabRoot.swift in Sources */,
+				794F0E9B2C61CFDD00C82D75 /* SpotifyDivergedPage.swift in Sources */,
 				7947336B2B464E2B001C3FEB /* MusubiModel.swift in Sources */,
 				7961DA112B55ADDB00650775 /* UIColor+.swift in Sources */,
 				79F556BE2B73F9F4000304B9 /* NewCommitPage.swift in Sources */,

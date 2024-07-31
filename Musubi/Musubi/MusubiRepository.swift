@@ -155,14 +155,34 @@ extension Musubi {
                 .write(to: HEAD_FILE, options: .atomic)
         }
         
+        enum SpotifyDivergenceCheckResult {
+            case diverged(remoteSpotifyBlob: Musubi.Model.Blob, localHeadBlob: Musubi.Model.Blob)
+            case didNotDiverge
+        }
+        
+        func checkIfSpotifyDiverged() async throws -> SpotifyDivergenceCheckResult {
+            var remoteSpotifyTrackIDs: [String] = []
+            for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: self.repositoryReference.id) {
+                remoteSpotifyTrackIDs.append(contentsOf: sublist.map { $0.id })
+            }
+            let remoteSpotifyBlob = remoteSpotifyTrackIDs.joined(separator: ",")
+            
+            let localHeadCommit = try Musubi.Storage.LocalFS.loadCommit(commitID: headCommitID)
+            let localHeadBlob = try Musubi.Storage.LocalFS.loadBlob(blobID: localHeadCommit.blobID)
+            
+            if remoteSpotifyBlob == localHeadBlob {
+                return .didNotDiverge
+            } else {
+                return .diverged(remoteSpotifyBlob: remoteSpotifyBlob, localHeadBlob: localHeadBlob)
+            }
+        }
+        
         // Assumes caller has disabled UI. In particular, this task should be the only thing with
         // the ability to mutate `self.stagedAudioTrackList` until it finishes executing.
-        func makeCommit(message: String) async throws {
+        func makeCommit(message: String, proposedCommitBlob: String) async throws {
             guard let currentUser = Musubi.UserManager.shared.currentUser else {
-                throw Musubi.Cloud.Error.request(detail: "tried to commitAndPush without active user")
+                throw Musubi.Cloud.Error.request(detail: "tried to commit without active user")
             }
-            
-            let proposedCommitBlob = try await self.stagedAudioTrackList.toBlob()
             
             let cloudResponse: Musubi.Cloud.Response.Commit = try await Musubi.Cloud.make(
                 request: Musubi.Cloud.Request.Commit(
@@ -195,7 +215,8 @@ extension Musubi {
             }
         }
         
-        // TODO: atomicity?
+        // TODO: atomicity and isolation
+        // TODO: can be made a LOT more efficient/robust by diffingWithLiveMoves by [trackID]
         private func completeCommit(
             newCommitID: String,
             newCommit: Musubi.Model.Commit,
@@ -204,24 +225,29 @@ extension Musubi {
                 if newCommitBlob.blobID != newCommit.blobID {
                     throw Musubi.Repository.Error.committing(detail: "received new commit doesn't match proposed blob")
                 }
+            
+                try Musubi.Storage.LocalFS.save(blob: newCommitBlob, blobID: newCommit.blobID)
+                try Musubi.Storage.LocalFS.save(commit: newCommit, commitID: newCommitID)
+            
+                let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
                 
-                let headAudioTrackList = Musubi.ViewModel.AudioTrackList(
+                // TODO: handle errors with AudioTrackList hydration (or better, don't use AudioTrackList here)
+                let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
+                let newCommitAudioTrackList = Musubi.ViewModel.AudioTrackList(
                     repositoryCommit: try Musubi.RepositoryCommit(
                         repositoryReference: self.repositoryReference,
-                        commitID: self.headCommitID
+                        commitID: newCommitID
                     ),
                     knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
                 )
                 
                 // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
-                let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
                 let spotifyWriteSession = SpotifyRequests.Write.Session(
                     playlistID: self.repositoryReference.handle.playlistID,
                     lastSnapshotID: playlistMetadata.snapshot_id
                 )
                 
-                // TODO: diff with newCommitBlob instead of stagedAudioTrackList?
-                for change in try await self.stagedAudioTrackList.differenceWithLiveMoves(from: headAudioTrackList) {
+                for change in try await newCommitAudioTrackList.differenceWithLiveMoves(from: spotifyAudioTrackList) {
                     switch change {
                     case let .remove(offset, _, _):
                         try await spotifyWriteSession.remove(at: offset)
@@ -234,11 +260,42 @@ extension Musubi {
                     }
                 }
                 
-                try Musubi.Storage.LocalFS.save(blob: newCommitBlob, blobID: newCommit.blobID)
-                try Musubi.Storage.LocalFS.save(commit: newCommit, commitID: newCommitID)
-                
                 self.headCommitID = newCommitID
                 try self.saveHeadPointer()
+        }
+        
+        // TODO: dedup code with above
+        func syncSpotifyToLocalHead() async throws {
+            let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
+            
+            // TODO: handle errors with AudioTrackList hydration (or better, don't use AudioTrackList here)
+            let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
+            let headAudioTrackList = Musubi.ViewModel.AudioTrackList(
+                repositoryCommit: try Musubi.RepositoryCommit(
+                    repositoryReference: self.repositoryReference,
+                    commitID: self.headCommitID
+                ),
+                knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
+            )
+            
+            // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
+            let spotifyWriteSession = SpotifyRequests.Write.Session(
+                playlistID: self.repositoryReference.handle.playlistID,
+                lastSnapshotID: playlistMetadata.snapshot_id
+            )
+            
+            for change in try await headAudioTrackList.differenceWithLiveMoves(from: spotifyAudioTrackList) {
+                switch change {
+                case let .remove(offset, _, _):
+                    try await spotifyWriteSession.remove(at: offset)
+                case let .insert(offset, element, associatedWith):
+                    if let associatedWith = associatedWith {
+                        try await spotifyWriteSession.move(removalOffset: associatedWith, insertionOffset: offset)
+                    } else {
+                        try await spotifyWriteSession.insert(audioTrackID: element.audioTrackID, at: offset)
+                    }
+                }
+            }
         }
         
         func checkoutCommit(audioTrackList: Musubi.ViewModel.AudioTrackList) async throws {
