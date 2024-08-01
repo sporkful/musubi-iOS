@@ -162,7 +162,7 @@ extension Musubi {
         
         func checkIfSpotifyDiverged() async throws -> SpotifyDivergenceCheckResult {
             var remoteSpotifyTrackIDs: [String] = []
-            for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: self.repositoryReference.id) {
+            for try await sublist in SpotifyRequests.Read.playlistTrackListFull(playlistID: self.repositoryReference.handle.playlistID) {
                 remoteSpotifyTrackIDs.append(contentsOf: sublist.map { $0.id })
             }
             let remoteSpotifyBlob = remoteSpotifyTrackIDs.joined(separator: ",")
@@ -231,8 +231,9 @@ extension Musubi {
             
                 let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
                 
-                // TODO: handle errors with AudioTrackList hydration (or better, don't use AudioTrackList here)
                 let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
+                try await spotifyAudioTrackList.initialHydrationTask.value
+                
                 let newCommitAudioTrackList = Musubi.ViewModel.AudioTrackList(
                     repositoryCommit: try Musubi.RepositoryCommit(
                         repositoryReference: self.repositoryReference,
@@ -240,6 +241,7 @@ extension Musubi {
                     ),
                     knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
                 )
+                try await newCommitAudioTrackList.initialHydrationTask.value
                 
                 // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
                 let spotifyWriteSession = SpotifyRequests.Write.Session(
@@ -268,8 +270,9 @@ extension Musubi {
         func syncSpotifyToLocalHead() async throws {
             let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
             
-            // TODO: handle errors with AudioTrackList hydration (or better, don't use AudioTrackList here)
             let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
+            try await spotifyAudioTrackList.initialHydrationTask.value
+            
             let headAudioTrackList = Musubi.ViewModel.AudioTrackList(
                 repositoryCommit: try Musubi.RepositoryCommit(
                     repositoryReference: self.repositoryReference,
@@ -277,6 +280,7 @@ extension Musubi {
                 ),
                 knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
             )
+            try await headAudioTrackList.initialHydrationTask.value
             
             // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
             let spotifyWriteSession = SpotifyRequests.Write.Session(
