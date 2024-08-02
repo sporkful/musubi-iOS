@@ -17,6 +17,8 @@ struct SpotifyDivergedPage: View {
     @State private var showAlertEmptyMessage = false
     @FocusState private var messageFieldIsFocused: Bool
     
+    @State private var showAlertConfirmDiscard = false
+    
     @State private var visualDiffFromHead: [Musubi.ViewModel.AudioTrackList.VisualChange] = []
     @State private var headAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
     @State private var spotifyAudioTrackList: Musubi.ViewModel.AudioTrackList? = nil
@@ -29,6 +31,27 @@ struct SpotifyDivergedPage: View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
                 List {
+                    Text(
+                        """
+                        Musubi has detected **external edits - edits you made directly on the Spotify \
+                        app instead of the Musubi app**. These external edits have been summarized in \
+                        the diff below.
+                        
+                        
+                        Musubi gives you two ways to handle this (choose at the bottom of this page):
+                        
+                        a) Save these external edits as the new "latest commit". Your current local Musubi \
+                        version will remain uncommitted and untouched - you can decide what to do with it \
+                        after this popup closes (e.g. discard it by checking-out the new "latest commit", \
+                        or manually incorporate these external edits then commit the merged version).
+                        
+                        b) Discard these external edits and proceed with committing your current local \
+                        Musubi version. Note these external edits will be lost forever - Spotify will be \
+                        updated to mirror your current local Musubi version.
+                        """
+                    )
+                    .padding(.vertical)
+                    .opacity(0.8)
                     Section("External edits on Spotify (compared to most recent previous commit)") {
                         ForEach(visualDiffFromHead, id: \.self) { visualChange in
                             // TODO: will this react to updates in relevantAudioTrackData?
@@ -93,27 +116,64 @@ struct SpotifyDivergedPage: View {
                         }
                     }
                     Section("Commit message") {
-                        TextField("Enter a message for your new commit here", text: $commitMessage)
+                        TextField("Enter a commit message for these external edits", text: $commitMessage)
                             .focused($messageFieldIsFocused)
                     }
                     Button {
                         commit(message: commitMessage)
                     } label: {
-                        HStack {
-                            Spacer()
-                            Text("Create new commit")
+                        ZStack {
+                            // for spacing purposes only
+                            Text("1\n2")
                                 .bold()
-                                .listRowBackground(Color.white.opacity(0.280))
-                            Spacer()
+                                .hidden()
+                            HStack(alignment: .center) {
+                                Spacer()
+                                Text("Create new commit for these external edits")
+                                    .bold()
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
                         }
                     }
+                    .buttonStyle(.bordered)
+                    .tint(.white)
+                    Button {
+                        showAlertConfirmDiscard = true
+                    } label: {
+                        ZStack {
+                            // for spacing purposes only
+                            Text("1\n2")
+                                .bold()
+                                .hidden()
+                            HStack(alignment: .center) {
+                                Spacer()
+                                Text("Discard these external edits")
+                                    .bold()
+                                Spacer()
+                            }
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                 }
                 .interactiveDismissDisabled(true)
                 .withCustomSheetNavbar(
-                    caption: "New commit",
+                    caption: "External edits detected",
                     title: repositoryClone.repositoryReference.name,
                     cancellationControl: .init(title: "Cancel", action: { showSheet = false }),
                     primaryControl: nil
+                )
+                .alert(
+                    "Are you sure you want to discard these external edits?",
+                    isPresented: $showAlertConfirmDiscard,
+                    actions: {
+                        Button("Yes", role: .destructive, action: { discardExternalEdits() } )
+                        Button("Cancel", role: .cancel, action: { showAlertConfirmDiscard = false })
+                    },
+                    message: {
+                        Text("If you proceed with \"Yes\", Spotify will be updated to mirror your current local Musubi version.")
+                    }
                 )
                 .alert(
                     "Please enter a commit message!",

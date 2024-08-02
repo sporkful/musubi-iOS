@@ -98,14 +98,21 @@ struct NewCommitPage: View {
                     Button {
                         commit(message: commitMessage)
                     } label: {
-                        HStack {
+                        ZStack {
+                        // for spacing purposes only
+                        Text("1\n2")
+                            .bold()
+                            .hidden()
+                        HStack(alignment: .center) {
                             Spacer()
                             Text("Create new commit")
                                 .bold()
-                                .listRowBackground(Color.white.opacity(0.280))
                             Spacer()
                         }
+                        }
                     }
+                    .buttonStyle(.bordered)
+                    .tint(.white)
                 }
                 .interactiveDismissDisabled(true)
                 .withCustomSheetNavbar(
@@ -154,13 +161,18 @@ struct NewCommitPage: View {
                         Task { await loadVisualDiffFromHead() }
                     }
                 }
+                .onChange(of: showSheetSpotifyDiverged, initial: false) { _, newValue in
+                    if newValue == false {
+                        Task { await loadVisualDiffFromHead() }
+                    }
+                }
                 .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
                 .sheet(
                     isPresented: $showSheetSpotifyDiverged,
-                    onDismiss: {
-                        isSheetDisabled = false
-                        showSheet = false
-                    },
+//                    onDismiss: {
+//                        isSheetDisabled = false
+//                        showSheet = false
+//                    },
                     content: {
                         SpotifyDivergedPage(
                             remoteSpotifyBlob: remoteSpotifyBlob,
