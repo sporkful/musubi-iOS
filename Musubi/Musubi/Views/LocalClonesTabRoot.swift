@@ -38,51 +38,51 @@ struct LocalClonesTabRoot: View {
                 NewPlaylistSheet(showSheet: $showSheetCreateNewPlaylist)
             }
         } else {
-        ScrollViewReader { scrollProxy in
-            List {
-                ForEach(currentUser.localClonesIndex) { repositoryReference in
-                    NavigationLink(value: repositoryReference) {
-                        ListCellWrapper(
-                            item: repositoryReference,
-                            showThumbnail: true,
-                            customTextStyle: .defaultStyle
-                        )
+            ScrollViewReader { scrollProxy in
+                List {
+                    ForEach(currentUser.localClonesIndex) { repositoryReference in
+                        NavigationLink(value: repositoryReference) {
+                            ListCellWrapper(
+                                item: repositoryReference,
+                                showThumbnail: true,
+                                customTextStyle: .defaultStyle
+                            )
+                        }
+                    }
+                    if spotifyPlaybackManager.currentTrack != nil {
+                        Rectangle()
+                            .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                            .padding(6.30 + 3.30)
+                            .hidden()
+                    }
+                    Rectangle()
+                        .frame(height: 1)
+                        .hidden()
+                        .id(HomeViewCoordinator.ScrollAnchor.bottom)
+                }
+                .toolbar {
+                    Button(
+                        action: { showSheetCreateNewPlaylist = true },
+                        label: { Image(systemName: "plus") }
+                    )
+                }
+                .sheet(isPresented: $showSheetCreateNewPlaylist) {
+                    NewPlaylistSheet(showSheet: $showSheetCreateNewPlaylist)
+                }
+                .onChange(of: homeViewCoordinator.myReposDesiredScrollAnchor) { _, newState in
+                    withAnimation {
+                        scrollProxy.scrollTo(newState)
                     }
                 }
-                if spotifyPlaybackManager.currentTrack != nil {
-                    Rectangle()
-                        .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                        .padding(6.30 + 3.30)
-                        .hidden()
-                }
-                Rectangle()
-                    .frame(height: 1)
-                    .hidden()
-                    .id(HomeViewCoordinator.ScrollAnchor.bottom)
-            }
-            .toolbar {
-                Button(
-                    action: { showSheetCreateNewPlaylist = true },
-                    label: { Image(systemName: "plus") }
-                )
-            }
-            .sheet(isPresented: $showSheetCreateNewPlaylist) {
-                NewPlaylistSheet(showSheet: $showSheetCreateNewPlaylist)
-            }
-            .onChange(of: homeViewCoordinator.myReposDesiredScrollAnchor) { _, newState in
-                withAnimation {
-                    scrollProxy.scrollTo(newState)
+                .task {
+                    // TODO: check for races
+                    // staggered refresh to stay within rate limit // TODO: tune / organize this
+                    for repositoryReference in currentUser.localClonesIndex {
+                        try? await repositoryReference.refreshExternalMetadata()
+                        try? await Task.sleep(until: .now + .seconds(2), clock: .continuous)
+                    }
                 }
             }
-            .task {
-                // TODO: check for races
-                // staggered refresh to stay within rate limit // TODO: tune / organize this
-                for repositoryReference in currentUser.localClonesIndex {
-                    try? await repositoryReference.refreshExternalMetadata()
-                    try? await Task.sleep(until: .now + .seconds(2), clock: .continuous)
-                }
-            }
-        }
         }
     }
 }

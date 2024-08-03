@@ -25,7 +25,7 @@ extension Musubi {
                 URLQueryItem(name: "client_id", value: SPOTIFY_CLIENT_ID),
                 URLQueryItem(name: "response_type", value: "code"),
                 URLQueryItem(name: "redirect_uri", value: REDIRECT),
-    //            URLQueryItem(name: "state", value: ),
+                //            URLQueryItem(name: "state", value: ),
                 URLQueryItem(name: "scope", value: SpotifyRequests.ACCESS_SCOPES_STR),
                 URLQueryItem(name: "code_challenge_method", value: "S256"),
                 URLQueryItem(name: "code_challenge", value: pkceChallenge),
@@ -91,7 +91,7 @@ extension Musubi {
             var request = URLRequest(url: URL(string: "https://accounts.spotify.com/api/token")!)
             request.httpMethod = "POST"
             request.setValue("application/x-www-form-urlencoded ", forHTTPHeaderField: "Content-Type")
-
+            
             var components = URLComponents()
             components.queryItems = queryItems
             request.httpBody = components.query?.data(using: .utf8)
@@ -118,7 +118,7 @@ extension Musubi {
         }
         
         // TODO: can we make this more generic / reduce code duplication? (see eof)
-
+        
         private typealias Keychain = Musubi.Storage.Keychain
         private typealias KeyIdentifier = Keychain.KeyIdentifier
         
@@ -192,50 +192,50 @@ extension Musubi {
             }
         }
         
-    //    private enum OAuthCacheable {
-    //        case token, refreshToken, expirationDate
-    //
-    //        var keychainName: Musubi.Storage.Keychain.KeyName {
-    //            switch self {
-    //            case .token: .oauthToken
-    //            case .refreshToken: .oauthRefreshToken
-    //            case .expirationDate: .oauthExpirationDate
-    //            }
-    //        }
-    //
-    //        // TODO: does Swift have built-in features to support this? ideally want to just bind
-    //        // each case to a different type (e.g. token:String, expirationDate:Date)
-    //        func save<T>(value: T) throws {
-    //            let typeErrDetail = "(SpotifyWebClient::OAuthCacheable::save) given value has wrong type"
-    //            switch self {
-    //            case .token, .refreshToken:
-    //                guard value is String else {
-    //                    throw Musubi.DeveloperError.any(detail: typeErrDetail)
-    //                }
-    //            case .expirationDate:
-    //                guard value is Date else {
-    //                    throw Musubi.DeveloperError.any(detail: typeErrDetail)
-    //                }
-    //            }
-    //
-    //            let value: Data = switch self {
-    //            case .token, .refreshToken:
-    //                Data((value as! String).utf8)
-    //            case .expirationDate:
-    //                withUnsafeBytes(of: value) { Data($0) }
-    //            }
-    //
-    //            do {
-    //                try Musubi.Storage.Keychain.save(
-    //                    keyName: self.keychainName,
-    //                    value: value
-    //                )
-    //            } catch {
-    //                Task {
-    //                    await logOut()
-    //                }
-    //            }
-    //        }
-    //    }
+        //    private enum OAuthCacheable {
+        //        case token, refreshToken, expirationDate
+        //
+        //        var keychainName: Musubi.Storage.Keychain.KeyName {
+        //            switch self {
+        //            case .token: .oauthToken
+        //            case .refreshToken: .oauthRefreshToken
+        //            case .expirationDate: .oauthExpirationDate
+        //            }
+        //        }
+        //
+        //        // TODO: does Swift have built-in features to support this? ideally want to just bind
+        //        // each case to a different type (e.g. token:String, expirationDate:Date)
+        //        func save<T>(value: T) throws {
+        //            let typeErrDetail = "(SpotifyWebClient::OAuthCacheable::save) given value has wrong type"
+        //            switch self {
+        //            case .token, .refreshToken:
+        //                guard value is String else {
+        //                    throw Musubi.DeveloperError.any(detail: typeErrDetail)
+        //                }
+        //            case .expirationDate:
+        //                guard value is Date else {
+        //                    throw Musubi.DeveloperError.any(detail: typeErrDetail)
+        //                }
+        //            }
+        //
+        //            let value: Data = switch self {
+        //            case .token, .refreshToken:
+        //                Data((value as! String).utf8)
+        //            case .expirationDate:
+        //                withUnsafeBytes(of: value) { Data($0) }
+        //            }
+        //
+        //            do {
+        //                try Musubi.Storage.Keychain.save(
+        //                    keyName: self.keychainName,
+        //                    value: value
+        //                )
+        //            } catch {
+        //                Task {
+        //                    await logOut()
+        //                }
+        //            }
+        //        }
+        //    }
     }
 }

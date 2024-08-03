@@ -46,26 +46,26 @@ struct LocalClonePage: View {
             )
         }
         // TODO: impl
-//        .alert(
-//            "Failed to open local clone: \(repositoryClone.repositoryReference.name)",
-//            isPresented: $repositoryClone.stagingAreaHydrationError,
-//            actions: {
-//                Button(
-//                    "OK",
-//                    action: {
-//                        navigationPath.removeLast()
-//                    }
-//                )
-//            },
-//            message: {
-//                Text(
-//                    """
-//                    Don't worry, your data isn't corrupted! There was just an error when fetching \
-//                    individual track details from Spotify. Please try opening again.
-//                    """
-//                )
-//            }
-//        )
+        //        .alert(
+        //            "Failed to open local clone: \(repositoryClone.repositoryReference.name)",
+        //            isPresented: $repositoryClone.stagingAreaHydrationError,
+        //            actions: {
+        //                Button(
+        //                    "OK",
+        //                    action: {
+        //                        navigationPath.removeLast()
+        //                    }
+        //                )
+        //            },
+        //            message: {
+        //                Text(
+        //                    """
+        //                    Don't worry, your data isn't corrupted! There was just an error when fetching \
+        //                    individual track details from Spotify. Please try opening again.
+        //                    """
+        //                )
+        //            }
+        //        )
     }
 }
 

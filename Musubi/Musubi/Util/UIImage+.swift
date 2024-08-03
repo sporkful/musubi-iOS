@@ -12,7 +12,7 @@ extension UIImage {
             z: inputImage.extent.size.width,
             w: inputImage.extent.size.height
         )
-
+        
         // TODO: try histogram
         // https://developer.apple.com/library/archive/documentation/GraphicsImaging/Reference/CoreImageFilterReference
         guard let filter = CIFilter(
@@ -24,7 +24,7 @@ extension UIImage {
         guard let outputImage = filter.outputImage else {
             return nil
         }
-
+        
         var bitmap = [UInt8](repeating: 0, count: 4)
         let context = CIContext(options: [.workingColorSpace: kCFNull])
         context.render(
@@ -35,7 +35,7 @@ extension UIImage {
             format: .RGBA8,
             colorSpace: nil
         )
-
+        
         return UIColor(
             red: CGFloat(bitmap[0]) / 255,
             green: CGFloat(bitmap[1]) / 255,
@@ -46,19 +46,19 @@ extension UIImage {
     
     func centerColor() -> UIColor? {
         guard let cgImage = cgImage,
-            let pixelData = cgImage.dataProvider?.data
-            else { return nil }
+              let pixelData = cgImage.dataProvider?.data
+        else { return nil }
         
         let centerPoint = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
         let pixelInfo = Int(centerPoint.y) * cgImage.bytesPerRow + Int(centerPoint.x) * 4;
-
+        
         let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
         
         let r = CGFloat(data[pixelInfo]) / CGFloat(255.0)
         let g = CGFloat(data[pixelInfo+1]) / CGFloat(255.0)
         let b = CGFloat(data[pixelInfo+2]) / CGFloat(255.0)
         let a = CGFloat(data[pixelInfo+3]) / CGFloat(255.0)
-
+        
         return UIColor(red: r, green: g, blue: b, alpha: a)
     }
 }

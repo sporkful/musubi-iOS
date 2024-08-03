@@ -113,33 +113,33 @@ extension Musubi.ViewModel {
         
         /*
          // TODO: revisit this if memory efficiency needed, e.g. with global shared cache of track data.
-        
-        // for audio tracks with no parent, e.g. from search
-        private var _audioTrack: Spotify.AudioTrack?
-        
-        var audioTrack: Spotify.AudioTrack? {
-            get async {
-                if let _audioTrack = _audioTrack {
-                    return _audioTrack
-                } else {
-                    return await self.parent?.audioTrackData[audioTrackID]
-                }
-            }
-        }
-        
-        init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList) {
-            self.audioTrackID = audioTrackID
-            self.occurrence = occurrence
-            self.parent = parent
-            self._audioTrack = nil
-        }
-        
-        init(audioTrack: Spotify.AudioTrack) {
-            self.audioTrackID = audioTrack.id
-            self.occurrence = 1
-            self.parent = nil
-            self._audioTrack = audioTrack
-        }
+         
+         // for audio tracks with no parent, e.g. from search
+         private var _audioTrack: Spotify.AudioTrack?
+         
+         var audioTrack: Spotify.AudioTrack? {
+         get async {
+         if let _audioTrack = _audioTrack {
+         return _audioTrack
+         } else {
+         return await self.parent?.audioTrackData[audioTrackID]
+         }
+         }
+         }
+         
+         init(audioTrackID: Spotify.ID, occurrence: Int, parent: AudioTrackList) {
+         self.audioTrackID = audioTrackID
+         self.occurrence = occurrence
+         self.parent = parent
+         self._audioTrack = nil
+         }
+         
+         init(audioTrack: Spotify.AudioTrack) {
+         self.audioTrackID = audioTrack.id
+         self.occurrence = 1
+         self.parent = nil
+         self._audioTrack = audioTrack
+         }
          
          */
         
@@ -152,14 +152,14 @@ extension Musubi.ViewModel {
             rhs: Musubi.ViewModel.AudioTrack
         ) -> Bool {
             return lhs.audioTrackID == rhs.audioTrackID
-                && lhs.occurrence == rhs.occurrence
-//                && lhs.parent?.context.id == rhs.parent?.context.id
+            && lhs.occurrence == rhs.occurrence
+            //                && lhs.parent?.context.id == rhs.parent?.context.id
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(audioTrackID)
             hasher.combine(occurrence)
-//            hasher.combine(parent?.context.id ?? "")
+            //            hasher.combine(parent?.context.id ?? "")
         }
     }
     
@@ -172,7 +172,7 @@ extension Musubi.ViewModel {
         private(set) var contents: [AudioTrack]
         
         private(set) var audioTrackCounter: [Spotify.ID : Int]
-//        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
+        //        private(set) var audioTrackData: [Spotify.ID : Spotify.AudioTrack]
         
         // temporary placeholder for above - see AudioTrack definition above for origin
         func audioTrackData() async -> [Spotify.ID : Spotify.AudioTrack] {
@@ -232,7 +232,7 @@ extension Musubi.ViewModel {
             self.context = repositoryCommit
             self.contents = []
             self.audioTrackCounter = [:]
-//            self.audioTrackData = knownAudioTrackData ?? [:]
+            //            self.audioTrackData = knownAudioTrackData ?? [:]
             self.initialHydrationTask = Task {}
             
             self.initialHydrationTask = Task {
@@ -346,9 +346,9 @@ extension Musubi.ViewModel {
         
         private func _append(audioTracks: [Spotify.AudioTrack]) throws {
             for audioTrack in audioTracks {
-//                if self.audioTrackData[audioTrack.id] == nil {
-//                    self.audioTrackData[audioTrack.id] = audioTrack
-//                }
+                //                if self.audioTrackData[audioTrack.id] == nil {
+                //                    self.audioTrackData[audioTrack.id] = audioTrack
+                //                }
                 self.audioTrackCounter[audioTrack.id] = (self.audioTrackCounter[audioTrack.id] ?? 0) + 1
                 self.contents.append(
                     AudioTrack(
@@ -474,11 +474,11 @@ extension Musubi.ViewModel {
         enum CustomError: LocalizedError {
             case misc(detail: String)
             case DEV(detail: String)
-
+            
             var errorDescription: String? {
                 let description = switch self {
-                    case let .misc(detail): "(misc) \(detail)"
-                    case let .DEV(detail): "(DEV) \(detail)"
+                case let .misc(detail): "(misc) \(detail)"
+                case let .DEV(detail): "(DEV) \(detail)"
                 }
                 return "[Musubi::ViewModel::AudioTrackList] \(description)"
             }

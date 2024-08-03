@@ -34,60 +34,60 @@ struct NewCommitPage: View {
                             // TODO: row numbers and +/- annotations
                             // TODO: moves
                             // TODO: undo by row?
-                                switch visualChange.change {
-                                case .none:
+                            switch visualChange.change {
+                            case .none:
+                                ListCellWrapper(
+                                    item: visualChange.element,
+                                    showThumbnail: true,
+                                    customTextStyle: .defaultStyle,
+                                    showAudioTrackMenu: false
+                                )
+                                
+                            case .inserted(associatedWith: let associatedWith):
+                                HStack {
+                                    if associatedWith != nil {
+                                        Image(systemName: "arrow.right")
+                                            .foregroundStyle(Color.green)
+                                            .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                    } else {
+                                        Image(systemName: "plus")
+                                            .foregroundStyle(Color.green)
+                                            .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
+                                    }
                                     ListCellWrapper(
                                         item: visualChange.element,
                                         showThumbnail: true,
-                                        customTextStyle: .defaultStyle,
+                                        customTextStyle: .init(color: .green, bold: true),
                                         showAudioTrackMenu: false
                                     )
+                                }
+                                .listRowBackground(Color.green.opacity(0.180))
                                 
-                                case .inserted(associatedWith: let associatedWith):
-                                    HStack {
-                                        if associatedWith != nil {
-                                            Image(systemName: "arrow.right")
-                                                .foregroundStyle(Color.green)
+                            case .removed(associatedWith: let associatedWith):
+                                HStack {
+                                    if let associatedWith = associatedWith {
+                                        if associatedWith < visualDiffFromHead.firstIndex(of: visualChange)! {
+                                            Image(systemName: "arrow.up")
+                                                .foregroundStyle(Color.red)
                                                 .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
                                         } else {
-                                            Image(systemName: "plus")
-                                                .foregroundStyle(Color.green)
-                                                .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
-                                        }
-                                        ListCellWrapper(
-                                            item: visualChange.element,
-                                            showThumbnail: true,
-                                            customTextStyle: .init(color: .green, bold: true),
-                                            showAudioTrackMenu: false
-                                        )
-                                    }
-                                    .listRowBackground(Color.green.opacity(0.180))
-                                
-                                case .removed(associatedWith: let associatedWith):
-                                    HStack {
-                                        if let associatedWith = associatedWith {
-                                            if associatedWith < visualDiffFromHead.firstIndex(of: visualChange)! {
-                                                Image(systemName: "arrow.up")
-                                                    .foregroundStyle(Color.red)
-                                                    .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
-                                            } else {
-                                                Image(systemName: "arrow.down")
-                                                    .foregroundStyle(Color.red)
-                                                    .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
-                                            }
-                                        } else {
-                                            Image(systemName: "minus")
+                                            Image(systemName: "arrow.down")
                                                 .foregroundStyle(Color.red)
                                                 .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
                                         }
-                                        ListCellWrapper(
-                                            item: visualChange.element,
-                                            showThumbnail: true,
-                                            customTextStyle: .init(color: .red, bold: true),
-                                            showAudioTrackMenu: false
-                                        )
+                                    } else {
+                                        Image(systemName: "minus")
+                                            .foregroundStyle(Color.red)
+                                            .frame(width: Musubi.UI.ImageDimension.cellThumbnail.rawValue * 0.81)
                                     }
-                                    .listRowBackground(Color.red.opacity(0.180))
+                                    ListCellWrapper(
+                                        item: visualChange.element,
+                                        showThumbnail: true,
+                                        customTextStyle: .init(color: .red, bold: true),
+                                        showAudioTrackMenu: false
+                                    )
+                                }
+                                .listRowBackground(Color.red.opacity(0.180))
                             }
                         }
                     }
@@ -99,16 +99,16 @@ struct NewCommitPage: View {
                         commit(message: commitMessage)
                     } label: {
                         ZStack {
-                        // for spacing purposes only
-                        Text("1\n2")
-                            .bold()
-                            .hidden()
-                        HStack(alignment: .center) {
-                            Spacer()
-                            Text("Create new commit")
+                            // for spacing purposes only
+                            Text("1\n2")
                                 .bold()
-                            Spacer()
-                        }
+                                .hidden()
+                            HStack(alignment: .center) {
+                                Spacer()
+                                Text("Create new commit")
+                                    .bold()
+                                Spacer()
+                            }
                         }
                     }
                     .buttonStyle(.bordered)
@@ -169,10 +169,10 @@ struct NewCommitPage: View {
                 .withCustomDisablingOverlay(isDisabled: $isSheetDisabled)
                 .sheet(
                     isPresented: $showSheetSpotifyDiverged,
-//                    onDismiss: {
-//                        isSheetDisabled = false
-//                        showSheet = false
-//                    },
+                    //                    onDismiss: {
+                    //                        isSheetDisabled = false
+                    //                        showSheet = false
+                    //                    },
                     content: {
                         SpotifyDivergedPage(
                             remoteSpotifyBlob: remoteSpotifyBlob,

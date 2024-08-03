@@ -45,38 +45,38 @@ struct SelectableListSection<Element: Hashable, CustomListCell: View>: View {
             .padding([.horizontal, .bottom])
             Divider()
             ScrollView {
-            LazyVStack(spacing: .zero) {
-            ForEach(selectableList, id: \.self) { element in
-                VStack(alignment: .leading, spacing: .zero) {
-                Divider()
-                HStack(spacing: .zero) {
-                    if selectedElements.contains(element) {
-                        Image(systemName: "checkmark.square.fill")
-                            .font(.title3)
-                            .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedElements.remove(element)
+                LazyVStack(spacing: .zero) {
+                    ForEach(selectableList, id: \.self) { element in
+                        VStack(alignment: .leading, spacing: .zero) {
+                            Divider()
+                            HStack(spacing: .zero) {
+                                if selectedElements.contains(element) {
+                                    Image(systemName: "checkmark.square.fill")
+                                        .font(.title3)
+                                        .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            selectedElements.remove(element)
+                                        }
+                                } else {
+                                    Image(systemName: "square")
+                                        .font(.title3)
+                                        .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            selectedElements.insert(element)
+                                        }
+                                }
+                                listCellBuilder(element)
+                                    .padding(.leading)
                             }
-                    } else {
-                        Image(systemName: "square")
-                            .font(.title3)
-                            .frame(height: Musubi.UI.ImageDimension.cellThumbnail.rawValue)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedElements.insert(element)
-                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 9.87)
+                            .background(selectedElements.contains(element) ? Color.gray.opacity(0.5) : Color.clear)
+                        }
+                        //                .listRowBackground(selectedElements.contains(element) ? Color.gray.opacity(0.5) : .none)
                     }
-                    listCellBuilder(element)
-                        .padding(.leading)
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 9.87)
-                .background(selectedElements.contains(element) ? Color.gray.opacity(0.5) : Color.clear)
-                }
-//                .listRowBackground(selectedElements.contains(element) ? Color.gray.opacity(0.5) : .none)
-            }
-            }
             }
         }
         .toolbarBackground(Color.black, for: .navigationBar)

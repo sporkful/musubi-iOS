@@ -25,16 +25,16 @@ struct SpotifyRequests {
         case request(detail: String)
         case parsing(detail: String)
         case DEV(detail: String)
-
+        
         var errorDescription: String? {
             let description = switch self {
-                case let .response(httpStatusCode, retryAfter): """
+            case let .response(httpStatusCode, retryAfter): """
                     failed with status code \(httpStatusCode) - retry after \(retryAfter ?? -1))
                     """
-                case let .auth(detail): "(auth) \(detail)"
-                case let .request(detail): "(request) \(detail)"
-                case let .parsing(detail): "(misc parsing) \(detail)"
-                case let .DEV(detail): "(DEV) \(detail)"
+            case let .auth(detail): "(auth) \(detail)"
+            case let .request(detail): "(request) \(detail)"
+            case let .parsing(detail): "(misc parsing) \(detail)"
+            case let .DEV(detail): "(DEV) \(detail)"
             }
             return "[Spotify::Request] \(description)"
         }
@@ -54,14 +54,14 @@ extension SpotifyRequests {
         "playlist-read-collaborative",
         "playlist-modify-private",
         "playlist-modify-public",
-//        "user-follow-modify",
+        //        "user-follow-modify",
         "user-follow-read",
         "user-read-playback-position",
         "user-top-read",
         "user-read-recently-played",
-//        "user-library-modify",
+        //        "user-library-modify",
         "user-library-read",
-//        "user-read-email",
+        //        "user-read-email",
         "user-read-private"
     ]
     
@@ -255,7 +255,7 @@ extension SpotifyRequests.Read {
             }
         }
     }
-
+    
     static func artistMetadata(artistID: Spotify.ID) async throws -> Spotify.ArtistMetadata {
         return try await SpotifyRequests.makeRequest(
             type: HTTPMethod.GET,

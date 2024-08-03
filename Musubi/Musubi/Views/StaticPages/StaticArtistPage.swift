@@ -180,9 +180,9 @@ struct StaticArtistPage: View {
             .ignoresSafeArea(.all, edges: [.top])
             VStack {
                 Color(backgroundHighlightColor)
-                    // TODO: this seems unreliable
-                    // Note behavior changes depending on order of the following two modifiers.
-                    // By calling frame after, we don't need to add any offset for safe area / navbar.
+                // TODO: this seems unreliable
+                // Note behavior changes depending on order of the following two modifiers.
+                // By calling frame after, we don't need to add any offset for safe area / navbar.
                     .ignoresSafeArea(.all, edges: .top)
                     .frame(height: 1)
                     .opacity(0.81)

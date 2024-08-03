@@ -71,9 +71,9 @@ struct SpotifyLoginWebView: UIViewRepresentable {
     @Binding var showAlertLoginError: Bool
     
     let pkceVerifier: String
-
+    
     let webView = WKWebView()
-
+    
     func makeUIView(context: UIViewRepresentableContext<SpotifyLoginWebView>) -> WKWebView {
         guard let pkceChallenge = try? Musubi.Cryptography.newPKCEChallenge(pkceVerifier: pkceVerifier) else {
             showAlertLoginError = true
@@ -85,7 +85,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
         self.webView.load(Musubi.UserManager.shared.createWebLoginRequest(pkceChallenge: pkceChallenge))
         return self.webView
     }
-
+    
     func updateUIView(_ uiView: WKWebView, context: UIViewRepresentableContext<SpotifyLoginWebView>) {
         return
     }
@@ -97,7 +97,7 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             pkceVerifier: pkceVerifier
         )
     }
-
+    
     class Coordinator: NSObject, WKNavigationDelegate {
         @Binding private var showSheetWebLogin: Bool
         @Binding private var showAlertLoginError: Bool
@@ -119,9 +119,9 @@ struct SpotifyLoginWebView: UIViewRepresentable {
             // We only care about the one with the auth code.
             guard let oauthRedirectedURL = webView.url,
                   let authCode = URLComponents(string: oauthRedirectedURL.absoluteString)?
-                    .queryItems?
-                    .first(where: { $0.name == "code" })?
-                    .value
+                .queryItems?
+                .first(where: { $0.name == "code" })?
+                .value
             else {
                 return
             }

@@ -249,28 +249,28 @@ fileprivate struct ConfirmationPage: View {
             
             do {
                 // TODO: clean this - Swift's built-in map doesn't support async closures yet :(
-//                let newAudioTracks = try await audioTrackList.contents
-//                    .filter { element in
-//                        selectedAudioTracks.contains(element)
-//                    }
-//                    .map { element in
-//                        guard let audioTrack = await element.audioTrack else {
-//                            throw Musubi.UI.Error.misc(
-//                                detail: "[Musubi::AddToSel...] missing audio track data in executeAdd"
-//                            )
-//                        }
-//                        return audioTrack
-//                    }
+                //                let newAudioTracks = try await audioTrackList.contents
+                //                    .filter { element in
+                //                        selectedAudioTracks.contains(element)
+                //                    }
+                //                    .map { element in
+                //                        guard let audioTrack = await element.audioTrack else {
+                //                            throw Musubi.UI.Error.misc(
+                //                                detail: "[Musubi::AddToSel...] missing audio track data in executeAdd"
+                //                            )
+                //                        }
+                //                        return audioTrack
+                //                    }
                 
                 self.selectedAudioTracksOrdered = []
                 for element in await audioTrackList.contents {
                     if selectedAudioTracks.contains(element) {
-//                        guard let audioTrack = await element.audioTrack else {
-//                            throw Musubi.UI.Error.misc(
-//                                detail: "missing audio track data in orderSelectedAudioTracks"
-//                            )
-//                        }
-//                        self.selectedAudioTracksOrdered.append(audioTrack)
+                        //                        guard let audioTrack = await element.audioTrack else {
+                        //                            throw Musubi.UI.Error.misc(
+                        //                                detail: "missing audio track data in orderSelectedAudioTracks"
+                        //                            )
+                        //                        }
+                        //                        self.selectedAudioTracksOrdered.append(audioTrack)
                         self.selectedAudioTracksOrdered.append(element.audioTrack)
                     }
                 }

@@ -15,13 +15,13 @@ extension Musubi {
             case committing(detail: String)
             case misc(detail: String)
             case DEV(detail: String)
-
+            
             var errorDescription: String? {
                 let description = switch self {
-                    case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
-                    case let .committing(detail): "(committing) \(detail)"
-                    case let .misc(detail): "\(detail)"
-                    case let .DEV(detail): "(DEV) \(detail)"
+                case let .cloning(detail): "(initial cloning - check Musubi::UserManager) \(detail)"
+                case let .committing(detail): "(committing) \(detail)"
+                case let .misc(detail): "\(detail)"
+                case let .DEV(detail): "(DEV) \(detail)"
                 }
                 return "[Musubi::Repository] \(description)"
             }
@@ -98,7 +98,7 @@ extension Musubi {
         
         var id: String { "\(self.repositoryReference.id):\(self.commitID)" }
     }
-
+    
     // TODO: take out stagedAudioTrackList and merge this with RepositoryReference (and just call it Repository?)
     @Observable
     @MainActor
@@ -144,7 +144,7 @@ extension Musubi {
             try await self.stagedAudioTrackList.append(audioTracks: audioTracks)
             try! await saveStagingArea() // intentional fail-fast
         }
-
+        
         func saveStagingArea() async throws {
             try await self.stagedAudioTrackList.toBlobData()
                 .write(to: STAGING_AREA_FILE, options: .atomic)
@@ -222,48 +222,48 @@ extension Musubi {
             newCommit: Musubi.Model.Commit,
             newCommitBlob: Musubi.Model.Blob
         ) async throws {
-                if newCommitBlob.blobID != newCommit.blobID {
-                    throw Musubi.Repository.Error.committing(detail: "received new commit doesn't match proposed blob")
-                }
+            if newCommitBlob.blobID != newCommit.blobID {
+                throw Musubi.Repository.Error.committing(detail: "received new commit doesn't match proposed blob")
+            }
             
-                try Musubi.Storage.LocalFS.save(blob: newCommitBlob, blobID: newCommit.blobID)
-                try Musubi.Storage.LocalFS.save(commit: newCommit, commitID: newCommitID)
+            try Musubi.Storage.LocalFS.save(blob: newCommitBlob, blobID: newCommit.blobID)
+            try Musubi.Storage.LocalFS.save(commit: newCommit, commitID: newCommitID)
             
-                let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
-                
-                let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
-                try await spotifyAudioTrackList.initialHydrationTask.value
-                
-                let newCommitAudioTrackList = Musubi.ViewModel.AudioTrackList(
-                    repositoryCommit: try Musubi.RepositoryCommit(
-                        repositoryReference: self.repositoryReference,
-                        commitID: newCommitID
-                    ),
-                    knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
-                )
-                try await newCommitAudioTrackList.initialHydrationTask.value
-                
-                // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
-                let spotifyWriteSession = SpotifyRequests.Write.Session(
-                    playlistID: self.repositoryReference.handle.playlistID,
-                    lastSnapshotID: playlistMetadata.snapshot_id
-                )
-                
-                for change in try await newCommitAudioTrackList.differenceWithLiveMoves(from: spotifyAudioTrackList) {
-                    switch change {
-                    case let .remove(offset, _, _):
-                        try await spotifyWriteSession.remove(at: offset)
-                    case let .insert(offset, element, associatedWith):
-                        if let associatedWith = associatedWith {
-                            try await spotifyWriteSession.move(removalOffset: associatedWith, insertionOffset: offset)
-                        } else {
-                            try await spotifyWriteSession.insert(audioTrackID: element.audioTrackID, at: offset)
-                        }
+            let playlistMetadata = try await SpotifyRequests.Read.playlistMetadata(playlistID: self.repositoryReference.handle.playlistID)
+            
+            let spotifyAudioTrackList = Musubi.ViewModel.AudioTrackList(playlistMetadata: playlistMetadata)
+            try await spotifyAudioTrackList.initialHydrationTask.value
+            
+            let newCommitAudioTrackList = Musubi.ViewModel.AudioTrackList(
+                repositoryCommit: try Musubi.RepositoryCommit(
+                    repositoryReference: self.repositoryReference,
+                    commitID: newCommitID
+                ),
+                knownAudioTrackData: await self.stagedAudioTrackList.audioTrackData()
+            )
+            try await newCommitAudioTrackList.initialHydrationTask.value
+            
+            // TODO: get snapshot id from cloud as well (cloud needs to check against spotify for remote updates)
+            let spotifyWriteSession = SpotifyRequests.Write.Session(
+                playlistID: self.repositoryReference.handle.playlistID,
+                lastSnapshotID: playlistMetadata.snapshot_id
+            )
+            
+            for change in try await newCommitAudioTrackList.differenceWithLiveMoves(from: spotifyAudioTrackList) {
+                switch change {
+                case let .remove(offset, _, _):
+                    try await spotifyWriteSession.remove(at: offset)
+                case let .insert(offset, element, associatedWith):
+                    if let associatedWith = associatedWith {
+                        try await spotifyWriteSession.move(removalOffset: associatedWith, insertionOffset: offset)
+                    } else {
+                        try await spotifyWriteSession.insert(audioTrackID: element.audioTrackID, at: offset)
                     }
                 }
-                
-                self.headCommitID = newCommitID
-                try self.saveHeadPointer()
+            }
+            
+            self.headCommitID = newCommitID
+            try self.saveHeadPointer()
         }
         
         // TODO: dedup code with above

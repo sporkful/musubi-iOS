@@ -23,8 +23,8 @@ struct AudioTrackListPage: View {
         
         static func == (lhs: AudioTrackListPage.CustomToolbarItem, rhs: AudioTrackListPage.CustomToolbarItem) -> Bool {
             return lhs.title == rhs.title
-                && lhs.sfSymbolName == rhs.sfSymbolName
-                && lhs.isDisabledVisually == rhs.isDisabledVisually
+            && lhs.sfSymbolName == rhs.sfSymbolName
+            && lhs.isDisabledVisually == rhs.isDisabledVisually
         }
         
         func hash(into hasher: inout Hasher) {
@@ -141,19 +141,19 @@ struct AudioTrackListPage: View {
                 if let coverImageURLString = audioTrackList.context.coverImageURLString,
                    URL(string: coverImageURLString) != nil
                 {
-                if let image = coverImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: coverImageDimension, height: coverImageDimension)
-                        .clipped()
-                        .shadow(color: .black, radius: COVER_IMAGE_SHADOW_RADIUS)
-                        .opacity(coverImageOpacity)
-                } else {
-                    ProgressView()
-                        .frame(width: coverImageDimension, height: coverImageDimension)
-                        .opacity(coverImageOpacity)
-                }
+                    if let image = coverImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: coverImageDimension, height: coverImageDimension)
+                            .clipped()
+                            .shadow(color: .black, radius: COVER_IMAGE_SHADOW_RADIUS)
+                            .opacity(coverImageOpacity)
+                    } else {
+                        ProgressView()
+                            .frame(width: coverImageDimension, height: coverImageDimension)
+                            .opacity(coverImageOpacity)
+                    }
                 } else {
                     ZStack {
                         Rectangle()
@@ -248,9 +248,9 @@ struct AudioTrackListPage: View {
             .coordinateSpace(name: "\(viewID.uuidString)::ScrollView")
             VStack {
                 Color(backgroundHighlightColor)
-                    // TODO: this seems unreliable
-                    // Note behavior changes depending on order of the following two modifiers.
-                    // By calling frame after, we don't need to add any offset for safe area / navbar.
+                // TODO: this seems unreliable
+                // Note behavior changes depending on order of the following two modifiers.
+                // By calling frame after, we don't need to add any offset for safe area / navbar.
                     .ignoresSafeArea(.all, edges: .top)
                     .frame(height: 1)
                     .opacity(0.81)
@@ -341,19 +341,19 @@ struct AudioTrackListPage: View {
 }
 
 fileprivate struct CustomToolbar: View {
-        @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
-        
-        let customToolbarPrimaryItems: [AudioTrackListPage.CustomToolbarItem]
-        let customToolbarAdditionalItems: [AudioTrackListPage.CustomToolbarItem]
-        
-        // TODO: is @Bindable necessary?
-        @Bindable var parentAudioTrackList: Musubi.ViewModel.AudioTrackList
-        
-        @State private var showAlertErrorStartPlayback = false
-        
-        var body: some View {
-            HStack {
-                ForEach(customToolbarPrimaryItems, id: \.self) { customToolbarItem in
+    @Environment(SpotifyPlaybackManager.self) private var spotifyPlaybackManager
+    
+    let customToolbarPrimaryItems: [AudioTrackListPage.CustomToolbarItem]
+    let customToolbarAdditionalItems: [AudioTrackListPage.CustomToolbarItem]
+    
+    // TODO: is @Bindable necessary?
+    @Bindable var parentAudioTrackList: Musubi.ViewModel.AudioTrackList
+    
+    @State private var showAlertErrorStartPlayback = false
+    
+    var body: some View {
+        HStack {
+            ForEach(customToolbarPrimaryItems, id: \.self) { customToolbarItem in
                 if !customToolbarItem.isDisabledVisually {
                     Button {
                         customToolbarItem.action()
@@ -374,9 +374,9 @@ fileprivate struct CustomToolbar: View {
                     .disabled(true)
                     .onTapGesture(perform: customToolbarItem.action)
                 }
-                }
-                Menu {
-                    ForEach(customToolbarAdditionalItems + customToolbarPrimaryItems, id: \.self) { customToolbarItem in
+            }
+            Menu {
+                ForEach(customToolbarAdditionalItems + customToolbarPrimaryItems, id: \.self) { customToolbarItem in
                     if !customToolbarItem.isDisabledVisually {
                         Button {
                             customToolbarItem.action()
@@ -391,87 +391,87 @@ fileprivate struct CustomToolbar: View {
                         .disabled(true)
                         .onTapGesture(perform: customToolbarItem.action)
                     }
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.title3)
-                        .frame(maxHeight: .infinity, alignment: .center)
-                        .contentShape(Rectangle())
                 }
-                Spacer()
-                // TODO: Spotify's shuffle button here is persistently tied to the specific tracklist open
-//                Button {
-//                    Task { try await spotifyPlaybackManager.toggleShuffle() }
-//                } label: {
-//                    Image(systemName: "shuffle")
-//                        .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
-//                        .foregroundStyle(spotifyPlaybackManager.shuffle ? Color.green : Color.white.opacity(0.5))
-//                }
-                // TODO: figure out better way to extract context's audioTrackList (no need to case / repeat code)
-                if case .remote(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
-                   audioTrackList?.context.id == parentAudioTrackList.context.id
-                {
-                    if spotifyPlaybackManager.isPlaying {
-                        Button {
-                            Task { try await spotifyPlaybackManager.pause() }
-                        } label: {
-                            Image(systemName: "pause.circle.fill")
-                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
-                        }
-                    } else {
-                        Button {
-                            Task { try await spotifyPlaybackManager.resume() }
-                        } label: {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
-                        }
-                    }
-                }
-                else if case .local(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
-                        audioTrackList.context.id == parentAudioTrackList.context.id
-                {
-                    if spotifyPlaybackManager.isPlaying {
-                        Button {
-                            Task { try await spotifyPlaybackManager.pause() }
-                        } label: {
-                            Image(systemName: "pause.circle.fill")
-                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
-                        }
-                    } else {
-                        Button {
-                            Task { try await spotifyPlaybackManager.resume() }
-                        } label: {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
-                        }
-                    }
-                }
-                else {
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.title3)
+                    .frame(maxHeight: .infinity, alignment: .center)
+                    .contentShape(Rectangle())
+            }
+            Spacer()
+            // TODO: Spotify's shuffle button here is persistently tied to the specific tracklist open
+            //                Button {
+            //                    Task { try await spotifyPlaybackManager.toggleShuffle() }
+            //                } label: {
+            //                    Image(systemName: "shuffle")
+            //                        .font(.system(size: Musubi.UI.SHUFFLE_SYMBOL_SIZE))
+            //                        .foregroundStyle(spotifyPlaybackManager.shuffle ? Color.green : Color.white.opacity(0.5))
+            //                }
+            // TODO: figure out better way to extract context's audioTrackList (no need to case / repeat code)
+            if case .remote(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
+               audioTrackList?.context.id == parentAudioTrackList.context.id
+            {
+                if spotifyPlaybackManager.isPlaying {
                     Button {
-                        Task { @MainActor in
-                            if !parentAudioTrackList.contents.isEmpty {
-                                do {
-                                    try await spotifyPlaybackManager.play(audioTrack: parentAudioTrackList.contents[0])
-                                } catch {
-                                    showAlertErrorStartPlayback = true
-                                }
-                            }
-                        }
+                        Task { try await spotifyPlaybackManager.pause() }
+                    } label: {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
+                    }
+                } else {
+                    Button {
+                        Task { try await spotifyPlaybackManager.resume() }
                     } label: {
                         Image(systemName: "play.circle.fill")
                             .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
                     }
                 }
             }
-            .alert(
-                "Error when starting playback",
-                isPresented: $showAlertErrorStartPlayback,
-                actions: {},
-                message: {
-                    Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+            else if case .local(audioTrackList: let audioTrackList) = spotifyPlaybackManager.context,
+                    audioTrackList.context.id == parentAudioTrackList.context.id
+            {
+                if spotifyPlaybackManager.isPlaying {
+                    Button {
+                        Task { try await spotifyPlaybackManager.pause() }
+                    } label: {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
+                    }
+                } else {
+                    Button {
+                        Task { try await spotifyPlaybackManager.resume() }
+                    } label: {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
+                    }
                 }
-            )
+            }
+            else {
+                Button {
+                    Task { @MainActor in
+                        if !parentAudioTrackList.contents.isEmpty {
+                            do {
+                                try await spotifyPlaybackManager.play(audioTrack: parentAudioTrackList.contents[0])
+                            } catch {
+                                showAlertErrorStartPlayback = true
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: Musubi.UI.PrimaryPlayButtonSize.audioTrackListPage.fontSize))
+                }
+            }
         }
+        .alert(
+            "Error when starting playback",
+            isPresented: $showAlertErrorStartPlayback,
+            actions: {},
+            message: {
+                Text(Musubi.UI.ErrorMessage(suggestedFix: .contactDev).string)
+            }
+        )
+    }
 }
 
 fileprivate struct AssociatedPeopleList: View {
@@ -526,10 +526,10 @@ fileprivate struct AssociatedPeopleList: View {
                         Button(
                             action: { openRelatedPage(spotifyNavigable: person) },
                             label: {
-                            Text(person.name)
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
+                                Text(person.name)
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
                             }
                         )
                     }
@@ -547,10 +547,10 @@ fileprivate struct AssociatedPeopleList: View {
                         Button(
                             action: { openRelatedPage(spotifyNavigable: person) },
                             label: {
-                            Text(person.name)
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
+                                Text(person.name)
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
                             }
                         )
                     }

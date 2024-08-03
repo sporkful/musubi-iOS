@@ -40,7 +40,7 @@ extension Spotify {
         let country: String
         let display_name: String?
         let explicit_content: [String: Bool]
-//        let external_urls: [String: String]
+        //        let external_urls: [String: String]
         let id: Spotify.ID
         let images: [Spotify.Image]?
         let product: String
@@ -50,7 +50,7 @@ extension Spotify {
     
     struct OtherUser: SpotifyIdentifiable, SpotifyPerson {
         let display_name: String?
-//        let external_urls: [String: String]
+        //        let external_urls: [String: String]
         let id: Spotify.ID
         let images: [Spotify.Image]?
         
@@ -105,8 +105,8 @@ extension Spotify {
         let name: String
         let release_date: String
         let artists: [ArtistMetadata]
-//        let copyrights: Copyrights
-//        let label: String
+        //        let copyrights: Copyrights
+        //        let label: String
         
         var uri: String { "spotify:album:\(id)" }
         
@@ -126,7 +126,7 @@ extension Spotify {
     struct PlaylistMetadata: SpotifyIdentifiable, SpotifyNavigable {
         let id: Spotify.ID
         private let description: String
-//        let followers: Followers
+        //        let followers: Followers
         let images: [Spotify.Image]?
         let name: String
         let owner: OtherUser

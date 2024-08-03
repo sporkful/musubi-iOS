@@ -25,7 +25,7 @@ extension Musubi.Model {
         
         let blobID: String
         
-//        var isVisible: Bool
+        //        var isVisible: Bool
     }
     
     typealias Blob = String  // instead of [UInt8] for easier JSON ser/de.

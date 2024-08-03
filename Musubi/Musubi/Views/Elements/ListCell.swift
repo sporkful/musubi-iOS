@@ -97,8 +97,8 @@ struct ListCellWrapper<Item: CustomPreviewable>: View {
                     showThumbnail: showThumbnail,
                     customTextStyle: customTextStyle,
                     isActive: spotifyPlaybackManager.currentTrack == audioTrack
-                        // TODO: clean up this hack (refer to ViewModel.AudioTrack)
-                        && spotifyPlaybackManager.currentTrack?.parent?.context.id == audioTrack.parent?.context.id,
+                    // TODO: clean up this hack (refer to ViewModel.AudioTrack)
+                    && spotifyPlaybackManager.currentTrack?.parent?.context.id == audioTrack.parent?.context.id,
                     isPlaying: spotifyPlaybackManager.isPlaying,
                     isLarge: isLarge
                 )

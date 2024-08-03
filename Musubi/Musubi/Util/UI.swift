@@ -10,10 +10,10 @@ extension Musubi {
         
         enum Error: LocalizedError {
             case misc(detail: String)
-
+            
             var errorDescription: String? {
                 let description = switch self {
-                    case let .misc(detail): "\(detail)"
+                case let .misc(detail): "\(detail)"
                 }
                 return "[Musubi::UI] \(description)"
             }
@@ -30,8 +30,8 @@ extension Musubi.UI {
         case cellThumbnail = 42
         case largeCellThumbnail = 77
         case audioTracklistCover = 262
-//        case artistCover = 162
-//        case playerCover = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 52.0
+        //        case artistCover = 162
+        //        case playerCover = min(Musubi.UI.SCREEN_WIDTH, Musubi.UI.SCREEN_HEIGHT) - 52.0
     }
     
     enum PrimaryPlayButtonSize {
@@ -89,10 +89,10 @@ extension Musubi.UI {
             
             var text: String {
                 return switch self {
-                    case .reopen: "try quitting and re-opening the Musubi app."
-                    case .relogin: "try logging out and logging back in."
-                    case .reinstall: "try deleting and re-installing the Musubi app."
-                    case .contactDev: "please let us know so we can fix it."
+                case .reopen: "try quitting and re-opening the Musubi app."
+                case .relogin: "try logging out and logging back in."
+                case .reinstall: "try deleting and re-installing the Musubi app."
+                case .contactDev: "please let us know so we can fix it."
                 }
             }
         }

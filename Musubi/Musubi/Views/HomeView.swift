@@ -52,9 +52,9 @@ class HomeViewCoordinator {
         } else if let repositoryCommit = musubiNavigable as? Musubi.RepositoryCommit {
             // Note openedLocalClone doesn't get reset when navigated away from - it only gets changed
             // when user explicitly opens a new local clone.
-//            if Musubi.UserManager.shared.currentUser?.openedLocalClone?.repositoryReference != repositoryCommit.repositoryReference {
-                try await self.open(repositoryReference: repositoryCommit.repositoryReference)
-//            }
+            //            if Musubi.UserManager.shared.currentUser?.openedLocalClone?.repositoryReference != repositoryCommit.repositoryReference {
+            try await self.open(repositoryReference: repositoryCommit.repositoryReference)
+            //            }
             
             try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
             showSheetCommitHistory = true
@@ -73,9 +73,9 @@ class HomeViewCoordinator {
         }
         
         // TODO: scroll to correct position?
-//        homeViewCoordinator.myReposDesiredScrollAnchor =
-//        try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-//        homeViewCoordinator.myReposDesiredScrollAnchor = .none
+        //        homeViewCoordinator.myReposDesiredScrollAnchor =
+        //        try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+        //        homeViewCoordinator.myReposDesiredScrollAnchor = .none
         
         self.myReposNavPath.append(repositoryReference)
     }
@@ -109,7 +109,7 @@ struct HomeView: View {
             .withMiniPlayerOverlay()
             .tabItem { Label("My Repositories", systemImage: "books.vertical") }
             .tag(HomeViewCoordinator.Tab.myRepos)
-//                .badge("!") // TODO: notifications?
+            //                .badge("!") // TODO: notifications?
             
             // MARK: - "Spotify Search" tab
             NavigationStack(path: $homeViewCoordinator.spotifySearchNavPath) {

@@ -13,10 +13,10 @@ extension Musubi {
 extension Musubi.Cryptography {
     enum Error: LocalizedError {
         case pkce(detail: String)
-
+        
         var errorDescription: String? {
             let description = switch self {
-                case let .pkce(detail): "(pkce) \(detail)"
+            case let .pkce(detail): "(pkce) \(detail)"
             }
             return "[Musubi::Cryptography] \(description)"
         }
@@ -48,12 +48,12 @@ extension Musubi.Cryptography {
             (0..<pkceVerifierLength).map { _ in pkcePossibleChars.randomElement(using: &srng)! }
         )
         
-//        var randomBytes = [UInt8](repeating: 0, count: 32)
-//        let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
-//        if status != errSecSuccess {
-//            throw CryptographyError.pkce(detail: "failed to generate random bytes; status=\(status)")
-//        }
-//        return encodeBase64URL(bytes: randomBytes)
+        //        var randomBytes = [UInt8](repeating: 0, count: 32)
+        //        let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        //        if status != errSecSuccess {
+        //            throw CryptographyError.pkce(detail: "failed to generate random bytes; status=\(status)")
+        //        }
+        //        return encodeBase64URL(bytes: randomBytes)
     }
     
     static func newPKCEChallenge(pkceVerifier: String) throws -> String {

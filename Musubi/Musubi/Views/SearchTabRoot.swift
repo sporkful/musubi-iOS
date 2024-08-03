@@ -112,57 +112,57 @@ struct SearchTabRoot: View {
                         }
                     }
                     if isSearching {
-                    if showAllPlaylistResults {
-                        Section("All Playlists") {
-                            ForEach(searchResults.playlists.items) { playlistMetadata in
-                                NavigationLink(value: playlistMetadata) {
+                        if showAllPlaylistResults {
+                            Section("All Playlists") {
+                                ForEach(searchResults.playlists.items) { playlistMetadata in
+                                    NavigationLink(value: playlistMetadata) {
+                                        ListCellWrapper(
+                                            item: playlistMetadata,
+                                            showThumbnail: true,
+                                            customTextStyle: .defaultStyle
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if showAudioTrackResults {
+                            Section("Tracks") {
+                                ForEach(searchResults.tracks.items) { audioTrack in
                                     ListCellWrapper(
-                                        item: playlistMetadata,
+                                        item: Musubi.ViewModel.AudioTrack(audioTrack: audioTrack),
                                         showThumbnail: true,
-                                        customTextStyle: .defaultStyle
+                                        customTextStyle: .defaultStyle,
+                                        showAudioTrackMenu: true
                                     )
                                 }
                             }
                         }
-                    }
-                    if showAudioTrackResults {
-                        Section("Tracks") {
-                            ForEach(searchResults.tracks.items) { audioTrack in
-                                ListCellWrapper(
-                                    item: Musubi.ViewModel.AudioTrack(audioTrack: audioTrack),
-                                    showThumbnail: true,
-                                    customTextStyle: .defaultStyle,
-                                    showAudioTrackMenu: true
-                                )
-                            }
-                        }
-                    }
-                    if showArtistResults {
-                        Section("Artists") {
-                            ForEach(searchResults.artists.items) { artistMetadata in
-                                NavigationLink(value: artistMetadata) {
-                                    ListCellWrapper(
-                                        item: artistMetadata,
-                                        showThumbnail: true,
-                                        customTextStyle: .defaultStyle
-                                    )
+                        if showArtistResults {
+                            Section("Artists") {
+                                ForEach(searchResults.artists.items) { artistMetadata in
+                                    NavigationLink(value: artistMetadata) {
+                                        ListCellWrapper(
+                                            item: artistMetadata,
+                                            showThumbnail: true,
+                                            customTextStyle: .defaultStyle
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    if showAlbumResults {
-                        Section("Albums") {
-                            ForEach(searchResults.albums.items) { albumMetadata in
-                                NavigationLink(value: albumMetadata) {
-                                    ListCellWrapper(
-                                        item: albumMetadata,
-                                        showThumbnail: true,
-                                        customTextStyle: .defaultStyle
-                                    )
+                        if showAlbumResults {
+                            Section("Albums") {
+                                ForEach(searchResults.albums.items) { albumMetadata in
+                                    NavigationLink(value: albumMetadata) {
+                                        ListCellWrapper(
+                                            item: albumMetadata,
+                                            showThumbnail: true,
+                                            customTextStyle: .defaultStyle
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
                     }
                     if spotifyPlaybackManager.currentTrack != nil {
                         Rectangle()

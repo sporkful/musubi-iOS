@@ -18,11 +18,11 @@ extension Musubi {
         enum Error: LocalizedError {
             case request(detail: String)
             case response(detail: String)
-
+            
             var errorDescription: String? {
                 let description = switch self {
-                    case let .request(detail): "(request) \(detail)"
-                    case let .response(detail): "(response) \(detail)"
+                case let .request(detail): "(request) \(detail)"
+                case let .response(detail): "(response) \(detail)"
                 }
                 return "[Musubi::Cloud] \(description)"
             }
@@ -56,7 +56,7 @@ extension Musubi.Cloud {
         jsonEncoder.dateEncodingStrategy = .iso8601
         urlRequest.httpBody = try jsonEncoder.encode(request)
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         urlRequest.setValue(
             try await Musubi.UserManager.shared.getAuthToken(),
             forHTTPHeaderField: "X-Musubi-SpotifyAuth"

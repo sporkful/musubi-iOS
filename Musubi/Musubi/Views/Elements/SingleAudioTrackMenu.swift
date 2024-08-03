@@ -57,7 +57,7 @@ struct SingleAudioTrackMenu: View {
                 }
             )
             if let album = self.audioTrack.audioTrack.album
-//               album != self.audioTrack.parent?.context as? Spotify.AlbumMetadata
+            //               album != self.audioTrack.parent?.context as? Spotify.AlbumMetadata
             {
                 Button(
                     action: { openRelatedPage(spotifyNavigable: album) },
@@ -70,7 +70,7 @@ struct SingleAudioTrackMenu: View {
                 )
             }
             if let primaryArtist = self.audioTrack.audioTrack.artists.first
-//               primaryArtist != self.audioTrack.parent?.context as? Spotify.ArtistMetadata
+            //               primaryArtist != self.audioTrack.parent?.context as? Spotify.ArtistMetadata
             {
                 Button(
                     action: { openRelatedPage(spotifyNavigable: primaryArtist) },

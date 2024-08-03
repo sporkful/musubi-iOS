@@ -46,17 +46,17 @@ struct StaticPlaylistPage: View {
                 (
                     // TODO: clean up (can't access localClonesIndex from computed prop)
                     !self.currentUser.localClonesIndex.contains(where: { $0.handle == self.associatedRepositoryHandle })
-                        ? cloningToolbarItem
-                        : AudioTrackListPage.CustomToolbarItem(
-                            title: playlistMetadata.owner.id == currentUser.id
-                                ? "Get your Musubi repository"
-                                : "Get your personal Musubi fork",
-                            sfSymbolName: playlistMetadata.owner.id == currentUser.id
-                                ? "square.and.arrow.down.on.square"
-                                : "arrow.triangle.branch",
-                            action: { showAlertAlreadyCloned = true },
-                            isDisabledVisually: true
-                        )
+                    ? cloningToolbarItem
+                    : AudioTrackListPage.CustomToolbarItem(
+                        title: playlistMetadata.owner.id == currentUser.id
+                        ? "Get your Musubi repository"
+                        : "Get your personal Musubi fork",
+                        sfSymbolName: playlistMetadata.owner.id == currentUser.id
+                        ? "square.and.arrow.down.on.square"
+                        : "arrow.triangle.branch",
+                        action: { showAlertAlreadyCloned = true },
+                        isDisabledVisually: true
+                    )
                 )
             ]
         )
@@ -104,30 +104,30 @@ struct StaticPlaylistPage: View {
                 return
             }
             
-                do {
-                    homeViewCoordinator.myReposNavPath.removeLast(homeViewCoordinator.myReposNavPath.count)
-                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-                    homeViewCoordinator.openTab = .myRepos
+            do {
+                homeViewCoordinator.myReposNavPath.removeLast(homeViewCoordinator.myReposNavPath.count)
+                try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                homeViewCoordinator.openTab = .myRepos
                 
-                    let repositoryReference = try await self.currentUser.initOrClone(
-                        repositoryHandle: Musubi.RepositoryHandle(
-                            userID: currentUser.id,
-                            playlistID: playlistMetadata.id
-                        )
+                let repositoryReference = try await self.currentUser.initOrClone(
+                    repositoryHandle: Musubi.RepositoryHandle(
+                        userID: currentUser.id,
+                        playlistID: playlistMetadata.id
                     )
-                    
-                    homeViewCoordinator.myReposDesiredScrollAnchor = .bottom
-                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-                    homeViewCoordinator.myReposDesiredScrollAnchor = .none
-                    try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
-                    homeViewCoordinator.myReposNavPath.append(repositoryReference)
-                    homeViewCoordinator.disableUI = false
-                } catch {
-                    print("[Musubi::StaticPlaylistPage] initOrClone error")
-                    print(error.localizedDescription)
-                    showAlertCloneError = true
-                    return
-                }
+                )
+                
+                homeViewCoordinator.myReposDesiredScrollAnchor = .bottom
+                try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                homeViewCoordinator.myReposDesiredScrollAnchor = .none
+                try await Task.sleep(until: .now + .seconds(0.5), clock: .continuous)
+                homeViewCoordinator.myReposNavPath.append(repositoryReference)
+                homeViewCoordinator.disableUI = false
+            } catch {
+                print("[Musubi::StaticPlaylistPage] initOrClone error")
+                print(error.localizedDescription)
+                showAlertCloneError = true
+                return
+            }
         }
     }
     

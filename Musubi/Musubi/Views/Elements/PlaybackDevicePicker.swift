@@ -20,58 +20,58 @@ struct PlaybackDevicePicker: View {
         @Bindable var spotifyPlaybackManager = spotifyPlaybackManager
         
         Menu {
-        Picker(
-            selection: $spotifyPlaybackManager.desiredActiveDevice,
-            content: {
-                ForEach(spotifyPlaybackManager.availableDevices, id: \.self) { device in
-                    Label(device.name, systemImage: device.sfSymbolName)
-                        .tag(Optional(device))
-                }
-                if spotifyPlaybackManager.desiredActiveDevice == nil {
-                    Text("None").tag(nil as SpotifyPlaybackManager.AvailableDevice?)
-                }
-            },
-            label: {}
-        )
+            Picker(
+                selection: $spotifyPlaybackManager.desiredActiveDevice,
+                content: {
+                    ForEach(spotifyPlaybackManager.availableDevices, id: \.self) { device in
+                        Label(device.name, systemImage: device.sfSymbolName)
+                            .tag(Optional(device))
+                    }
+                    if spotifyPlaybackManager.desiredActiveDevice == nil {
+                        Text("None").tag(nil as SpotifyPlaybackManager.AvailableDevice?)
+                    }
+                },
+                label: {}
+            )
         } label: {
-                if outerLabelStyle == .iconOnly {
+            if outerLabelStyle == .iconOnly {
+                if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
+                    Image(systemName: desiredActiveDevice.sfSymbolName)
+                } else {
+                    Image(systemName: "iphone.sizes")
+                }
+            } else if outerLabelStyle == .fullBody {
+                HStack {
                     if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
-                        Image(systemName: desiredActiveDevice.sfSymbolName)
-                    } else {
-                        Image(systemName: "iphone.sizes")
-                    }
-                } else if outerLabelStyle == .fullBody {
-                    HStack {
-                        if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
-                            HStack {
-                                Image(systemName: desiredActiveDevice.sfSymbolName)
-                                Text(desiredActiveDevice.name)
-                            }
-                            .foregroundStyle(Color.green)
-                        } else {
-                            Text("None")
+                        HStack {
+                            Image(systemName: desiredActiveDevice.sfSymbolName)
+                            Text(desiredActiveDevice.name)
                         }
-                        Image(systemName: "chevron.up.chevron.down")
-                    }
-                } else if outerLabelStyle == .fullFootnote {
-                    if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
-                        Label(
-                            desiredActiveDevice.name,
-                            systemImage: desiredActiveDevice.sfSymbolName
-                        )
-                        .font(.caption)
                         .foregroundStyle(Color.green)
                     } else {
-                        Label(
-                            "Select a device",
-                            systemImage: "iphone.sizes"
-                        )
-                        .font(.caption)
-                        .opacity(0.81)
+                        Text("None")
                     }
-                } else {
-                    Text("Device")
+                    Image(systemName: "chevron.up.chevron.down")
                 }
+            } else if outerLabelStyle == .fullFootnote {
+                if let desiredActiveDevice = spotifyPlaybackManager.desiredActiveDevice {
+                    Label(
+                        desiredActiveDevice.name,
+                        systemImage: desiredActiveDevice.sfSymbolName
+                    )
+                    .font(.caption)
+                    .foregroundStyle(Color.green)
+                } else {
+                    Label(
+                        "Select a device",
+                        systemImage: "iphone.sizes"
+                    )
+                    .font(.caption)
+                    .opacity(0.81)
+                }
+            } else {
+                Text("Device")
+            }
         }
         // TODO: figure out how to attach callbacks to menu expanding/collapsing (attaching to inner picker doesn't work)
         .onAppear(perform: startPoller)

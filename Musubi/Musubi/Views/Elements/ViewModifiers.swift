@@ -39,22 +39,22 @@ private struct WithCustomDisablingOverlay: ViewModifier {
     func body(content: Content) -> some View {
         ZStack {
             content
-//                .allowsHitTesting(!isDisabled)
+            //                .allowsHitTesting(!isDisabled)
                 .disabled(isDisabled)
             if isDisabled {
-//                ZStack {
-//                    Rectangle()
-//                        .fill(Color.gray.opacity(0.360))
-//                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                        .ignoresSafeArea(.all, edges: .all)
-                    ProgressView("Loading")
-                        .controlSize(.large)
-                        .padding()
-                        .foregroundStyle(Color.white)
-                        .bold()
-                        .background(Color.gray.opacity(0.8), in: RoundedRectangle(cornerRadius: 8))
-                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
-//                }
+                //                ZStack {
+                //                    Rectangle()
+                //                        .fill(Color.gray.opacity(0.360))
+                //                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                //                        .ignoresSafeArea(.all, edges: .all)
+                ProgressView("Loading")
+                    .controlSize(.large)
+                    .padding()
+                    .foregroundStyle(Color.white)
+                    .bold()
+                    .background(Color.gray.opacity(0.8), in: RoundedRectangle(cornerRadius: 8))
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                //                }
             }
         }
     }
@@ -175,27 +175,27 @@ private struct MiniPlayerOverlay: ViewModifier {
                     VStack(spacing: 0) {
                         HStack {
                             HStack {
-                            if let thumbnail = thumbnail {
-                                Image(uiImage: thumbnail)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
-                                    .clipped()
-                            } else {
-                                ProgressView()
-                                    .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
-                            }
-                            VStack(alignment: .leading) {
-                                Text(currentTrack.audioTrack.name)
-                                    .font(.subheadline)
-                                    .lineLimit(1)
-                                    .padding(.bottom, 0.0127)
-                                Text(currentTrack.fullCaption)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                                    .opacity(0.9)
-                            }
-                            Spacer()
+                                if let thumbnail = thumbnail {
+                                    Image(uiImage: thumbnail)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
+                                        .clipped()
+                                } else {
+                                    ProgressView()
+                                        .frame(width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE)
+                                }
+                                VStack(alignment: .leading) {
+                                    Text(currentTrack.audioTrack.name)
+                                        .font(.subheadline)
+                                        .lineLimit(1)
+                                        .padding(.bottom, 0.0127)
+                                    Text(currentTrack.fullCaption)
+                                        .font(.caption)
+                                        .lineLimit(1)
+                                        .opacity(0.9)
+                                }
+                                Spacer()
                             }
                             .contentShape(Rectangle())
                             .onTapGesture(perform: { showSheetPlayer = true })
